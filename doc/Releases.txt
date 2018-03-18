@@ -1,0 +1,9 @@
+---   Releases   ---
+--------------------
+
+0.1
+            @  18.03.18
+     18.03.17  FIX:     single quotes in Info  
+     18.03.13  PGN:     pgn/2
+               DATA:    4nclall1718.pgn  4ncl_short.pgn
+     18.02.18  PACK:    chess_db
