@@ -18,6 +18,7 @@
 :- lib(db_facts).
 :- lib(prosqlite).
 :- lib(stoics_lib).
+:- lib(debug_call).
 
 :- dynamic(chess_db_handles/2).       % Dir, HandlesTerm
 
@@ -34,6 +35,7 @@
 :- lib(chess_db_openning_pgn/2).
 
 :- lib(chess_db_handles/4).
+:- lib(chess_db_messages/0).
 
 :- lib(end(chess_db)).
 
@@ -50,7 +52,7 @@ Ideally we want to hook this pack to a web-page interface for playing the games 
 ---+++ Installation: 
 
 ==
-?- pack_install( pack(chess_db) ).
+?- pack_install( chess_db ).
 ==
 
 The pack includes code to:
@@ -74,6 +76,8 @@ Packs:
      (1.0)
   * options     
      (1.0)
+  * debug_call
+     (1.1)
 
 ---+++ Basics
 
@@ -176,6 +180,13 @@ Moves are matched to game_move/4 and are pulled from game_orig/2.
 
 You can view the two games in your favourite game PGN viewer. In this case chessx in Linux.
 
+---+++ Debug terms
+
+Listens to:
+  * chess_db
+  * chess_db(move)
+  * chess_db(original)
+
 ---+++ Pack predicates
 
 
@@ -203,6 +214,7 @@ miscellaneous
 
 @author nicos angelopoulos
 @version  0.1 2018/3/18
+@version  0.2 2018/3/20
 @see  http://stoics.org.uk/~nicos/sware/chess_db
 @see  https://github.com/nicos-angelopoulos/chess_db
 @see  [pack('chess_db/examples/short.pl')]
@@ -215,8 +227,8 @@ miscellaneous
      The current version. Version is a Mj:Mn:Fx term, and date is a date(Y,M,D) term.
 
 ==
-?- chess_db_version( 0:1:0, date(2018,3,18) ).
+?- chess_db_version( 0:2:0, date(2018,3,20) ).
 true.
 ==
 */
-chess_db_version( 0:1:0, date(2018,3,18) ).
+chess_db_version( 0:2:0, date(2018,3,20) ).

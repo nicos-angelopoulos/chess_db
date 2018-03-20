@@ -55,6 +55,7 @@ pgn_dcg( [] ) --> {true}.
     
 pgn_dcg_game( pgn(Info,Moves,Res) ) --> 
     pgn_dcg_info( InfoPrv ),
+    { debug_call( chess_db, chess_db:chess_db_info_kvs(InfoPrv) ) },
     pgn_dcg_moves( Moves, MovesInfo ),
     {append( InfoPrv, MovesInfo, Info )},
     pgn_dcg_result( Res ),
@@ -95,10 +96,10 @@ pgn_dcg_moves( [], AddToInfo ) -->
 
 pgn_dcg_moves_has( [move(Num,Mvs,Cms)|T] ) -->
     integer( Num ),
+    { debug( chess_db(move), 'Move: ~d', [Num] ) },
     ".", pgn_dcg_move_end,
     !,
     pgn_dcg_move( Mv1, Cm1 ),
-    % { (Num =:= 40 -> trace; true) },
     pgn_dcg_variation,
     pgn_dcg_variation_white( Num ),
     {Mv1 \= []},  % fixme: error
@@ -107,12 +108,13 @@ pgn_dcg_moves_has( [move(Num,Mvs,Cms)|T] ) -->
     {append(Mv1,Mv2,Mvs)},
     {append(Cm1,Cm2,Cms)},
     !,
+    { debug( chess_db(move), 'Move read: ~w', [move(Num,Mvs,Cms)] ) },
     pgn_dcg_moves_has( T ).
 pgn_dcg_moves_has( [] ) --> {true}.
     
 pgn_dcg_move( [Mv], [Cm] ) -->
     [C],
-    { \+ ( 0'0 =< C, C =< 0'9 ) },
+    { \+ ( (0'0 =< C, C =< 0'9) ; (C =:= 0'*)) },
     !,
     string( String ),
     pgn_dcg_move_end,
@@ -125,7 +127,6 @@ pgn_dcg_move( [], [] ) --> {true}.
 
 pgn_dcg_move_variation( Strs ) -->
     [0'{],
-    % {trace},
     pgn_dcg_move_variation_body( Strs ).
 pgn_dcg_move_variation( [] ) --> {true}.
 
@@ -148,14 +149,17 @@ pgn_dcg_move_variation_segment_end( true ) -->
 pgn_dcg_move_variation_segment_end( false ) --> 
     [0'}],
     pgn_dcg_move_end.
-    % {trace}.
 
 pgn_dcg_move_end --> " ", whites, pgn_dcg_skip_ends.
-pgn_dcg_move_end --> [13,10].
-pgn_dcg_move_end --> [10].
+pgn_dcg_move_end --> [13,10], pgn_dcg_skip_ends.
+pgn_dcg_move_end --> [10], pgn_dcg_skip_ends.
 
+/*
 pgn_dcg_skip_ends --> [13], !, pgn_dcg_skip_ends.
 pgn_dcg_skip_ends --> [10], !, pgn_dcg_skip_ends.
+pgn_dcg_skip_ends --> {true}.
+*/
+pgn_dcg_skip_ends --> pgn_dcg_move_end, !, pgn_dcg_skip_ends.
 pgn_dcg_skip_ends --> {true}.
 
 pgn_dcg_info( [] ) -->
@@ -186,18 +190,28 @@ pgn_dcg_cntrl_m --> {true}.
 pgn_dcg_variation --> 
     [0'(], 
     !,
-    pgn_dcg_variation_till_right,
+    pgn_dcg_variation_till_right(1),
     pgn_dcg_variation. % as there might multiple variations
 pgn_dcg_variation --> {true}.
 
-pgn_dcg_variation_till_right --> 
+pgn_dcg_variation_till_right( 0 ) --> {!}.
+pgn_dcg_variation_till_right( I ) --> 
     [0')],
     !,
-    pgn_dcg_move_end.
-pgn_dcg_variation_till_right --> 
+    {H is I - 1},
+    { debug(chess_db(move),'Parenthesis closing: %d', I) },
+    pgn_dcg_move_end,
+    pgn_dcg_variation_till_right( H ).
+pgn_dcg_variation_till_right(I) --> 
+    [0'(],
+    !,
+    {J is I + 1},
+    { debug(chess_db(move),'Parenthesis opening: %d', I) },
+    pgn_dcg_variation_till_right( J ).
+pgn_dcg_variation_till_right( I ) --> 
     [_],
     !,
-    pgn_dcg_variation_till_right.
+    pgn_dcg_variation_till_right(I).
 
 pgn_dcg_mark -->  % fixme: currently valuation marks (and variations) are thrown away
     [0'$],

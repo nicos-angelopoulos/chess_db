@@ -8,7 +8,7 @@ Ideally we want to hook this pack to a web-page interface for playing the games 
 
 ---+++ Installation: 
 
-?- pack_install( pack(chess_db) ).
+?- pack_install( chess_db ).
 
 The pack includes code to:
   * parse PGN's 

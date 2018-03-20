@@ -1,8 +1,13 @@
 ---   Releases   ---
 --------------------
 
-0.1
-            @  18.03.18
+0.2         @  18.03.20
+     18.03.20  DEBUG:   new term for White vs Black reading-in update
+               FIX:     nested variations
+               FIX:     recognise * as a valid result (properly read-in)
+               DOC:     pack(chess_db) -> chess_db in .pl and Readme
+
+0.1         @  18.03.18
      18.03.17  FIX:     single quotes in Info  
      18.03.13  PGN:     pgn/2
                DATA:    4nclall1718.pgn  4ncl_short.pgn
