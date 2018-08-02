@@ -62,8 +62,9 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, MoHa, OrHa, Nid ) :-
     findall( game_info(Nid,K,V), member(K-V,Info), Goals ),
     db_assert( InfoHandle, Goals, _ ),
     findall( game_move(Nid,N,Turn,Move), (
-                                            member( move(N,NMvs,_Cmms),Moves),
-                                            nth1( Idx, NMvs, Move ),
+                                            member( move(N,Mv1,Mv2,_Cmm1,_Cms2),Moves),
+                                            nth1( Idx, [Mv1,Mv2], Move ),
+                                            Move \== [],   % Mv2 really
                                             nth1( Idx, [false,true], Turn )  % check values are db asserted properly
                                          ), Moals ),
     db_assert( MoHa, Moals, _ ),

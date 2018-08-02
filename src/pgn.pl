@@ -11,7 +11,7 @@ a file or Pgn term is given as ground first argument.
 
 A Pgn term is of the form: pgn(Info,Moves,Res,Orig). Where, <br>
   * Info is K-V pairs of the [] part of the PGN notation
-  * Moves are the game moves: move(Num,Mvs,Cms)
+  * Moves are the game moves: move(Num,Mv1,Mv2,Cms1,Cms2)
   * Res is the result (it usually also has an Info pair
   * Orig is the verbatim lines of the original .pgn input for that game
 
@@ -22,11 +22,12 @@ A Pgn term is of the form: pgn(Info,Moves,Res,Orig). Where, <br>
 
 fixme: 
     1. if we have result from both Info and end of moves, make sure they are the same <br>
-    2. if the info missing and the result from endo of moves exists, then add it to info
+    2. if the info missing and the result from end of moves exists, then add it to info
 
 
 @author nicos angelopoulos
 @version  0.1 2018/03/14
+@version  0.2 2018/08/01, changed from move(Num,Mvs,Cms), add $ starting NAGs, allow opening comment on game with moves
 @tbd complement the 2 ways of getting the result.
 @tbd   currently valuation marks and variations are thrown away
 
@@ -79,8 +80,16 @@ pgn_dcg_result_token( '1/2-1/2' ) -->
 pgn_dcg_result_token( '*' ) --> 
     "*".
 
+pgn_dcg_moves( Moves, Info ) --> 
+    pgn_dcg_ply_variation( CmStrings ),
+    { CmStrings \== [] },
+    { atomic_list_concat(CmStrings,'',Cm) },
+    pgn_dcg_moves( Moves, TInfo ),
+    {debug( chess_db(moves), 'Read moves: ~w', [Moves] )},
+    {Info = ['Game_Note'-Cm|TInfo]}.
+
 pgn_dcg_moves( Empty, AddToInfo ) --> 
-    pgn_dcg_move_variation( CmStrings ),
+    pgn_dcg_ply_variation( CmStrings ),
     { CmStrings \== [] },
     !,
     { atomic_list_concat(CmStrings,'',Cm),
@@ -94,25 +103,25 @@ pgn_dcg_moves( Moves, Info ) -->
 pgn_dcg_moves( [], AddToInfo ) --> 
       { AddToInfo = ['Game_Note'-'No moves parsed (pgn/2).'] }.
 
-pgn_dcg_moves_has( [move(Num,Mvs,Cms)|T] ) -->
+pgn_dcg_moves_has( [move(Num,Mv1,Mv2,Cm1,Cm2)|T] ) -->
     integer( Num ),
     { debug( chess_db(move), 'Move: ~d', [Num] ) },
     ".", pgn_dcg_move_end,
     !,
-    pgn_dcg_move( Mv1, Cm1 ),
-    pgn_dcg_variation,
+    pgn_dcg_ply( Mv1, Cm1 ),
+    pgn_dcg_variation, % is alternative always afer variation ?
     pgn_dcg_variation_white( Num ),
     {Mv1 \= []},  % fixme: error
-    pgn_dcg_move( Mv2, Cm2 ),
+    pgn_dcg_ply( Mv2, Cm2 ),
     pgn_dcg_variation,
-    {append(Mv1,Mv2,Mvs)},
-    {append(Cm1,Cm2,Cms)},
+    % {append(Mv1,Mv2,Mvs)},
+    % {append(Cm1,Cm2,Cms)},
     !,
-    { debug( chess_db(move), 'Move read: ~w', [move(Num,Mvs,Cms)] ) },
+    { debug( chess_db(move), 'Move read: ~w', [move(Num,Mv1,Mv2,Cm1,Cm2)] ) },
     pgn_dcg_moves_has( T ).
 pgn_dcg_moves_has( [] ) --> {true}.
     
-pgn_dcg_move( [Mv], [Cm] ) -->
+pgn_dcg_ply( Mv, Cm ) -->
     [C],
     { \+ ( (0'0 =< C, C =< 0'9) ; (C =:= 0'*)) },
     !,
@@ -121,32 +130,39 @@ pgn_dcg_move( [Mv], [Cm] ) -->
     !,
     pgn_dcg_mark,
     { atom_codes( Mv, [C|String] )},
-    pgn_dcg_move_variation( CmStrings ),
+    pgn_dcg_ply_variation( CmStrings ),
     { atomic_list_concat(CmStrings,'',Cm) }.
-pgn_dcg_move( [], [] ) --> {true}.
+pgn_dcg_ply( [], [] ) --> {true}.
 
-pgn_dcg_move_variation( Strs ) -->
+pgn_dcg_ply_variation( [Str|Strs] ) -->
+    [0'$],
+    integer(Int),
+    !,
+    {atomic_list_concat(['$',Int],Str)},
+    pgn_dcg_move_end,
+    pgn_dcg_ply_variation( Strs ).
+pgn_dcg_ply_variation( Strs ) -->
     [0'{],
-    pgn_dcg_move_variation_body( Strs ).
-pgn_dcg_move_variation( [] ) --> {true}.
+    pgn_dcg_ply_variation_body( Strs ).
+pgn_dcg_ply_variation( [] ) --> {true}.
 
-pgn_dcg_move_variation_body( [Str|Strs] ) -->
+pgn_dcg_ply_variation_body( [Str|Strs] ) -->
     string( StrCs ),
-    pgn_dcg_move_variation_segment_end( C ),
+    pgn_dcg_ply_variation_segment_end( C ),
     !,
     {atom_codes(Str,StrCs)},
-    pgn_dcg_move_variation_continue( C, Strs ).
-pgn_dcg_move_variation_body( [] ) --> {true}.
+    pgn_dcg_ply_variation_continue( C, Strs ).
+pgn_dcg_ply_variation_body( [] ) --> {true}.
 
-pgn_dcg_move_variation_continue( true, Strs ) -->
-    pgn_dcg_move_variation_body( Strs ).
-pgn_dcg_move_variation_continue( false, [] ) --> {true}.
+pgn_dcg_ply_variation_continue( true, Strs ) -->
+    pgn_dcg_ply_variation_body( Strs ).
+pgn_dcg_ply_variation_continue( false, [] ) --> {true}.
 
-pgn_dcg_move_variation_segment_end( true ) --> 
+pgn_dcg_ply_variation_segment_end( true ) --> 
     [13,10].
-pgn_dcg_move_variation_segment_end( true ) --> 
+pgn_dcg_ply_variation_segment_end( true ) --> 
     [10].
-pgn_dcg_move_variation_segment_end( false ) --> 
+pgn_dcg_ply_variation_segment_end( false ) --> 
     [0'}],
     pgn_dcg_move_end.
 
@@ -190,7 +206,9 @@ pgn_dcg_cntrl_m --> {true}.
 pgn_dcg_variation --> 
     [0'(], 
     !,
+    { debug(chess_db(move),'Parenthesis opening: ~d', 1) },
     pgn_dcg_variation_till_right(1),
+    pgn_dcg_move_end,
     pgn_dcg_variation. % as there might multiple variations
 pgn_dcg_variation --> {true}.
 
@@ -199,14 +217,14 @@ pgn_dcg_variation_till_right( I ) -->
     [0')],
     !,
     {H is I - 1},
-    { debug(chess_db(move),'Parenthesis closing: %d', I) },
-    pgn_dcg_move_end,
+    { debug(chess_db(move),'Parenthesis closing: ~d', I) },
+    % pgn_dcg_move_end,
     pgn_dcg_variation_till_right( H ).
 pgn_dcg_variation_till_right(I) --> 
     [0'(],
     !,
     {J is I + 1},
-    { debug(chess_db(move),'Parenthesis opening: %d', I) },
+    { debug(chess_db(move),'Parenthesis opening: ~d', J) },
     pgn_dcg_variation_till_right( J ).
 pgn_dcg_variation_till_right( I ) --> 
     [_],
@@ -226,20 +244,24 @@ pgn_dcg_variation_white( Num ) -->
     !,
     whites,% fixme: ends move codes
     [0'.,0'.,0'.],
-    whites.  % fixme: ends move codes
+    % whites.  % fixme: ends move codes
+    pgn_dcg_move_end.
 pgn_dcg_variation_white( _Num ) -->  {true}. % fixme: error
 
 %%% dealing with originals (outside the parser)
-pgn_originals( FileR, Origs ) :-
+pgn_originals( FileR, [Fst|Origs] ) :-
     % fixme: do the clean up way
     io_open( FileR, read, In ),
     io_line( In, Line ),
-    pgn_original_till_next( Line, In, Next, _ ),
+    % fixme, maybe you want to skip empty lines at top of file ?
+    pgn_original_till_next( Line, In, Next, Fst ),
     pgn_original_games( Next, In, Origs ),
     io_close( FileR, In ).
 
 pgn_original_games( end_of_file, _In, [] ) :- !.
 pgn_original_games( Line, In, [Orig|Origs] ) :-
+    atom_codes( LineAtm, Line ),
+    debug( chess_db(iline), 'next game starts at line: ~w', LineAtm ),
     pgn_original_game( Line, In, Next, Orig ),
     !,
     pgn_original_games( Next, In, Origs ).
@@ -255,9 +277,20 @@ pgn_original_info( [0'[|T], In, [[0'[|T]|Orig], ContInfo, ContOrig ) :-
 pgn_original_info( ContLine, _In, ContOrig, ContLine, ContOrig ).
 
 pgn_original_till_next( end_of_file, _In, end_of_file, [] ) :- !.
-pgn_original_till_next( [0'[|T], _In, [0'[|T], [] ) :- !.
+pgn_original_till_next( [13], In, Next, Lines ) :-
+    io_line( In, Next ),
+    ( Next = [0'[|_T] ; Next = end_of_file ),
+    !,
+    Lines = [[]].
+pgn_original_till_next( [], In, Next, Lines ) :-
+    io_line( In, Next ),
+    ( Next = [0'[|_T] ; Next = end_of_file ),
+    !,
+    Lines = [[]].
+% pgn_original_till_next( [0'[|T], _In, [0'[|T], [] ) :- !.
 pgn_original_till_next( Line, In, Ends, [Line|T] ) :-
     io_line( In, Next ),
+    atom_codes( LineAtm, Line ),
     pgn_original_till_next( Next, In, Ends, T ).
 
 pgn_add_originals( Pgns, Origs, Pgn ) :-
