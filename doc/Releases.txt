@@ -1,6 +1,15 @@
 ---   Releases   ---
 --------------------
 
+0.3
+     18.08.02  FIXED    games with opening comment, and moves are now parsed
+               CHANGE   representation of moves in pgn/2 :(
+               NEW      support $ starting NAGs (Numeric Annotation Glyphs)
+               FIXED    %d to ~d in some debug errors
+               FIXED    new line between N... and the move
+               IMPROVE  the reading-in of orignials more strict at separating games
+               UPDATE   chess_db/2 to the new move/5 structure
+
 0.2         @  18.03.20
      18.03.20  DEBUG:   new term for White vs Black reading-in update
                FIX:     nested variations
