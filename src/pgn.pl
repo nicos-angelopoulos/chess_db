@@ -290,7 +290,6 @@ pgn_original_till_next( [], In, Next, Lines ) :-
 % pgn_original_till_next( [0'[|T], _In, [0'[|T], [] ) :- !.
 pgn_original_till_next( Line, In, Ends, [Line|T] ) :-
     io_line( In, Next ),
-    atom_codes( LineAtm, Line ),
     pgn_original_till_next( Next, In, Ends, T ).
 
 pgn_add_originals( Pgns, Origs, Pgn ) :-

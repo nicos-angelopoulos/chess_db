@@ -2,6 +2,7 @@
 --------------------
 
 0.3
+     18.08.05  FIXED    remove atom_codes/2 that had dangling debug atom
      18.08.02  FIXED    games with opening comment, and moves are now parsed
                CHANGE   representation of moves in pgn/2 :(
                NEW      support $ starting NAGs (Numeric Annotation Glyphs)
