@@ -4,11 +4,11 @@ chess_db_defaults( [create(false),position(false)] ).
 /** chess_db( +PgnOrF ).
     chess_db( +PngOrF, +Db ).
     chess_db( +PngOrF, +Opts ).
-    chess_db( +PngOrF, Db, +Opts ).
+    chess_db( +PngOrF, +Db, +Opts ).
 
 Add games from a PGN file or a PGN term, PgnOrF, to the chess database 
-pointed to by Db or Opts. If Db is given both as argument and option,
-the argument overrides. If argument Db or option Db are variables,
+pointed to by Db and/or Opts. If Db is given both as argument and option,
+the argument overrides. If argument Db or option Db is a variable,
 then the full location of the Db used is returned. To distinguish between
 the two arity 2 versions, Opts in that case need be a list.
 
@@ -16,7 +16,9 @@ Opts
   * create(Create=false)
      if true create dir and/or db files if they do not exist
   * db(Db)
-     directory or file location for database
+     database location
+  * dir(Dir)
+     directory where database is located, (many allowed, see chess_db_connect/2)
   * position(Pos=false)
      if true, use position table
 
@@ -25,14 +27,16 @@ Options can also be picked up from ~/.pl/chess_db.pl (see options_append/3).
 ==
 ?- pgn( pgn('18.03-candidates'), Pgn ), 
    chess_db( Pgn, chess_db('18.03-candidates'), [db(Which),create(true)] ).
-
 Pgn = ...
 Which = '.../swipl-7.7.18/pack/chess_db_data/dbs/18.03-candidates'.
 
+?- chess_db( pgn('4ncl_short.pgn'), fourNCL, [dir('/tmp'),create(true),db(Db)] ).
+Db = '/tmp/fourNCL'.
 ==
 
 @author nicos angelopoulos
 @version  0.1 2018/3/14
+@version  0.2 2018/8/17, 
 @see options_append/3
 
 */
@@ -52,12 +56,13 @@ chess_db( PgnIn, DbOrOpts ) :-
 chess_db( PgnIn, ArgDb, Args ) :-
     options_append( chess_db, Args, Opts ),
     ( memberchk(db(OptDb),Opts) -> true; true ),
-    options( create(Create), Opts ),
-    options( position(Pos), Opts ),
+    % options( create(Create), Opts ),
+    % options( position(Pos), Opts ),
     pgn( PgnIn, Pgn ),
-    ( ground(ArgDb) -> Dir = ArgDb; Dir = OptDb ),
-    ( var(Dir) -> throw(variable_location(ArgDb,Args)); true ),
-    chess_db_handles( Create, Pos, Dir, CdbHs, AbsDb ),
+    ( ground(ArgDb) -> Db = ArgDb; Db = OptDb ),
+    ( var(Db) -> throw(variable_location(ArgDb,Args)); true ),
+    chess_db_connect( Db, [db(AbsDb),handles(CdbHs)|Opts] ),
+    % chess_db_handles( Create, Pos, Dir, CdbHs, AbsDb ),
     chess_db_handle( info, CdbHs, InfoHandle ),
     chess_db_max_id( InfoHandle, LaGid ),
     chess_db_games_add( Pgn, LaGid, CdbHs),
@@ -106,7 +111,7 @@ chess_db_table_fields( game_orig, [gid+integer,original-text] ).
 chess_db_table_fields( game_position, [position+text,gid+integer] ).
 
 chess_db_dir( Dir, _Create, AbsDir ) :-
-    AbsOpts = [access(exist),type(directory),file_errors(fail)],
+    AbsOpts = [file_type(directory),file_errors(fail)], % fixme: assumes dir-based db
     absolute_file_name( Dir, AbsDir, AbsOpts ),
     % exists_directory( Dir ),
     !,
@@ -119,7 +124,6 @@ chess_db_dir( Dir, Create, AbsDir ) :-
     !,
     debug( chess_db, 'Creating new chess_db directory: ~w', AbsDir ),
     make_directory_path( AbsDir ).
-
 chess_db_dir( Dir, Create, Dir ) :-
     throw( chess_db_dir_does_not_exist_and_asked_not_to_create_it_by(Dir,Create) ).
 

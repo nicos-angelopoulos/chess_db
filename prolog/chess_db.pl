@@ -4,7 +4,7 @@
                         chess_db_max_id/2,                      % +HandleST, -Max
                         chess_db_game_id/1,                     % -GameID
                         chess_db_id_info/3,                     % +Gid, -Key, -Val
-                        chess_db_connect/1,                     % +Opts
+                        chess_db_connect/1,chess_db_connect/2,  % +Dbs[, +Opts]
                         chess_db_disconnect/1,                  % ?Db
                         chess_db_current/1, chess_db_current/2, % +CdbHs[, +Opts]
                         chess_db_openning/2,                    % +Moves, -Gid
@@ -215,7 +215,7 @@ info interactions
 
 manage database connections
 
-  * chess_db_connect/1
+  * chess_db_connect/1,chess_db_connect/2
   * chess_db_disconnect/1
   * chess_db_current/2
 

@@ -2,12 +2,12 @@
 --------------------
 
 tbd: use db_facts preds rather than prosqlite... (18.08.15)
-   : create pgn/ and db/ subs in examples/ and corresponding alias so
-   : chess_db_connect( pgn(18.07-Biel.pgn) ). will connect to that
-   : also chess_dbs as empty pack ? for default installs of pgns and databases
-   : allow missing of .pgn when opening
+     was there ever a pgn_write/2 ??? 
 
 0.3
+     18.08.16  CHANGE   Dbs are now relative to dir option entries
+               OPTS     new db(Db) for returning connected abses (chess_db_connect/3)
+               DOC      examples in chess_db_connect/2
      18.08.15  IFACE    added arity chess_db/3
                IFACE    if arg.DB or opt.DB 3 is var, abs loc is returned
      18.08.15  CHANGE   do not fail if one db open fails
