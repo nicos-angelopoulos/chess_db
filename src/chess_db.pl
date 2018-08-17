@@ -2,25 +2,33 @@
 chess_db_defaults( [create(false),position(false)] ).
 
 /** chess_db( +PgnOrF ).
+    chess_db( +PngOrF, +Db ).
     chess_db( +PngOrF, +Opts ).
+    chess_db( +PngOrF, Db, +Opts ).
 
 Add games from a PGN file or a PGN term, PgnOrF, to the chess database 
-pointed to by Opts.
+pointed to by Db or Opts. If Db is given both as argument and option,
+the argument overrides. If argument Db or option Db are variables,
+then the full location of the Db used is returned. To distinguish between
+the two arity 2 versions, Opts in that case need be a list.
 
 Opts
   * create(Create=false)
      if true create dir and/or db files if they do not exist
-  * dir(Dir=_)
-     directory for database
+  * db(Db)
+     directory or file location for database
   * position(Pos=false)
      if true, use position table
 
 Options can also be picked up from ~/.pl/chess_db.pl (see options_append/3).
 
 ==
-?- working_directory( Old, pack('chess_db/examples') ), assert( push_dir(Old) ).
-?- Opts = [dir('/tmp/chess_dbase'),create(true)],
-   chess_db( '18.03.10-Hampstead.pgn', Opts ).
+?- pgn( pgn('18.03-candidates'), Pgn ), 
+   chess_db( Pgn, chess_db('18.03-candidates'), [db(Which),create(true)] ).
+
+Pgn = ...
+Which = '.../swipl-7.7.18/pack/chess_db_data/dbs/18.03-candidates'.
+
 ==
 
 @author nicos angelopoulos
@@ -29,19 +37,33 @@ Options can also be picked up from ~/.pl/chess_db.pl (see options_append/3).
 
 */
 chess_db( PgnIn ) :-
-    chess_db( PgnIn, [] ).
+    chess_db( PgnIn, _, [] ).
 
-chess_db( PgnIn, Args ) :-
+chess_db( PgnIn, DbOrOpts ) :-
+    ( is_list(DbOrOpts) ->
+        Db = _AbsDb,
+        Opts = DbOrOpts
+        ;
+        Db = DbOrOpts,
+        Opts = []
+    ),
+    chess_db( PgnIn, Db, Opts ).
+
+chess_db( PgnIn, ArgDb, Args ) :-
     options_append( chess_db, Args, Opts ),
-    options( dir(Dir), Opts ),
+    ( memberchk(db(OptDb),Opts) -> true; true ),
     options( create(Create), Opts ),
     options( position(Pos), Opts ),
     pgn( PgnIn, Pgn ),
-    chess_db_handles( Create, Pos, Dir, CdbHs ),
+    ( ground(ArgDb) -> Dir = ArgDb; Dir = OptDb ),
+    ( var(Dir) -> throw(variable_location(ArgDb,Args)); true ),
+    chess_db_handles( Create, Pos, Dir, CdbHs, AbsDb ),
     chess_db_handle( info, CdbHs, InfoHandle ),
     chess_db_max_id( InfoHandle, LaGid ),
     chess_db_games_add( Pgn, LaGid, CdbHs),
-    chess_db_handles_close( CdbHs ).
+    chess_db_handles_close( CdbHs ),
+    ( var(ArgDb) -> ArgDb = AbsDb; true ),
+    ( var(OptDb) -> OptDb = AbsDb; true ).
 
 chess_db_games_add( [], _Gid, _CdbHs ).
 chess_db_games_add( [G|Gs], Gid, CdbHs ) :-
@@ -83,16 +105,46 @@ chess_db_table_fields( game_move, [gid+integer,move_no+integer,turn+boolean,move
 chess_db_table_fields( game_orig, [gid+integer,original-text] ).
 chess_db_table_fields( game_position, [position+text,gid+integer] ).
 
-chess_db_dir( Dir, _Create ) :-
-    exists_directory( Dir ),
+chess_db_dir( Dir, _Create, AbsDir ) :-
+    AbsOpts = [access(exist),type(directory),file_errors(fail)],
+    absolute_file_name( Dir, AbsDir, AbsOpts ),
+    % exists_directory( Dir ),
     !,
     % fixme: can the following into a debug_call(,dir,chess_db/Dir).
-    debug( chess_db, 'Using existing chess_db directory: ~w', Dir ).
-chess_db_dir( Dir, Create ) :-
+    debug( chess_db, 'Using existing chess_db directory: ~w', AbsDir ).
+chess_db_dir( Dir, Create, AbsDir ) :-
     Create == true,
+    % AbsOpts = [solutions(first),file_errors(fail),mode(none),expand(true)],
+    chess_db_dir_create( Dir, AbsDir ),
     !,
-    debug( chess_db, 'Creating new chess_db directory: ~w', Dir ),
-    make_directory_path( Dir ).
-chess_db_dir( Dir, Create ) :-
+    debug( chess_db, 'Creating new chess_db directory: ~w', AbsDir ),
+    make_directory_path( AbsDir ).
+
+chess_db_dir( Dir, Create, Dir ) :-
     throw( chess_db_dir_does_not_exist_and_asked_not_to_create_it_by(Dir,Create) ).
 
+chess_db_dir_create( Dir, AbsDir ) :-
+    absolute_file_name( Dir, AbsDir, [solutions(all)] ),
+    % when creating prefer aliases that exist...
+    ( (compound(Dir),functor(Dir,Name,1)) -> 
+        user:file_search_path( Name, _Path ),
+        Mock =.. [Name,what],
+        absolute_file_name( Mock, AbsMock, [solutions(all)] ),
+        directory_file_path( NamePath, what, AbsMock ),
+        atom_concat(NamePath,_,AbsDir), 
+        exists_directory(NamePath),
+        debug( chess_db, 'New chess_db directory (existing search): ~w', [AbsDir] )
+        ;
+        true
+    ),
+    !.
+chess_db_dir_create( Dir, AbsDir ) :-
+    absolute_file_name( Dir, AbsDir, [solutions(all)] ),
+    absolute_file_name( pack(chess_db), AbsChDb ),
+    directory_file_path( Prefix, chess_db, AbsChDb ),
+    atom_concat( Prefix, _, AbsDir ),
+    !,
+    debug( chess_db, 'New chess_db directory (pack prefix): ~w', [AbsDir] ).
+chess_db_dir_create( Dir, AbsDir ) :-
+    debug( chess_db, 'New chess_db directory (fall back): ~w', [AbsDir] ),
+    absolute_file_name( Dir, AbsDir ).

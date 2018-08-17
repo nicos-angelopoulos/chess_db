@@ -43,7 +43,7 @@ pgn( PgnIn, PgnOut ) :-
     !,
     PgnOut = PgnIn.
 pgn( File, Pgn ) :-
-    absolute_file_name( File, AbsFile, [access(exist)] ),
+    absolute_file_name( File, AbsFile, [access(exist),extensions([pgn,'PGN',''])] ),
     phrase_from_file(pgn_dcg(PgnPrv), AbsFile ),
     pgn_originals( AbsFile, Origs ),
     pgn_add_originals( PgnPrv, Origs, Pgn ).

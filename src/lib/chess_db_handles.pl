@@ -1,18 +1,22 @@
-/**  chess_db_handles( +Create, +Pos, +Dir, -CdbHs )
+/**  chess_db_handles( +Create, +Pos, +Dir, -CdbHs, -AbsLoc )
 
-Associatiate db handles CdbHs with Dbs within Dr.
+Associate db handles CdbHs with chess db tables within Dir.<br>
+Enables db creation if Create is true. Enables position table, if Pos is true.
+Returns the absolute location of the Db in AbsLoc.
 
 ==
+?- chess_db_handles( true, true, '/tmp/ex_db', Cdbhs ).
 ==
 
 @author nicos angelopoulos
 @version  0.1 2018/3/17
+@version  0.1 2018/8/16, added AbsLoc
 
 */
-chess_db_handles( Create, Pos, Dir, CdbHs ) :-
-    chess_db_dir( Dir, Create ),
+chess_db_handles( Create, Pos, Dir, CdbHs, AbsDir ) :-
+    chess_db_dir( Dir, Create, AbsDir ),
     ( Pos == true -> PosL = [position]; PosL = [] ),
-    chess_db_connect_subs( [info,move,orig|PosL], Dir, Create, CdbHsL ),
+    chess_db_connect_subs( [info,move,orig|PosL], AbsDir, Create, CdbHsL ),
     CdbHs =.. [chdbs|CdbHsL].
 
 chess_db_connect_subs( [], _Dir, _Create, [] ).
@@ -43,7 +47,7 @@ chess_db_connect_sub( Dir, Create, Db, Handle ) :-
 chess_db_connect_to( DbF, _Create, _Base, Handle ) :-
     exists_file( DbF ),
     !,
-    sqlite_connect( DbF, Handle, as_predicates(true) ).
+    sqlite_connect( DbF, Handle, as_predicates(false) ).
 chess_db_connect_to( DbF, Create, Base, Handle ) :-
     chess_db_connect_to_create( Create, DbF, Base, Handle ).
 

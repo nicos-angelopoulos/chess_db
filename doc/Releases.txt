@@ -1,14 +1,28 @@
 ---   Releases   ---
 --------------------
 
+tbd: use db_facts preds rather than prosqlite... (18.08.15)
+   : create pgn/ and db/ subs in examples/ and corresponding alias so
+   : chess_db_connect( pgn(18.07-Biel.pgn) ). will connect to that
+   : also chess_dbs as empty pack ? for default installs of pgns and databases
+   : allow missing of .pgn when opening
+
 0.3
+     18.08.15  IFACE    added arity chess_db/3
+               IFACE    if arg.DB or opt.DB 3 is var, abs loc is returned
+     18.08.15  CHANGE   do not fail if one db open fails
+               DEBUG    set debug channel chess_db(true) to on by default
+               FIXED    openning of multiple dbs concurrently (no predicated)
+               IFACE    chess_db_id_info/3
+               IFACE    chess_db_game_id/1
+               ADDED    chess_db and pgn aliases (and pgn extension for pgn/2)
      18.08.05  FIXED    remove atom_codes/2 that had dangling debug atom
      18.08.02  FIXED    games with opening comment, and moves are now parsed
                CHANGE   representation of moves in pgn/2 :(
                NEW      support $ starting NAGs (Numeric Annotation Glyphs)
                FIXED    %d to ~d in some debug errors
                FIXED    new line between N... and the move
-               IMPROVE  the reading-in of orignials more strict at separating games
+               IMPROVE  the reading-in of originals more strict at separating games
                UPDATE   chess_db/2 to the new move/5 structure
 
 0.2         @  18.03.20

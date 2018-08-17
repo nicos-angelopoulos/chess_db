@@ -1,7 +1,9 @@
 :- module( chess_db, [ 
-                        chess_db/1,chess_db/2,                  % +PgnToF[, +Opts]
+                        chess_db/1,chess_db/2,chess_db/3,       % +PgnToF[, Db[, +Opts]]
                         chess_db_list/1,                        % +Dir
                         chess_db_max_id/2,                      % +HandleST, -Max
+                        chess_db_game_id/1,                     % -GameID
+                        chess_db_id_info/3,                     % +Gid, -Key, -Val
                         chess_db_connect/1,                     % +Opts
                         chess_db_disconnect/1,                  % ?Db
                         chess_db_current/1, chess_db_current/2, % +CdbHs[, +Opts]
@@ -12,6 +14,11 @@
                         pgn/2                                   % +PgnToF, ?PgnT
                      ] ).
 
+:- multifile(user:file_search_path/2).
+user:file_search_path( pgn, pack('chess_db/data/pgn') ).
+user:file_search_path( pgn, pack('chess_db_data/pgn') ).
+user:file_search_path( chess_db, pack('chess_db_data/dbs') ).
+
 :- use_module(library(lib)).
 
 :- lib(options).
@@ -20,7 +27,7 @@
 :- lib(stoics_lib).
 :- lib(debug_call).
 
-:- dynamic(chess_db_handles/2).       % Dir, HandlesTerm
+:- dynamic(chess_db_handles/2).       % +Dir, +HandlesTerm
 
 :- lib(source(chess_db),homonyms(true)).
 
@@ -28,6 +35,8 @@
 :- lib(chess_db/2).
 :- lib(chess_db_list/1).
 :- lib(chess_db_max_id/2).
+:- lib(chess_db_game_id/1).
+:- lib(chess_db_id_info/3).
 :- lib(chess_db_connect/1).
 :- lib(chess_db_current/2).
 :- lib(chess_db_openning/2).
@@ -37,6 +46,7 @@
 :- lib(chess_db_handles/4).
 :- lib(chess_db_messages/0).
 
+:- debug(chess_db(true)).
 :- lib(end(chess_db)).
 
 /**  <module> PGN and chess game databases.
@@ -45,9 +55,11 @@ This library produces chess games databases from PGN files and provides some<br>
 predicates for manipulating these databases.
 
 Once connected to a number of chess_db databases, all kinds of information about the games <br>
-can be interrogated. (see chess_db_openning/2 for an example).
+can be interrogated. (See chess_db_openning/2 for an example).
 
-Ideally we want to hook this pack to a web-page interface for playing the games as we select them.
+Ideally we want to hook this pack to a web-based interface for playing the games as we select them.<br>
+Currently selected games can be saved to a PGN file and be displayed with any PGN displaying
+program.
 
 ---+++ Installation: 
 
@@ -72,9 +84,9 @@ Packs:
      (1.5)
   * db_facts    
      (0.5)
-  * stoics_lib  
+  * stoics_lib
      (1.0)
-  * options     
+  * options
      (1.0)
   * debug_call
      (1.1)
@@ -186,6 +198,7 @@ Listens to:
   * chess_db
   * chess_db(move)
   * chess_db(original)
+  * chess_db(true) (on-by-default channel, turn off if want silent operation)
 
 ---+++ Pack predicates
 
