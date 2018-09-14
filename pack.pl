@@ -1,6 +1,6 @@
 name( chess_db ).
 title( 'PGN and chess game databases.' ).
-version( '0.2' ).
+version( '0.3' ).
 author( 'Nicos Angelopoulos', 'http://stoics.org.uk/~nicos' ).
 packager( 'Nicos Angelopoulos', 'http://stoics.org.uk/~nicos' ).
 maintainer( 'Nicos Angelopoulos', 'http://stoics.org.uk/~nicos' ).

@@ -66,7 +66,8 @@ chess_db( PgnIn, ArgDb, Args ) :-
     chess_db_handle( info, CdbHs, InfoHandle ),
     chess_db_max_id( InfoHandle, LaGid ),
     chess_db_games_add( Pgn, LaGid, CdbHs),
-    chess_db_handles_close( CdbHs ),
+    ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
+    % chess_db_handles_close( CdbHs ),
     ( var(ArgDb) -> ArgDb = AbsDb; true ),
     ( var(OptDb) -> OptDb = AbsDb; true ).
 

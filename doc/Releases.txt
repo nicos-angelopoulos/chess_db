@@ -1,10 +1,12 @@
 ---   Releases   ---
 --------------------
 
-tbd: use db_facts preds rather than prosqlite... (18.08.15)
-     was there ever a pgn_write/2 ??? 
-
-0.3
+0.3         @  18.09.14
+     18.09.14  IFACE    renaming openning -> opening
+     18.08.20  IFACE    chess_db_ids_pgn/2
+               CHANGE   chess_db_id_info/3 -> chess_db_game_info/3
+               CHANGE   chess_db_game_id/1 -> chess_db_game/1
+     18.08.17  DOC      updated all examples and predicate docs
      18.08.16  CHANGE   Dbs are now relative to dir option entries
                OPTS     new db(Db) for returning connected abses (chess_db_connect/3)
                DOC      examples in chess_db_connect/2
@@ -12,7 +14,7 @@ tbd: use db_facts preds rather than prosqlite... (18.08.15)
                IFACE    if arg.DB or opt.DB 3 is var, abs loc is returned
      18.08.15  CHANGE   do not fail if one db open fails
                DEBUG    set debug channel chess_db(true) to on by default
-               FIXED    openning of multiple dbs concurrently (no predicated)
+               FIXED    opening of multiple dbs concurrently (no predicated)
                IFACE    chess_db_id_info/3
                IFACE    chess_db_game_id/1
                ADDED    chess_db and pgn aliases (and pgn extension for pgn/2)

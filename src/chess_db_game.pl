@@ -1,4 +1,4 @@
-/**  chess_db_game_id( -GameID ).
+/**  chess_db_game( -GameID ).
 
 Return all the unique game ids, constructed as Handles:Gno.<br>
 Handles are the handles to access an open chess id and Gno is the<br>
@@ -7,7 +7,7 @@ unique game id for a game in that database.
 ==
 ?- chess_db_connect( [dir('/usr/local/users/chess/chess_db/18.07-Biel'),profile(false),position(true)] ).
 
-?- chess_db_game_id(Gid).
+?- chess_db_game(Gid).
 Gid = chdbs(<#40380f90857f0000>, <#40380f90857f0000>, <#40380f90857f0000>, <#40380f90857f0000>):1 ;
 Gid = chdbs(<#40380f90857f0000>, <#40380f90857f0000>, <#40380f90857f0000>, <#40380f90857f0000>):2 ;
 ==
@@ -16,7 +16,7 @@ Gid = chdbs(<#40380f90857f0000>, <#40380f90857f0000>, <#40380f90857f0000>, <#403
 @version  0.1 2018/8/15
 
 */
-chess_db_game_id( Gid ) :-
+chess_db_game( Gid ) :-
     chess_db_current( CdbHs ),
     chess_db_handle( info, CdbHs, InfoH ),
     % setof( AGno, (K,V)^db_holds(InfoH,game_info(AGno,K,V)), Gnos ),

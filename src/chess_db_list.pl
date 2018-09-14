@@ -9,14 +9,17 @@ Likely to be only useful for debugging.
 
 @author nicos angelopoulos
 @version  0.1 2018/3/14
-*/
 
-chess_db_list( Dir ) :-
-    chess_db_handles( false, false, Dir, CdbHs ),
+*/
+chess_db_list( Db ) :-
+    chess_db_connect( Db, db(DbO) ),
+    % chess_db_handles( false, false, Db, CdbHs, _AbsDb ),
+    chess_db_current( CdbHs, DbO ),
     chess_db_max_id( CdbHs, Max ),
     chess_db_handle( info, CdbHs, InfHa ),
     chess_db_handle( move, CdbHs, MovHa ),
-    chess_db_list( Max, 1, InfHa, MovHa ).
+    chess_db_list( Max, 1, InfHa, MovHa ),
+    chess_db_disconnect( DbO ).
 
 chess_db_list( Max, I, _InfHa, _MovHa ) :-
     I > Max, 

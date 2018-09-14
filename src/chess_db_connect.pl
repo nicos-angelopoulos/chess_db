@@ -4,13 +4,13 @@
 :- lib(chess_db_exists/1).
 
 chess_db_connect_defaults( Defs ) :-
-    Defs = [ profile(true), create(false), position(false), db(_), handles(_)].
+    Defs = [profile(true), create(false), position(false), db(_), handles(_)].
 
 /** chess_db_connect( +DbS ).
     chess_db_connect( +DbS, +Opts ).
 
 Connect a number of chess_dbs (DbS) as open db handles that will be available<br>
-to a number of predicates that access the information: eg chess_db_openning/3.<br>
+to a number of predicates that access the information: eg chess_db_opening/3.<br>
 The library provides two conveniencies for locating chess dbs. First, via aliases:<br>
 chess_db (by default expands to pack(chess_db_data/dbs)). Second, via dir(Dir) option.<br>
 In this case Dbs are looked for relative to all Dir locations provided.<br>
@@ -18,6 +18,7 @@ Note that commonly used database directories can be defined long term in ~/.pl/c
 (see options_append/4).
 
 Opts
+  * close(close
   * create(Create=false)
      if true create dir and/or db files if they do not exist
   * db(Db)
@@ -60,7 +61,8 @@ Db = ['/usr/local/users/nicos/local/git/lib/swipl-7.7.18/pack/chess_db_data/dbs/
 
 @author nicos angelopoulos
 @version  0.1 2018/3/15
-@see chess_db_openning/3
+@version  0.2 2018/8/17, added aliases, better locator (and order), fixes, docs/examples
+@see chess_db_opening/3
 
 */
 chess_db_connect( DbS ) :-
@@ -91,36 +93,33 @@ de_list( Other, Other ).
 chess_db_connect_dirs( [], _Dirs, _Create, _Pos, [], [] ).
 chess_db_connect_dirs( [Db|Dbs], Dirs, Create, Pos, CdbHss, Abss ) :-
     chess_db_connect_db( Create, Pos, Db, Dirs, CdbHs, Abs ),
-    ( Abs = [] -> 
-        CdbHss = TCdbHss, Abss = TAbss
-        ; 
-        CdbHss = [CdbHs|TCdbHss], Abss = [Abs|TAbss] 
-    ),
+    ( Abs == [] -> Abss = TAbss ; Abss = [Abs|TAbss] ),
+    ( CdbHs == [] -> CdbHss = TCdbHss ; CdbHss = [CdbHs|TCdbHss] ),
     chess_db_connect_dirs( Dbs, Dirs, Create, Pos, TCdbHss, TAbss ).
 
-chess_db_connect_db( false, Pos, Db, Dirs, CdbHs, Abs ) :-
+chess_db_connect_db( false, Pos, Db, Dirs, CdbHs, AbsConn ) :-
     % append( Dirs, [''], Airs ),
     member( Dir, [''|Dirs] ),
     Apts = [relative_to(Dir),solutions(all),file_type(directory)], % fixme non dir dbs...
     absolute_file_name( Db, Abs, Apts ),
     chess_db_exists( Abs ),
-    chess_db_connect_abs_dir( Abs, false, Pos, CdbHs ),
+    chess_db_connect_abs_dir( Abs, false, Pos, CdbHs, AbsConn ),
     !.
-chess_db_connect_db( true, Pos, Db, Dirs, CdbHs, Abs ) :-
+chess_db_connect_db( true, Pos, Db, Dirs, CdbHs, AbsConn ) :-
     append( Dirs, [''], Airs ),
     member( Dir, Airs ),
     Apts = [relative_to(Dir),solutions(all)], % fixme non dir dbs...
-    absolute_file_name( Db, Abs, Apts ),  % fixme any options ?
-    chess_db_connect_abs_dir( Abs, true, Pos, CdbHs ),
+    absolute_file_name( Db, Abs, Apts ),
+    chess_db_connect_abs_dir( Abs, true, Pos, CdbHs, AbsConn ),
     !.
 chess_db_connect_db( _Create, _Pos, Dir, [], [] ) :-
     debug( chess_db(true), 'Failed to connect to chess_db at dir: ~p', [Dir] ).
 
-chess_db_connect_abs_dir( Abs, _Create, _Pos, CdbHs ) :-
+chess_db_connect_abs_dir( Abs, _Create, _Pos, CdbHs, [] ) :-
     chess_db_handles( Abs, CdbHs ),
     !,
     debug( chess_db, 'Handles already exist, for chess_db directory: ~p', [Abs] ).
-chess_db_connect_abs_dir( Abs, Create, Pos, CdbHs ) :-
+chess_db_connect_abs_dir( Abs, Create, Pos, CdbHs, Abs ) :-
     chess_db_handles( Create, Pos, Abs, CdbHs, _AbsDir ),
     !,
     assertz( chess_db_handles(Abs,CdbHs) ).

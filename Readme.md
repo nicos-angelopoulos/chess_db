@@ -2,7 +2,7 @@ This library produces chess games databases from PGN files and provides some<br>
 predicates for manipulating these databases.
 
 Once connected to a number of chess_db databases, all kinds of information about the games <br>
-can be interrogated. (see chess_db_openning/2 for an example).
+can be interrogated. (see chess_db_opening/2 for an example).
 
 Ideally we want to hook this pack to a web-page interface for playing the games as we select them.
 
@@ -16,7 +16,7 @@ The pack includes code to:
   * store the parsed terms into prosqlite databases
      chess_db/2
   * manipulate the resulting databases
-     chess_db_openning_pgn/2
+     chess_db_opening_pgn/2
 
 There are two example databases in data/ and an example program, examples/short.pl
 
@@ -53,7 +53,7 @@ For example a number of databases can be declared in dir/1 terms within file: <b
 ==
 ?- [pack('chess_db/examples/short.pl')].
 ?- short.      % creates a chess_db in subdirectory short/ from data/4ncl_short.pgn
-               % and displays the game ids for games that start with [e4,e6] (French defense)
+               % and displays the game ids for games that start with [e4,e6] (French defence)
 ...
 
 ?- french.     % creates a new pgn file from the base for the 2 games in short/ that start with e4,e6

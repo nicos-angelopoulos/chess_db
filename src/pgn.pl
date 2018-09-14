@@ -249,13 +249,14 @@ pgn_dcg_variation_white( Num ) -->
 pgn_dcg_variation_white( _Num ) -->  {true}. % fixme: error
 
 %%% dealing with originals (outside the parser)
-pgn_originals( FileR, [Fst|Origs] ) :-
+% pgn_originals( FileR, [Fst|Origs] ) :-
+pgn_originals( FileR, Origs ) :-
     % fixme: do the clean up way
     io_open( FileR, read, In ),
     io_line( In, Line ),
     % fixme, maybe you want to skip empty lines at top of file ?
-    pgn_original_till_next( Line, In, Next, Fst ),
-    pgn_original_games( Next, In, Origs ),
+    % pgn_original_till_next( Line, In, Next, Fst ),
+    pgn_original_games( Line, In, Origs ),
     io_close( FileR, In ).
 
 pgn_original_games( end_of_file, _In, [] ) :- !.
@@ -277,20 +278,30 @@ pgn_original_info( [0'[|T], In, [[0'[|T]|Orig], ContInfo, ContOrig ) :-
 pgn_original_info( ContLine, _In, ContOrig, ContLine, ContOrig ).
 
 pgn_original_till_next( end_of_file, _In, end_of_file, [] ) :- !.
-pgn_original_till_next( [13], In, Next, Lines ) :-
-    io_line( In, Next ),
-    ( Next = [0'[|_T] ; Next = end_of_file ),
+pgn_original_till_next( Other, In, Next, Lines ) :-
+    io_line( In, Ahead ),
+    pgn_original_till_next_ahead( Other, In, Ahead, Next, Lines ).
+
+pgn_original_till_next_ahead( [], _In, Ahead, Next, Lines ) :-
+    % io_line( In, Next ),
+    ( Ahead = [0'[|_T] ; Ahead = end_of_file ),
     !,
+    Next = Ahead,
     Lines = [[]].
-pgn_original_till_next( [], In, Next, Lines ) :-
-    io_line( In, Next ),
-    ( Next = [0'[|_T] ; Next = end_of_file ),
+pgn_original_till_next_ahead( [13], _In, Ahead, Next, Lines ) :-
+    % io_line( In, Next ),
+    ( Ahead = [0'[|_T] ; Ahead = end_of_file ),
     !,
+    Next = Ahead,
     Lines = [[]].
+pgn_original_till_next_ahead( Line, In, Ahead, Next, [Line|Lines] ) :-
+    io_line( In, Follows ),
+    pgn_original_till_next_ahead( Ahead, In, Follows, Next, Lines ).
+
 % pgn_original_till_next( [0'[|T], _In, [0'[|T], [] ) :- !.
-pgn_original_till_next( Line, In, Ends, [Line|T] ) :-
-    io_line( In, Next ),
-    pgn_original_till_next( Next, In, Ends, T ).
+% pgn_original_till_next( Line, In, Ends, [Line|T] ) :-
+    % io_line( In, Next ),
+    % pgn_original_till_next( Next, In, Ends, T ).
 
 pgn_add_originals( Pgns, Origs, Pgn ) :-
     length( Pgns, LenPgns ),
