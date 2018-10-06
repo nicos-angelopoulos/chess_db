@@ -1,6 +1,7 @@
 ---   Releases   ---
 --------------------
 
+0.4  18.10.06  EXAMPLE  started work on wco2018
 0.3         @  18.09.14
      18.09.14  IFACE    renaming openning -> opening
      18.08.20  IFACE    chess_db_ids_pgn/2
