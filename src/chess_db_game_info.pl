@@ -36,7 +36,7 @@ Result = '0-1'
 
 */
 chess_db_game_info( Gid, Key, Val ) :-
-    ( ground(Gid) -> true; chess_db_game_id(Gid) ),
+    ( ground(Gid) -> true; chess_db_game(Gid) ),
     Gid = CdbHs:Gno,
     chess_db_handle( info, CdbHs, InfoHandle ),
     db_holds( InfoHandle, game_info(Gno,Key,Val) ).

@@ -2,9 +2,9 @@
 chess_db_defaults( [create(false),position(false)] ).
 
 /** chess_db( +PgnOrF ).
-    chess_db( +PngOrF, +Db ).
-    chess_db( +PngOrF, +Opts ).
-    chess_db( +PngOrF, +Db, +Opts ).
+    chess_db( +PgnOrF, +ChessDb ).
+    chess_db( +PgnOrF, +Opts ).
+    chess_db( +PgnOrF, +ChessDb, +Opts ).
 
 Add games from a PGN file or a PGN term, PgnOrF, to the chess database 
 pointed to by Db and/or Opts. If Db is given both as argument and option,
@@ -14,11 +14,14 @@ the two arity 2 versions, Opts in that case need be a list.
 
 Opts
   * create(Create=false)
-     if true create dir and/or db files if they do not exist
+     how to behave if ChessDb exists (see chess_db_connect/2)
+
   * db(Db)
-     database location
+     database location (see chess_db_connect/2)
+
   * dir(Dir)
      directory where database is located, (many allowed, see chess_db_connect/2)
+
   * position(Pos=false)
      if true, use position table
 
@@ -84,7 +87,7 @@ chess_db_games_add( [G|Gs], Gid, CdbHs ) :-
 chess_db_game_add( InfoHandle, Info, _Moves, _Orig, Gid, _MoHa, _OrHa, Gid ) :-
     chess_db_game_info_exists( Info, InfoHandle, ExGid ),
     !, % fixme: add option for erroring
-    debug( chess_db, 'Info match existing game: ~d', ExGid ).
+    debug( chess_db(info), 'Info match existing game: ~d', ExGid ).
 chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, MoHa, OrHa, Nid ) :-
     Nid is Gid + 1,
     findall( game_info(Nid,K,V), member(K-V,Info), Goals ),
@@ -117,13 +120,13 @@ chess_db_dir( Dir, _Create, AbsDir ) :-
     % exists_directory( Dir ),
     !,
     % fixme: can the following into a debug_call(,dir,chess_db/Dir).
-    debug( chess_db, 'Using existing chess_db directory: ~w', AbsDir ).
+    debug( chess_db(info), 'Using existing chess_db directory: ~w', AbsDir ).
 chess_db_dir( Dir, Create, AbsDir ) :-
     Create == true,
     % AbsOpts = [solutions(first),file_errors(fail),mode(none),expand(true)],
     chess_db_dir_create( Dir, AbsDir ),
     !,
-    debug( chess_db, 'Creating new chess_db directory: ~w', AbsDir ),
+    debug( chess_db(info), 'Creating new chess_db directory: ~w', AbsDir ),
     make_directory_path( AbsDir ).
 chess_db_dir( Dir, Create, Dir ) :-
     throw( chess_db_dir_does_not_exist_and_asked_not_to_create_it_by(Dir,Create) ).
@@ -138,7 +141,7 @@ chess_db_dir_create( Dir, AbsDir ) :-
         directory_file_path( NamePath, what, AbsMock ),
         atom_concat(NamePath,_,AbsDir), 
         exists_directory(NamePath),
-        debug( chess_db, 'New chess_db directory (existing search): ~w', [AbsDir] )
+        debug( chess_db(info), 'New chess_db directory (existing search): ~w', [AbsDir] )
         ;
         true
     ),
@@ -149,7 +152,7 @@ chess_db_dir_create( Dir, AbsDir ) :-
     directory_file_path( Prefix, chess_db, AbsChDb ),
     atom_concat( Prefix, _, AbsDir ),
     !,
-    debug( chess_db, 'New chess_db directory (pack prefix): ~w', [AbsDir] ).
+    debug( chess_db(info), 'New chess_db directory (pack prefix): ~w', [AbsDir] ).
 chess_db_dir_create( Dir, AbsDir ) :-
-    debug( chess_db, 'New chess_db directory (fall back): ~w', [AbsDir] ),
+    debug( chess_db(info), 'New chess_db directory (fall back): ~w', [AbsDir] ),
     absolute_file_name( Dir, AbsDir ).

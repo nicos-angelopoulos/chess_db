@@ -72,5 +72,5 @@ chess_db_disconnect_handles( Db, CdbHs ) :-
     findall( _, ( between(1,Arity,I),arg(I,CdbHs,Stream),
                   db_disconnect( Stream )
                 ), _ ),
-    debug( chess_db, 'Closing chess db: ~p', Db ),
+    debug( chess_db(info), 'Closing chess db: ~p', Db ),
     retract( chess_db_handles(Db,CdbHs) ).

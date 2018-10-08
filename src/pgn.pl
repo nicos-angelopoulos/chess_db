@@ -60,7 +60,8 @@ pgn_dcg_game( pgn(Info,Moves,Res) ) -->
     pgn_dcg_moves( Moves, MovesInfo ),
     {append( InfoPrv, MovesInfo, Info )},
     pgn_dcg_result( Res ),
-    pgn_dcg_move_end.
+    pgn_dcg_move_end,
+    !.
 
 pgn_dcg_result( Res ) -->
     [32],
@@ -72,11 +73,11 @@ pgn_dcg_result( Res ) -->
     [10].
 
 pgn_dcg_result_token( '1-0' ) --> 
-    "1-0".
+    "1-0", !.
 pgn_dcg_result_token( '0-1' ) --> 
-    "0-1".
+    "0-1", !.
 pgn_dcg_result_token( '1/2-1/2' ) --> 
-    "1/2-1/2".
+    "1/2-1/2", !.
 pgn_dcg_result_token( '*' ) --> 
     "*".
 
@@ -103,21 +104,25 @@ pgn_dcg_moves( Moves, Info ) -->
 pgn_dcg_moves( [], AddToInfo ) --> 
       { AddToInfo = ['Game_Note'-'No moves parsed (pgn/2).'] }.
 
-pgn_dcg_moves_has( [move(Num,Mv1,Mv2,Cm1,Cm2)|T] ) -->
+pgn_dcg_moves_has( [move(Num,MvW,MvB,CmW,CmB)|T] ) -->
     integer( Num ),
     { debug( chess_db(move), 'Move: ~d', [Num] ) },
     ".", pgn_dcg_move_end,
     !,
-    pgn_dcg_ply( Mv1, Cm1 ),
+    pgn_dcg_ply( MvW, CmW ),
+    { debug( chess_db(move), 'Ply W: ~w, comment: ~w', [MvW,CmW] ) },
     pgn_dcg_variation, % is alternative always afer variation ?
     pgn_dcg_variation_white( Num ),
-    {Mv1 \= []},  % fixme: error
-    pgn_dcg_ply( Mv2, Cm2 ),
+    { debug( chess_db(move), 'Variation done: ~d', [Num] ) },
+    {MvW \= []},  % fixme: error
+    pgn_dcg_ply( MvB, CmB ),
+    { debug( chess_db(move), 'Ply B: ~w, comment: ~w', [MvB,CmB] ) },
     pgn_dcg_variation,
-    % {append(Mv1,Mv2,Mvs)},
-    % {append(Cm1,Cm2,Cms)},
+    % {append(MvW,MvB,Mvs)},
+    % {append(CmW,CmB,Cms)},
     !,
-    { debug( chess_db(move), 'Move read: ~w', [move(Num,Mv1,Mv2,Cm1,Cm2)] ) },
+    { debug( chess_db(move), 'Move read: ~w', [move(Num,MvW,MvB,CmW,CmB)] ) },
+    % { (Num =:= 58, MvB = 'Qb4#') -> trace; true }, % here: use something like this, if your PGN fails to parse
     pgn_dcg_moves_has( T ).
 pgn_dcg_moves_has( [] ) --> {true}.
     
@@ -143,6 +148,7 @@ pgn_dcg_ply_variation( [Str|Strs] ) -->
     pgn_dcg_ply_variation( Strs ).
 pgn_dcg_ply_variation( Strs ) -->
     [0'{],
+    !,
     pgn_dcg_ply_variation_body( Strs ).
 pgn_dcg_ply_variation( [] ) --> {true}.
 
@@ -241,10 +247,10 @@ pgn_dcg_mark --> {true}.
    
 pgn_dcg_variation_white( Num ) --> 
     integer( Num ),
-    !,
     whites,% fixme: ends move codes
-    [0'.,0'.,0'.],
+    [0'.,0'.,0'.],   %fixme: what ????!!!, this is surely a typo@18.10.08
     % whites.  % fixme: ends move codes
+    !,
     pgn_dcg_move_end.
 pgn_dcg_variation_white( _Num ) -->  {true}. % fixme: error
 

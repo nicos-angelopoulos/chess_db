@@ -26,7 +26,7 @@ chess_db_opening( Moves, Var ) :-
 chess_db_opening( [], PgnF ) :-
     % this a shorthand/speacial case
     !,
-    findall( Gid, chess_db_game_id(Gid), Gids ),
+    findall( Gid, chess_db_game(Gid), Gids ),
     chess_db_ids_pgn( Gids, PgnF ).
 chess_db_opening( Moves, PgnF ) :-
     chess_db_opening_pgn( Moves, PgnF ).

@@ -28,7 +28,7 @@ chess_db_alias( Alias, Path ) :-
     assertz( user:file_search_path(Alias,Path) ).
 
 :- multifile(user:file_search_path/2).
-:- chess_db_alias( pgn, pack('chess_db/data/pgn') ).
+:- chess_db_alias( pgn, pack('chess_db_data/pgn') ).
 :- chess_db_alias( chess_db, pack('chess_db_data/dbs') ).
 
 % user:file_search_path( pgn, pack('chess_db/data/pgn') ).
@@ -177,7 +177,7 @@ Gids = [chdbs(<sqlite>(0x276c930), <sqlite>(0x278f320), <sqlite>(0x2792450)):1, 
 Turn general library debugging on.
 
 ==
-?- debug(chess_db).
+?- debug(chess_db(info)).
 ==
 
 Re-connecting is handled fine.
@@ -202,10 +202,13 @@ View the two games in a PGN interface program such as:
 ---+++ Debug terms
 
 Listens to:
-  * chess_db
+  * chess_db(info)
+     trigger light reporting across the library
   * chess_db(move)
+  * chess_db(moves)
   * chess_db(original)
-  * chess_db(true) (on-by-default channel, turn off for silent operation)
+  * chess_db(true) 
+     (on-by-default channel, turn off for silent operation)
 
 ---+++ Pack predicates
 

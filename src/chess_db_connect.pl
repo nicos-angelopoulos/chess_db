@@ -9,24 +9,32 @@ chess_db_connect_defaults( Defs ) :-
 /** chess_db_connect( +DbS ).
     chess_db_connect( +DbS, +Opts ).
 
-Connect a number of chess_dbs (DbS) as open db handles that will be available<br>
+Connect to a number of chess_dbs (DbS) and provide make their db handles available<br>
 to a number of predicates that access the information: eg chess_db_opening/3.<br>
 The library provides two conveniencies for locating chess dbs. First, via aliases:<br>
 chess_db (by default expands to pack(chess_db_data/dbs)). Second, via dir(Dir) option.<br>
 In this case Dbs are looked for relative to all Dir locations provided.<br>
-Note that commonly used database directories can be defined long term in ~/.pl/chess_db_connect.pl<br>
+Note that commonly used database directories can be defined long term in 
+~/.pl/chess_db_connect.pl<br>
 (see options_append/4).
 
 Opts
-  * close(close
   * create(Create=false)
      if true create dir and/or db files if they do not exist
+     if =|true|= create ChessDb if doesn't exist (and use current if it does)
+     if =|false|= only proceed if ChessDb exists
+     if =|new|= only proceed if ChessDb does not exist (call creates it)
+     if =|fresh|= overwrites if a current exists
+
   * db(Db)
-    returns the absolute locations of the dbs successfully connected (a list iff more than one)
+     returns the absolute locations of the dbs successfully connected (a list iff more than one)
+
   * dir(Dir)
      parent directory of chess database (mutliple are allowed)
+
   * handles(Handles)
      returns the handles term of connected databases (a list if multiple were established)
+
   * profile(Prof=Prof)
      whether to mix, true, or ignore, false, profile based dir options (see options_append/4)
      if no dir(Dir) option is present in Opts, then Prof is ignored
@@ -105,20 +113,36 @@ chess_db_connect_db( false, Pos, Db, Dirs, CdbHs, AbsConn ) :-
     chess_db_exists( Abs ),
     chess_db_connect_abs_dir( Abs, false, Pos, CdbHs, AbsConn ),
     !.
-chess_db_connect_db( true, Pos, Db, Dirs, CdbHs, AbsConn ) :-
+chess_db_connect_db( new, Pos, Db, Dirs, CdbHs, AbsConn ) :-
     append( Dirs, [''], Airs ),
     member( Dir, Airs ),
     Apts = [relative_to(Dir),solutions(all)], % fixme non dir dbs...
     absolute_file_name( Db, Abs, Apts ),
     chess_db_connect_abs_dir( Abs, true, Pos, CdbHs, AbsConn ),
     !.
+chess_db_connect_db( true, Pos, Db, Dirs, CdbHs, AbsConn ) :-
+    ( chess_db_connect_db( false, Pos, Db, Dirs, CdbHs, AbsConn )  ->
+        true
+        ;
+        chess_db_connect_db( new, Pos, Db, Dirs, CdbHs, AbsConn )
+    ).
+chess_db_connect_db( fresh, Pos, Db, Dirs, CdbHs, AbsConn ) :-
+    member( Dir, [''|Dirs] ),
+    Apts = [relative_to(Dir),solutions(all),file_type(directory)], % fixme non dir dbs...
+    absolute_file_name( Db, Abs, Apts ),
+    chess_db_exists( Abs ),
+    !,
+    debug( chess_db(true), 'Deleting chess_db at: ~p', [Abs] ),
+    delete_directory_and_contents( Abs ),
+    chess_db_connect_abs_dir( Abs, true, Pos, CdbHs, AbsConn ).
+
 chess_db_connect_db( _Create, _Pos, Dir, [], [] ) :-
     debug( chess_db(true), 'Failed to connect to chess_db at dir: ~p', [Dir] ).
 
 chess_db_connect_abs_dir( Abs, _Create, _Pos, CdbHs, [] ) :-
     chess_db_handles( Abs, CdbHs ),
     !,
-    debug( chess_db, 'Handles already exist, for chess_db directory: ~p', [Abs] ).
+    debug( chess_db(info), 'Handles already exist, for chess_db directory: ~p', [Abs] ).
 chess_db_connect_abs_dir( Abs, Create, Pos, CdbHs, Abs ) :-
     chess_db_handles( Create, Pos, Abs, CdbHs, _AbsDir ),
     !,

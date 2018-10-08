@@ -52,7 +52,7 @@ chess_db_connect_to( DbF, Create, Base, Handle ) :-
     chess_db_connect_to_create( Create, DbF, Base, Handle ).
 
 chess_db_connect_to_create( false, DbF, _Base, _Handle ) :-
-    debug( chess_db, 'Not creating chess_db file: ~p', DbF ),
+    debug( chess_db(info), 'Not creating chess_db file: ~p', DbF ),
     !,
     fail.
 chess_db_connect_to_create( true, DbF, Base, Handle ) :-

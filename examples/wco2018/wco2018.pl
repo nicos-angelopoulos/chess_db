@@ -1,64 +1,162 @@
 
+:- use_module( library(lib) ).
+
 :- lib(os_lib).
 :- lib(by_unix).
 :- lib(chess_db).
 
 :- lib(stoics_lib:url_file/3).
+:- lib(stoics_lib:n_digits_min/3).
+
 :- debug(wco2018).
 
 /**  wco2018.
 
-(Can) get the wco PGN files and builds a proSQLite database from them.
-Shows some examples of queries for genereting sub-PGNs.
+Builds a chess database from the 2018's WCO PGN zip file.
+Shows some examples of queries for generating sub-PGNs.
 
   * opt(Opt=_)
      is a...
 
 ==
 ?- wco2018_build.
-?- wco2018.
+?- wco2018_len(Len).
+Len = 4036.
+?- wco2018_caro_cann.
+?- @ chessx( 'wco2018_caro_cann.pgn' ).  % chessx is a Linux UI program for playing out games from PGNs.
 ==
 
 @author nicos angelopoulos
-@version  0.1 2018/2/
+@version  0.1 2018/10/07
 
 */
-wco2018_build :-
-    os_cast( pack(chess_db/examples/wco2018), +ExD ),
-    os_path( ExD, dnload, DnD ),
-    os_make_path( DnD, [debug(true),debug_exists(true)] ),
-    working_directory( Old, ExD ),
-    SQLite = wco2018.sqlite,
-    wco2018_build_sqlite( SQLite, DnD ),
-    working_directory( _, Old ).
 
-wco2018_build_sqlite( SQLite, _DnD ) :-
-    exists_file(SQLite) ->
-    debug( wco2018, 'SQlite file already exists. Quiting the rest of the build.', true ),
+wco2018_len( Len ) :-
+    chess_db_connect( chess_db('wco2018.chess') ),
+    findall( Gid, chess_db_game(Gid), Gids ), length( Gids, Len ),
+    chess_db_disconnect.
+    
+wco2018_caro_cann :-
+    chess_db_connect( chess_db('wco2018.chess') ),
+    chess_db_opening_pgn( [e4,c6], 'caro_cann.pgn' ),
+    chess_db_disconnect.
+
+wco2018_build :-
+    Self = wco2018,
+    wco2018_downloads_dir( DnD ),
+    wco2018_alias( pgn(Self), PgD ),
+    os_ext( chess, Self, Celf ),
+    wco2018_alias( chess_db(Celf), WcoDB ),
+    %
+    debug( Self, 'Downloads directory: ~p', DnD ),
+    debug( Self, 'PGN directory: ~p', PgD ),
+    debug( Self, 'chess_db directory: ~p', WcoDB ),
+    %
+    MkOpts = [debug(true),debug_exists(true)],
+    os_make_path( DnD, MkOpts ),
+    os_make_path( PgD, MkOpts ),
+    %
+    ZipF = 'wco2018open11.zip',
+    wco2018_build( Self, ZipF, DnD, PgD, WcoDB ).
+
+wco2018_build( Self, _ZipF, _DnD, _PgnD, ChessDB ) :-
+    exists_directory( ChessDB ),
+    debug( Self, 'SQLite database files already exist. Quiting the rest of the build.', true ),
     !.
-wco2018_build_sqlite( SQLite, DnD ) :-
-    working_directory( _, DnD ),
-    File=wco2018open11.zip,
+wco2018_build( Self, _ZipF, _DnD, PgnD, ChessDB ) :-
+    working_directory( Old, PgnD ),
+    findall( PGN, (between(1,11,I),n_digits_min(2,I,Ia),
+                   atomic_list_concat(['wco2018_r',Ia,'_open.pgn'],'',PGN)
+                  ), PGNs ),
+    debug( Self, 'Testing for PGNs: ~w', [PGNs] ) ,
+    ( maplist(os_exists,PGNs) ->   
+            % depends on default option: err=test, 
+            % see, stoics_lib:map_list_options/3,4 if you need to use the options explicitly
+            true
+            ;
+            working_directory( _, Old ),
+            fail
+    ),
+    debug( Self, 'Round pgns already exist, skipping downdload and unzip steps', true ),
+    !,
+    % wco2018_build_db( Self, ZipF, DnD, PgnD, ChessDB ).
+    working_directory( _, PgnD ),
+    wco2018_build_pgns( Self, ChessDB ),
+    working_directory( _, Old ).
+wco2018_build( Self, ZipF, _DnD, PgnD, ChessDB ) :-
+    os_path( PgnD, ZipF, ZipP ),
+    exists_file( ZipP ),
+    !,
+    debug( Self, 'Zip file in pgns directory already exists, skipping downdload and copy steps', true ),
+    wco2018_build_unzip( Self, ZipF, PgnD, ChessDB ).
+wco2018_build( Self, ZipF, DnD, PgnD, ChessDB ) :-
+    os_path( DnD, ZipF, DnZipP ),
+    exists_file( DnZipP ),
+    debug( Self, 'Zip file already exists in downloads, skipping downdload step', true ),
+    !,
+    os_path( PgnD, ZipF, PgnZipP ),
+    copy_file( DnZipP, PgnZipP ),
+    wco2018_build_unzip( Self, ZipF, PgnD, ChessDB ).
+
+wco2018_build( Self, ZipF, DnD, PgnD, ChessDB ) :-
+    % step 1. download the zip file (if not already done so)
+    working_directory( Old, DnD ),
     Url = 'https://batumi2018.fide.com/storage/app/media/pgn/wco2018open11.zip',
     ( url_file(Url,File,overwrite(fail)) ->
         debug( wco2018, 'Local file: ~p', File )
         ;
         debug( wco2018, 'Zip file already existed. Did not download it again', true )
     ),
-    ( exists_file( 'wco2018_r11_open.pgn') -> 
-        debug( wco2018, 'Round pgns seem to already exist, skipping unzip step', true )
-        ;
-        debug( wco2018, 'Unpacking the zip file.', true ),
-        os_ext( zip, File, Stem ),
-        @ unzip( Stem )
-    ),
-    os_path( '..', SQLite, PaSQLite ),
-    wco2018_build_pgns( PaSQLite ).
+    % step 2. Unzip the zip file (if some of the PGN files are missing
+    os_path( PgnD, ZipF, PgnZipP ),
+    copy_file( File, PgnZipP ),
+    working_directory( _, Old ),
+    wco2018_build_unzip( Self, ZipF, PgnD, ChessDB ).
 
-wco2018_build_pgns( SQLite ) :-
+wco2018_build_unzip( Self, ZipF, PgnD, ChessDB ) :-
+    working_directory( Old, PgnD ),
+    ls,
+    @ unzip( ZipF ),
+    @ rm( -f, ZipF ),
+    working_directory( _, PgnD ),
+    wco2018_build_pgns( Self, ChessDB ),
+    % wco2018_build_db( Celf, Self, DnD, ZiPF, PgnD ).
+    working_directory( _, Old ).
+
+wco2018_build_pgns( Self, ChessDB ) :-
     os_file( PgnF ),
     os_ext( pgn, PgnF ),
-    debug( wco2018, 'Adding to db: ~p', PgnF ),
-    chess_db( PgnF, SQLite, create(true) ),
+    atom_concat( 'wco2018_r', _, PgnF ),
+    debug( Self, 'Adding to db: ~p', PgnF ),
+    ( chess_db(PgnF,ChessDB,create(true)) -> true; throw(failed_pgn(PgnF)) ), 
     fail.
-wco2018_build_pgns( _SQLite ).
+wco2018_build_pgns( _Self, _ChessDB ).
+
+wco2018_alias( Alias, Loc ) :-
+    % absolute_file_name( Alias, Loc ),
+    ( ( ( absolute_file_name(Alias,Loc,[solutions(all)]),
+        os_path(ChessDbDataDbsD,_,Loc),
+        os_path(ChessDbDataD,_,ChessDbDataDbsD),
+        os_path(PackD,_,ChessDbDataD),
+        exists_directory(PackD)
+       )
+        ;
+        absolute_file_name(Alias,Loc,[file_type(directory)])
+       )
+            -> true; throw(error1(Alias))
+    ).
+
+wco2018_downloads_dir( DnD ) :-
+    catch( os_cast(chess_db(dnloads),DnD),_,fail),
+    exists_directory( DnD ),
+    !.
+wco2018_downloads_dir( DnD ) :-
+    catch( os_cast(chess_db('../dnloads'),DnD),_,fail),
+    exists_directory( DnD ),
+    !.
+wco2018_downloads_dir( DnD ) :-
+    catch( os_cast(chess_db('Downloads'),DnD),_,fail),
+    exists_directory( DnD ),
+    !.
+wco2018_downloads_dir( DnD ) :-
+    os_cast( pack('Downloads'), +DnD ).
