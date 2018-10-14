@@ -2,6 +2,7 @@
 --------------------
 
 0.4  
+     18.10.14  EXAMPLE:  bit more on wco2018 (on team names csv for one)
      18.10.08  OPTS:     new values for create() (and correction for value true)
                EXAMPLE:  wco2018 now loads the db and creates Caro Kann
                DEBUG:    chess_db gone, chess_db(info) is now the basic debug token
@@ -25,7 +26,7 @@
                FIXED:    opening of multiple dbs concurrently (no predicated)
                IFACE:    chess_db_id_info/3
                IFACE:    chess_db_game_id/1
-               ADDED:    chess_db and pgn aliases (and pgn extension for pgn/2)
+               NEW:      chess_db and pgn aliases (and pgn extension for pgn/2)
      18.08.05  FIXED:    remove atom_codes/2 that had dangling debug atom
      18.08.02  FIXED:    games with opening comment, and moves are now parsed
                CHANGE:   representation of moves in pgn/2 :(
@@ -37,12 +38,12 @@
 
 0.2         @  18.03.20
      18.03.20  DEBUG:   new term for White vs Black reading-in update
-               FIX:     nested variations
-               FIX:     recognise * as a valid result (properly read-in)
+               FIXED:   nested variations
+               FIXED:   recognise * as a valid result (properly read-in)
                DOC:     pack(chess_db) -> chess_db in .pl and Readme
 
 0.1         @  18.03.18
      18.03.17  FIX:     single quotes in Info  
-     18.03.13  PGN:     pgn/2
+     18.03.13  IFACE:     pgn/2
                DATA:    4nclall1718.pgn  4ncl_short.pgn
      18.02.18  PACK:    chess_db

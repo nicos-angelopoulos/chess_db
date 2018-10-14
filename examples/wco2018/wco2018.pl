@@ -19,11 +19,15 @@ Shows some examples of queries for generating sub-PGNs.
      is a...
 
 ==
+?- [pack('chess_db/examples/wco2018/wco2018.pl')].
 ?- wco2018_build.
+% how many games, are there ?
 ?- wco2018_len(Len).
 Len = 4036.
+% create a Pgn with all the Caro Cann games
 ?- wco2018_caro_cann.
-?- @ chessx( 'wco2018_caro_cann.pgn' ).  % chessx is a Linux UI program for playing out games from PGNs.
+% play the games in a GUI front end...
+?- @ chessx( 'wco2018_caro_cann.pgn' ).
 ==
 
 @author nicos angelopoulos
@@ -160,3 +164,25 @@ wco2018_downloads_dir( DnD ) :-
     !.
 wco2018_downloads_dir( DnD ) :-
     os_cast( pack('Downloads'), +DnD ).
+
+% work in progress
+% the Url below would seem to create a multi sheet spreadsheet, 
+% with only one live sheet. can convert with ssconvert -S wco2018open-teams.xls wco2018open-teams.csv
+% or you can convert with % unoconv -f ods *.xlsx
+% for now include csv in pack ?
+%
+wco2018_teams :-
+    wco2018_downloads_dir( DnD ),
+    os_path( DnD, 'wco2018open-teams.xls', Xls ),
+    Url = 'http://chess-results.com/tnr368908.aspx?lan=1&art=1&flag=30',
+    ( url_file(Url,Xls,overwrite(false)) -> true; true ),
+    os_ext( _, csv, Xls, Csv ),
+    debug( by_unix ),
+    ( os_exists(Csv) ->
+        true
+        ;
+        @ ssconvert( Xls, Csv )
+    ),
+    write( csv(Csv) ), nl,
+    mtx( Csv, Mtx, match(false) ),
+    write( mtx(Mtx) ), nl.
