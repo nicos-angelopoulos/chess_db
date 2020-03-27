@@ -1,7 +1,10 @@
 ---   Releases   ---
 --------------------
 
-0.4  
+1.0  
+     20.03.27  IFACE:    new code for dictionaries: chess_dict_start_board/1
+               IFACE:    convert between dictionary boards and long integer position chess_dict_inpo/2
+
      18.10.14  EXAMPLE:  bit more on wco2018 (on team names csv for one)
      18.10.08  OPTS:     new values for create() (and correction for value true)
                EXAMPLE:  wco2018 now loads the db and creates Caro Kann

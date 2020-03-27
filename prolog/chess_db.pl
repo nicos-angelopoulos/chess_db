@@ -17,6 +17,11 @@
                         % db.info
                         chess_db_list/1,                        % +Dir
                         chess_db_max_id/2,                      % +HandleST, -Max
+                        % chess.dict
+                        chess_dict_start_board/1 ,              % -Brd
+                        chess_dict_inpo/2,                      % ?Brd, ?Inpo
+                        chess_fen_square/2,                     % ?Fen, ?Sqr
+                        chess_algebraic_square/2,               % ?Alg, ?Sqr
                         % etc
                         chess_db_version/2                      % -Vers, -Date
                      ] ).
@@ -60,9 +65,11 @@ chess_db_alias( Alias, Path ) :-
 :- lib(chess_db_opening/2).
 :- lib(chess_db_disconnect/1).
 :- lib(chess_db_opening_pgn/2).
-
 :- lib(chess_db_handles/4).
 :- lib(chess_db_messages/0).
+:- lib(chess_dict/0).
+:- lib(chess_fen_square/2).
+:- lib(chess_algebraic_square/2).
 
 :- debug(chess_db(true)).
 :- lib(end(chess_db)).
@@ -75,7 +82,7 @@ predicates for manipulating these databases.
 Once connected to a number of chess_db databases, information about the games <br>
 can be interrogated. (See chess_db_opening/2 for an example.)
 
-Ideally we want to hook this pack to a web-based interface for playing the games as we select them.<br>
+Ideally we want to hook this pack to either a web-based interface, or (b) have an engive interface to exploit GUI playing programs, for playing the games as we select them.<br>
 Currently selected games can be saved to a PGN file and be displayed with any PGN displaying program.
 
 ---+++ Installation: 
