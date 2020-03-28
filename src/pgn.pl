@@ -16,7 +16,9 @@ A Pgn term is of the form: pgn(Info,Moves,Res,Orig). Where, <br>
   * Orig is the verbatim lines of the original .pgn input for that game
 
 ==
-?- pgn( 4nclall1718.pgn, Pgn ).  % in data/
+?- pgn( pgn('4NCL-2017'), Pgn ).  % in data/pgn
+Pgn = [pgn(['Event'-'4NCL Division 1a', 'Site'-'Telford, ENG', 'Date'-'2017.11.11', ....] ...]
+
 ?- pgn( '18.03.10-Hampstead.pgn', Pgn ).
 ==
 

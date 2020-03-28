@@ -20,6 +20,8 @@
                         % chess.dict
                         chess_dict_start_board/1 ,              % -Brd
                         chess_dict_inpo/2,                      % ?Brd, ?Inpo
+                        chess_pgn_inpos/2,                      % +PgnTerm, -Inpos
+                        chess_dict_move/3,chess_dict_move/4,    % +Move, +DictI, [+Turn,] -DictO
                         chess_fen_square/2,                     % ?Fen, ?Sqr
                         chess_algebraic_square/2,               % ?Alg, ?Sqr
                         % etc
@@ -33,8 +35,8 @@ chess_db_alias( Alias, Path ) :-
     assertz( user:file_search_path(Alias,Path) ).
 
 :- multifile(user:file_search_path/2).
-:- chess_db_alias( pgn, pack('chess_db_data/pgn') ).
-:- chess_db_alias( chess_db, pack('chess_db_data/dbs') ).
+:- chess_db_alias( pgn, pack('chess_db/data/pgn') ).
+:- chess_db_alias( chess_db, pack('chess_db/data/dbs') ).
 
 % user:file_search_path( pgn, pack('chess_db/data/pgn') ).
 % user:file_search_path( pgn, pack('chess_db_data/pgn') ).
@@ -70,6 +72,8 @@ chess_db_alias( Alias, Path ) :-
 :- lib(chess_dict/0).
 :- lib(chess_fen_square/2).
 :- lib(chess_algebraic_square/2).
+:- lib(chess_dict_move/4).
+:- lib(chess_pgn_inpos/2).
 
 :- debug(chess_db(true)).
 :- lib(end(chess_db)).

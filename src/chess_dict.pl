@@ -17,10 +17,10 @@ chess_dict_start_board( Board ) :-
     Board = board{
             % castling
             cwk:1,cwq:1,cbk:1,cbq:1,
-            % en passat square
+            % en passant square
             eps:'-',
             hmv:0,  % half moves clock: since last 
-            fmv:1,  % full moves: played so far
+            fmv:0,  % full moves: played so far
             8:10,16:8,24:9,32:11,40:12,48:9,56:8,64:10,
             7:7 ,15:7,23:7,31:7 ,39:7 ,47:7,55:7,63:7 ,
             6:0 ,14:0,22:0,30:0 ,38:0 ,46:0,54:0,62:0 ,
@@ -60,7 +60,7 @@ Castling + Turn
  * cwq:1,
  * cbk:1,
  * cbq:1,
- * 0:1 
+ * 0:0, active move turn
 
 */
 chess_dict.
@@ -81,12 +81,15 @@ Bd = board{0:0, 1:4, 2:1, 3:0, 4:0, 5:0, 6:0, 7:7, 8:10, 9:2, 10:1, 11:0, 12:0, 
 Inpo = 100700000000010408070000000001020907000000000103120700000000010611070000000001050907000000000103080700000000010210070000000001040030,
 New = board{0:0, 1:4, 2:1, 3:0, 4:0, 5:0, 6:0, 7:7, 8:10, 9:2, 10:1, 11:0, 12:0, 13:0, 14:0, 15:7, 16:8, 17:3, 18:1, 19:0, 20:0, 21:0, 22:0, 23:7, 24:9, 25:5, 26:1, 27:0, 28:0, 29:0, 30:0, 31:7, 32:11, 33:6, 34:1, 35:0, 36:0, 37:0, 38:0, 39:7, 40:12, 41:3, 42:1, 43:0, 44:0, 45:0, 46:0, 47:7, 48:9, 49:2, 50:1, 51:0, 52:0, 53:0, 54:0, 55:7, 56:8, 57:4, 58:1, 59:0, 60:0, 61:0, 62:0, 63:7, 64:10, cbk:1, cbq:1, cwk:1, cwq:1, eps: (-)}.
 
-?- chess_dict_start_board( Bd ), chess_dict_inpo( Bd, Inpo ),
-   Lipo is 100 ^ 67.
+?- chess_dict_start_board( Bd ), chess_dict_inpo( Bd, Inpo ),                                                                                                                        Lipo is 100 ^ 66.
+
+Bd = board{0:0, 1:4, 2:1, 3:0, 4:0, 5:0, 6:0, 7:7, 8:10, 9:2, 10:1, 11:0, 12:0, 13:0, 14:0, 15:7, 16:8, 17:3, 18:1, 19:0, 20:0, 21:0, 22:0, 23:7, 24:9, 25:5, 26:1, 27:0, 28:0, 29:0, 30:0, 31:7, 32:11, 33:6, 34:1, 35:0, 36:0, 37:0, 38:0, 39:7, 40:12, 41:3, 42:1, 43:0, 44:0, 45:0, 46:0, 47:7, 48:9, 49:2, 50:1, 51:0, 52:0, 53:0, 54:0, 55:7, 56:8, 57:4, 58:1, 59:0, 60:0, 61:0, 62:0, 63:7, 64:10, cbk:1, cbq:1, cwk:1, cwq:1, eps: (-), fmv:1, hmv:0},
+Inpo = 100700000000010408070000000001020907000000000103120700000000010611070000000001050907000000000103080700000000010210070000000001040030,
+Lipo = 1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.
 
 ==
 
-We also need to factor in [castling + turn to move] + en passat square ;  BUT NOT (?) halfmove clock and fullmove number.
+We also need to factor in [castling + turn to move] + en passant square ;  BUT NOT (?) halfmove clock and fullmove number.
 
 So in db storing might need a position table (for the numeric only) + (half.move +full.move table) to make it tranlseatable to dics.
 
@@ -145,3 +148,8 @@ chess_dict_inpo( I, DictE, Inpo, Dict ) :-
     
 digit_code( Digi, Code ) :-
     number_codes( Digi, [Code] ).
+
+chess_dict_inc( DictI, Key, DictO ) :-
+    Val is DictI.Key + 1,
+    put_dict( Key, DictI, Val, DictO ).
+
