@@ -299,7 +299,9 @@ chess_dict_move_pawn( BegC, [NumC], DictI, Move, Turn, Constr, DictO ) :-
             chess_move_piece_pawn_turn_step( Turn, EndPos, 1, EnPassant ),
             chess_dict_move_piece_from_to(DictI, Double-Pawn, EndPos-Pawn, true, DictN),
             put_dict( hmv, DictN, 0, DictM ),
-            put_dict( eps, DictM, EnPassant, DictL ),
+            chess_fen_square( EnPAlg, EnPassant ),
+            % put_dict( eps, DictM, EnPassant, DictL ),
+            put_dict( eps, DictM, EnPAlg, DictL ),
             chess_dict_flip_turn_from( DictL, Turn, DictO )
             ;
             throw( cannot_find_pawn_to_move_to(Move) )

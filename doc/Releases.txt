@@ -3,8 +3,9 @@
 
 1.0  
      20.03.28  IFACE:    chess_dict_move/3  basic unit for move tracking on dict.boards
-               IFACE:    chess_pgn_inpos/2  convert a full game to all its Inpos
+               IFACE:    chess_pgn_limos/2  convert a full game to all its Inpos
                FIXED:    pgn alias to data/pgn
+               IFACE:    new posi table
 
      20.03.27  IFACE:    new code for dictionaries: chess_dict_start_board/1
                IFACE:    convert between dictionary boards and long integer position chess_dict_inpo/2

@@ -1,5 +1,5 @@
 
-chess_db_defaults( [create(false),position(false)] ).
+chess_db_defaults( [create(false),position(true)] ).
 
 /** chess_db( +PgnOrF ).
     chess_db( +PgnOrF, +ChessDb ).
@@ -22,7 +22,7 @@ Opts
   * dir(Dir)
      directory where database is located, (many allowed, see chess_db_connect/2)
 
-  * position(Pos=false)
+  * position(Pos=true)
      if true, use position table
 
 Options can also be picked up from ~/.pl/chess_db.pl (see options_append/3).
@@ -81,24 +81,39 @@ chess_db_games_add( [G|Gs], Gid, CdbHs ) :-
     chess_db_handle( info, CdbHs, InfoHandle ),
     chess_db_handle( move, CdbHs, MoveHandle ),
     chess_db_handle( orig, CdbHs, OrigHandle ),
-    chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, MoveHandle, OrigHandle, Nid ),
+    chess_db_handle( posi, CdbHs, PosiHandle ),
+    chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, MoveHandle, OrigHandle, PosiHandle, Nid ),
     chess_db_games_add( Gs, Nid, CdbHs ).
 
-chess_db_game_add( InfoHandle, Info, _Moves, _Orig, Gid, _MoHa, _OrHa, Gid ) :-
+chess_db_game_add( InfoHandle, Info, _Moves, _Orig, Gid, _MoHa, _OrHa, _PoHa, Gid ) :-
     chess_db_game_info_exists( Info, InfoHandle, ExGid ),
     !, % fixme: add option for erroring
     debug( chess_db(info), 'Info match existing game: ~d', ExGid ).
-chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, MoHa, OrHa, Nid ) :-
+chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, MoHa, OrHa, PoHa, Nid ) :-
+    write( moves(Moves) ), nl,
     Nid is Gid + 1,
     findall( game_info(Nid,K,V), member(K-V,Info), Goals ),
     db_assert( InfoHandle, Goals, _ ),
-    findall( game_move(Nid,N,Turn,Move), (
+    % findall( game_move(Nid,N,Turn,Move), (
+    /*
+    findall( game_move(Nid,Ply,Move), (
                                             member( move(N,Mv1,Mv2,_Cmm1,_Cms2),Moves),
                                             nth1( Idx, [Mv1,Mv2], Move ),
                                             Move \== [],   % Mv2 really
-                                            nth1( Idx, [false,true], Turn )  % check values are db asserted properly
+                                            % nth1( Idx, [false,true], Turn )  % check values are db asserted properly
+                                            Ply is ((N-1) * 2 ) + (Idx - 1)
                                          ), Moals ),
+                                         */
+
+    chess_dict_start_board( Start ),
+    chess_pgn_moves_limos( Moves, 0, Start, Limos ),
+    findall( game_move(Nid,Ply,Hmv,NxtMv), member(limo(Ply,Hmv,NxtMv,_Inpo),Limos),  Moals ),
     db_assert( MoHa, Moals, _ ),
+
+    findall( game_posi(Nid,Ply,Inpo), member(limo(Ply,_Hmv,_Mv,Inpo),Limos),  Poals ),
+    maplist( writeln, Poals ), nl,
+    db_assert( PoHa, Poals, _ ),
+
     maplist( atom_codes, OrigAtms, Orig ),
     atomic_list_concat( OrigAtms, '\n', OrigAtm ),
     debug( chess_db(original), '~a', OrigAtm ),
@@ -110,9 +125,10 @@ chess_db_game_info_exists( [K-V|T], InfHa, ExGid ) :-
     chess_db_game_info_exists( T, InfHa, ExGid ).
 
 chess_db_table_fields( game_info, [gid+integer,key+text,value-text] ).
-chess_db_table_fields( game_move, [gid+integer,move_no+integer,turn+boolean,move-text] ).
+% chess_db_table_fields( game_move, [gid+integer,move_no+integer,turn+boolean,move-text] ).
+chess_db_table_fields( game_move, [gid+integer,ply+integer,hmv-integer,move-text] ).
 chess_db_table_fields( game_orig, [gid+integer,original-text] ).
-chess_db_table_fields( game_position, [position+text,gid+integer] ).
+chess_db_table_fields( game_posi, [gid+integer,ply+integer,position-integer] ).
 
 chess_db_dir( Dir, _Create, AbsDir ) :-
     AbsOpts = [file_type(directory),file_errors(fail)], % fixme: assumes dir-based db

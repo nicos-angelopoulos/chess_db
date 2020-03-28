@@ -20,7 +20,7 @@
                         % chess.dict
                         chess_dict_start_board/1 ,              % -Brd
                         chess_dict_inpo/2,                      % ?Brd, ?Inpo
-                        chess_pgn_inpos/2,                      % +PgnTerm, -Inpos
+                        chess_pgn_limos/2,                      % +PgnTerm, -Limos
                         chess_dict_move/3,chess_dict_move/4,    % +Move, +DictI, [+Turn,] -DictO
                         chess_fen_square/2,                     % ?Fen, ?Sqr
                         chess_algebraic_square/2,               % ?Alg, ?Sqr
@@ -73,7 +73,7 @@ chess_db_alias( Alias, Path ) :-
 :- lib(chess_fen_square/2).
 :- lib(chess_algebraic_square/2).
 :- lib(chess_dict_move/4).
-:- lib(chess_pgn_inpos/2).
+:- lib(chess_pgn_limos/2).
 
 :- debug(chess_db(true)).
 :- lib(end(chess_db)).

@@ -54,6 +54,7 @@ Coding, 1-64
 En passant, eps
   * eps( Eps='-' )
   position for En passant-able pawn
+  [here we store the number, unlike FEN which stores the algebraic]
 
 Castling + Turn 
  * cwk:1,
