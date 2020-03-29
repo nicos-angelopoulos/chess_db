@@ -90,7 +90,6 @@ chess_db_game_add( InfoHandle, Info, _Moves, _Orig, Gid, _MoHa, _OrHa, _PoHa, Gi
     !, % fixme: add option for erroring
     debug( chess_db(info), 'Info match existing game: ~d', ExGid ).
 chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, MoHa, OrHa, PoHa, Nid ) :-
-    write( moves(Moves) ), nl,
     Nid is Gid + 1,
     findall( game_info(Nid,K,V), member(K-V,Info), Goals ),
     db_assert( InfoHandle, Goals, _ ),
@@ -111,7 +110,6 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, MoHa, OrHa, PoHa, Nid ) :
     db_assert( MoHa, Moals, _ ),
 
     findall( game_posi(Nid,Ply,Inpo), member(limo(Ply,_Hmv,_Mv,Inpo),Limos),  Poals ),
-    maplist( writeln, Poals ), nl,
     db_assert( PoHa, Poals, _ ),
 
     maplist( atom_codes, OrigAtms, Orig ),

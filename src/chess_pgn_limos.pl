@@ -25,6 +25,7 @@ chess_pgn_moves_limos( [], Ply, Board, Limo ) :-
     Limo = [limo(Ply,Board.hmv,[],Inpo)].
 chess_pgn_moves_limos( [move(_, WhMv, BlMv,_,_)|T], Ply, Board, Limos ) :-
     chess_dict_inpo( Board, WhInpo ),
+    debug( chess_db(limo), 'Move, white: ~w, black: ~w', [WhMv,BlMv] ),
     Wimo = limo(Ply,Board.hmv,WhMv,WhInpo),
     Bly is Ply + 1,
     chess_dict_move( WhMv, Board, Woard ),

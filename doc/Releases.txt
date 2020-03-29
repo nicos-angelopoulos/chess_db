@@ -6,6 +6,8 @@
                IFACE:    chess_pgn_limos/2  convert a full game to all its Inpos
                FIXED:    pgn alias to data/pgn
                IFACE:    new posi table
+               NEW:      pawn promotions
+               FIXED:    Knights horizon jumps
 
      20.03.27  IFACE:    new code for dictionaries: chess_dict_start_board/1
                IFACE:    convert between dictionary boards and long integer position chess_dict_inpo/2

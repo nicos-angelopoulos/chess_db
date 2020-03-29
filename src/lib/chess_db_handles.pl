@@ -15,7 +15,7 @@ Returns the absolute location of the Db in AbsLoc.
 */
 chess_db_handles( Create, Pos, Dir, CdbHs, AbsDir ) :-
     chess_db_dir( Dir, Create, AbsDir ),
-    debug( chess_db, 'Abs dir: ~p', [AbsDir] ),
+    debug( chess_db(db), 'Abs dir: ~p', [AbsDir] ),
     ( Pos == true -> PosL = [posi]; PosL = [] ),
     chess_db_connect_subs( [info,move,orig|PosL], AbsDir, Create, CdbHsL ),
     CdbHs =.. [chdbs|CdbHsL].

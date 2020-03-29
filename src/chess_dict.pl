@@ -36,7 +36,7 @@ chess_dict_start_board( Board ) :-
 
 A documentation predicate, 
 
-Coding, 1-64
+Coding, 1-64 (see algebraic_turn_piece/3).
  *  0 empty
  *  1 white pawn 
  *  2 white knight
@@ -122,7 +122,7 @@ chess_dict_inpo( 67, DictE, _Inpo, Dict ) :-
     DictE = Dict.
 chess_dict_inpo( I, DictE, Inpo, Dict ) :-
     V is Inpo mod (100 ^ I) // (100 ^ (I - 1)), 
-    debug( chess_db, 'Component: ~w', [I+V] ),
+    debug( chess_db(inpo), 'Component: ~w', [I+V] ),
     ( I =:= 1 -> 
         % CTFact is Dict.0 + (Dict.cwk * 2) + (Dict.cwq * 4) + (Dict.cbk * 8) + (Dict.cbq * 16),
         binary( V, BinAtm ),

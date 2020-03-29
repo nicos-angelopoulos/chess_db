@@ -1,3 +1,5 @@
+:- lib(chess_algebraic_turn_piece/3).
+:- lib(chess_pos_coord/3).
 
 /** chess_dict_move( +Move, +DictI, +Turn, -DictO ).
     chess_dict_move( +Move, +DictI, -DictO ).
@@ -37,6 +39,7 @@ chess_dict_move( Move, DictI, DictO ) :-
     chess_dict_move( Move, DictI, DictI.0, DictO ).
 
 chess_dict_move( Move, DictI, Turn, DictO ) :- 
+    debug( chess(move), 'Move: ~w', [Move] ),
     Durn = DictI.0,
     ( var(Turn) -> 
         Turn = Durn
@@ -45,11 +48,12 @@ chess_dict_move( Move, DictI, Turn, DictO ) :-
     ),
     !,
     put_dict( eps, DictI, '-', DictJ ),
-    chess_dict_move_1( Move, DictJ, Turn, DictM ),
+    (chess_dict_move_1(Move,DictJ,Turn,DictM) -> true; throw(failed_on_move(Move,Turn,DictJ)) ),
     ( Turn =:= 1 -> 
-        chess_dict_inc( DictM, fmv, DictO )
+        chess_dict_inc( DictM, fmv, DictL ),
+        put_dict( 0, DictL, 0, DictO )
         ;
-        DictO = DictM
+        put_dict( 0, DictM, 1, DictO )
     ).
 
 chess_dict_move_1( MoveCheck, DictI, Turn, DictO ) :- 
@@ -80,7 +84,27 @@ chess_dict_move_1( 'O-O-O', DictI, Turn, DictO ) :-
         put_dict( cbk, DictJ, 0, DictK ),
         put_dict( cbq, DictK, 0, DictO )
     ).
-% pawn
+% pawn.promotion
+chess_dict_move_1( Move, DictI, Turn, DictO ) :- 
+    atomic_list_concat( [Left,Right], '=', Move ),
+    !,
+    chess_algebraic_turn_piece( Right, Turn, NewPiece ),
+    ( atomic_list_concat([FromPfx,To],x,Left) ->
+        chess_algebraic_square( To, ToSqr ),
+        (Turn =:= 0 -> FromSfx ='7' ; FromSfx = '2'),
+        atom_concat( FromPfx, FromSfx, FromAlg ),
+        chess_algebraic_square( FromAlg, FromSqr ),
+        put_dict( FromSqr, DictI, 0, DictJ ),
+        put_dict( ToSqr, DictJ, NewPiece, DictK ),
+        put_dict( hmv, DictK, 0, DictO )
+        ;
+        chess_algebraic_square( Left, Sqr ),
+        (Turn =:= 0 -> From is Sqr - 1 ; From is Sqr + 1),
+        put_dict( From, DictI, 0, DictJ ),
+        put_dict( Sqr, DictJ, NewPiece, DictK ),
+        put_dict( hmv, DictK, 0, DictO )
+    ).
+% pawn.normal
 chess_dict_move_1( Move, DictI, Turn, DictO ) :- 
     % polymorphic DictO -> if same as Dict1 use destructive assignment
     atom_codes( Move, [BegC|Cs] ),
@@ -174,7 +198,9 @@ chess_dict_move_piece( PieceC, DscC, [BegC,NumC], DictI, _Move, Turn, Constr, Di
             chess_dict_inc( DictN, hmv, DictM ),
             chess_dict_flip_turn_from( DictM, Turn, DictO )
             ;
-            throw( non_unique_starts_2(Starts) )
+            atom_codes( ToSqr, [BegC,NumC] ),
+            atom_codes( PieceAtm, [PieceC] ),
+            throw( non_unique_starts_2(Starts,ToSqr,PieceAtm,DictI) )
         )
     ).
 % Ncxe4, N3xe4
@@ -229,9 +255,16 @@ chess_dict_positions_uniqued( row, DscC, Poss, Unique ) :-
 
 % Knights
 chess_dict_move_possible( 2, _Dict, ToPos, FromPos ) :-
-    member( Dist, [-17,-15,-10,-6,6,10,15,17] ),
-    FromPos is ToPos + Dist,
-    !.
+    % member( Dist, [-17,-15,-10,-6,6,10,15,17] ),
+    % FromPos is ToPos + Dist,
+    chess_pos_coord( ToPos, X, Y ),
+    member(Zx,[1,2,-1,-2]), 
+    member(Zy,[1,2,-1,-2]), 
+    abs(Zx) =\= abs(Zy),
+    X1 is X + Zx, X1 > 0, X1 < 9,
+    Y1 is Y + Zy, Y1 > 0, Y1 < 9,
+    chess_pos_coord( FromPos, X1, Y1 ),
+    !.  % fixme: this should be higher up surely ???
 % Bishops
 % 30 can be landed from 39, 48 (upper right);  23, 16 (upper left); 21, 12, 3 (lower left) 37, 44, 51, 58 (lower right)
 %
