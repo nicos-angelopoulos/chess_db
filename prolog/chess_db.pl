@@ -22,6 +22,7 @@
                         chess_dict_inpo/2,                      % ?Brd, ?Inpo
                         chess_pgn_limos/2,                      % +PgnTerm, -Limos
                         chess_dict_move/3,chess_dict_move/4,    % +Move, +DictI, [+Turn,] -DictO
+                        chess_annotate_freq/3,                  % +Pgn, +CheDbLoc, +Args
                         chess_fen_square/2,                     % ?Fen, ?Sqr
                         chess_algebraic_square/2,               % ?Alg, ?Sqr
                         % etc
@@ -45,6 +46,7 @@ chess_db_alias( Alias, Path ) :-
 :- use_module(library(lib)).
 
 :- lib(options).
+:- lib(os_lib).
 :- lib(db_facts).
 :- lib(prosqlite).
 :- lib(stoics_lib).
@@ -74,6 +76,7 @@ chess_db_alias( Alias, Path ) :-
 :- lib(chess_algebraic_square/2).
 :- lib(chess_dict_move/4).
 :- lib(chess_pgn_limos/2).
+:- lib(chess_annotate_freq/3).
 
 :- debug(chess_db(true)).
 :- lib(end(chess_db)).
@@ -256,6 +259,7 @@ miscellaneous
 @see  https://github.com/nicos-angelopoulos/chess_db
 @see  [pack('chess_db/examples/short.pl')]
 @see  pack(prosqlite), pack(db_facts), pack(stoics_lib), pack(options)
+@tbd  discard illegal moves when considering possible ones
 
 */
 
@@ -264,8 +268,8 @@ miscellaneous
      The current version. Version is a Mj:Mn:Fx term, and date is a date(Y,M,D) term.
 
 ==
-?- chess_db_version( 0:3:0, date(2018,3,21) ).
+?- chess_db_version( 1:0:0, date(2020,3,30) ).
 true.
 ==
 */
-chess_db_version( 0:3:0, date(2018,9,14) ).
+chess_db_version( 1:0:0, date(2020,3,30) ).

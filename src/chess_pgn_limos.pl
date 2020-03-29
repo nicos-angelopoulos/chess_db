@@ -28,6 +28,7 @@ chess_pgn_moves_limos( [move(_, WhMv, BlMv,_,_)|T], Ply, Board, Limos ) :-
     debug( chess_db(limo), 'Move, white: ~w, black: ~w', [WhMv,BlMv] ),
     Wimo = limo(Ply,Board.hmv,WhMv,WhInpo),
     Bly is Ply + 1,
+    % ( WhMv == 'R8d7' -> trace; true ),
     chess_dict_move( WhMv, Board, Woard ),
     ( BlMv == [] ->
         Fly is Bly, Noard = Woard,

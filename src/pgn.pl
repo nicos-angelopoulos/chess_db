@@ -38,8 +38,10 @@ fixme:
 pgn( File, Pgn ) :-
     ground( Pgn ),
     !,
-    absolute_file_name( Pgn, AbsPgn ),
-    pgn_write( AbsPgn, File ).
+    % absolute_file_name( Pgn, AbsPgn ),
+    % pgn_write( AbsPgn, File ).
+    absolute_file_name( File, AbsFile ),
+    pgn_write( Pgn, AbsFile ).
 pgn( PgnIn, PgnOut ) :-
     is_list( PgnIn ),
     !,
@@ -49,6 +51,39 @@ pgn( File, Pgn ) :-
     phrase_from_file(pgn_dcg(PgnPrv), AbsFile ),
     pgn_originals( AbsFile, Origs ),
     pgn_add_originals( PgnPrv, Origs, Pgn ).
+
+pgn_write( Pgn, File ) :-
+    open( File, write, Out ),
+    write( the_pgn_var(Pgn) ), nl,
+    maplist( pgn_write_stream(Out), Pgn ),
+    close( Out ).
+
+pgn_write_stream( Stream, pgn(Info,Moves,Res,_Orig) ) :-
+    maplist( pgn_write_stream_info(Stream), Info ),
+    nl( Stream ),
+    pgn_write_stream_moves( Moves, 1, Stream ),
+    write( Stream, Res ),
+    nl( Stream ), nl( Stream ).
+
+pgn_write_stream_info( Stream, Key-Value ) :-
+    write( Stream, '[' ), write( Stream, Key ), write( Stream, ' "' ), 
+    write( Stream, Value ), write( Stream, '"]' ), nl( Stream ).
+
+pgn_write_stream_moves( [], _I, _Stream ).
+pgn_write_stream_moves( [move(Mvn,Wht,Blc,Wcm,Bcm)|T], I, Stream ) :-
+    % move(3, exd5, cxd5, ' [%clk 1:26:43] this is acomment', ' [%clk 1:31:43]'),
+    write( Stream, Mvn ), write( Stream, '. ' ), write( Stream, Wht ), write( Stream, ' ' ),
+    ( Wcm == '' -> true
+        ; write( Stream, '{' ), write( Stream, Wcm ), write( Stream, '} ' )
+    ),
+    write( Stream, Mvn ), write( Stream, '... ' ), write( Stream, Blc ),
+    write( Stream, ' ' ),
+    ( Wcm == '' -> true
+        ; write( Stream, '{' ), write( Stream, Bcm ), write( Stream, '} ' )
+    ),
+    ( 0 =:= (I mod 3) -> nl( Stream ); true ),
+    J is I + 1,
+    pgn_write_stream_moves( T, J, Stream ).
 
 pgn_dcg( [H|T] ) -->
     pgn_dcg_game( H ),
@@ -318,7 +353,6 @@ pgn_add_originals( Pgns, Origs, Pgn ) :-
                 throw(pgns_originals_length_mismatch(LenPgns,LenOrigs) )
     ),
     pgn_add_originals_1( Pgns, Origs, Pgn ).
-
 
 pgn_add_originals_1( [], [], [] ).
 pgn_add_originals_1( [Pgn|Pgns], [Orig|Origs], [Ogn|Ogns] ) :-

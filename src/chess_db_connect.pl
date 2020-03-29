@@ -4,7 +4,7 @@
 :- lib(chess_db_exists/1).
 
 chess_db_connect_defaults( Defs ) :-
-    Defs = [profile(true), create(false), position(false), db(_), handles(_)].
+    Defs = [profile(true), create(false), position(true), db(_), handles(_)].
 
 /** chess_db_connect( +DbS ).
     chess_db_connect( +DbS, +Opts ).

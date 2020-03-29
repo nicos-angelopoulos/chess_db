@@ -33,6 +33,7 @@ Two = board{0:0, 1:4, 2:1, 3:0, 4:0, 5:0, 6:0, 7:7, 8:10, 9:2, 10:1, 11:0, 12:0,
 
 @author nicos angelopoulos
 @version  0:1 2020/03/27
+@tbd discard illegal moves when establishing possible moves
 
 */
 chess_dict_move( Move, DictI, DictO ) :- 
@@ -57,7 +58,8 @@ chess_dict_move( Move, DictI, Turn, DictO ) :-
     ).
 
 chess_dict_move_1( MoveCheck, DictI, Turn, DictO ) :- 
-    atom_concat( Move, '+', MoveCheck ),
+    ( atom_concat( Move, '+', MoveCheck ) ;
+      atom_concat( Move, '#', MoveCheck ) ),
     !,
     chess_dict_move_1( Move, DictI, Turn, DictO ).
 chess_dict_move_1( 'O-O', DictI, Turn, DictO ) :- 
@@ -251,7 +253,7 @@ chess_dict_positions_uniqued( col, DscC, Poss, Unique ) :-
 
 chess_dict_positions_uniqued( row, DscC, Poss, Unique ) :-
     TrgRow is DscC - 0'0,
-    findall( Pos, (member(Pos,Poss),TrgRow is (Pos mod 8) ), [Unique] ).
+    findall( Pos, (member(Pos,Poss), chess_pos_coord(Pos,_,TrgRow)), [Unique] ).
 
 % Knights
 chess_dict_move_possible( 2, _Dict, ToPos, FromPos ) :-
@@ -350,7 +352,8 @@ chess_dict_move_pawn_takes( 0, FromC, EndPos, DictI, DictO ) :-
         chess_dict_move_piece_from_to( DictI, SrcPos-Pawn, EndPos-Pawn, true, DictO )
         ; % throw(no_en_passe_yet(EndPos,SrcPos,0)) 
         RemPos is EndPos - 1,
-        ( DictI.RemPos =\= 7 -> throw( messed_up_en_passant(DictI.RemPos,EndPos,SrcPos) )
+        ( DictI.RemPos =\= 7 -> 
+            throw( messed_up_en_passant(DictI.RemPos,EndPos,SrcPos) )
             ;
             chess_dict_move_piece_from_to( DictI, SrcPos-Pawn, EndPos-Pawn, RemPos, DictO )
             % throw(no_en_passe_yet(EndPos,SrcPos,0)) 
@@ -361,8 +364,16 @@ chess_dict_move_pawn_takes( 1, FromC, EndPos, DictI, DictO ) :-
     ColMax is (FromC - 0'a) * 8,
     ( EndPos > ColMax -> SrcPos is EndPos - 7; SrcPos is EndPos + 9),
     DictI.SrcPos =:= Pawn,
-    ( DictI.EndPos =\= 0 -> true; throw(no_en_passe_yet(EndPos,SrcPos,1)) ),
-    chess_dict_move_piece_from_to( DictI, SrcPos-Pawn, EndPos-Pawn, true, DictO ).
+    ( DictI.EndPos =\= 0 -> 
+        chess_dict_move_piece_from_to( DictI, SrcPos-Pawn, EndPos-Pawn, true, DictO )
+        ; 
+        RemPos is EndPos + 1,
+        ( DictI.RemPos =\= 1 -> 
+            throw( messed_up_en_passant(DictI.RemPos,EndPos,SrcPos) )
+            ;
+            chess_dict_move_piece_from_to( DictI, SrcPos-Pawn, EndPos-Pawn, RemPos, DictO )
+        )
+    ).
 
 chess_dict_move_piece_from_to( DictI, PosFrom-PieceFrom, PosTo-PieceTo, Remove, DictO ) :-
     put_dict( PosFrom, DictI, 0, DictM ),
