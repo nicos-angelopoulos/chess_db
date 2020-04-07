@@ -2,6 +2,7 @@
 --------------------
 
 1.0  
+
      20.03.28  FIXED:    en_passant for black ... 
                IFACE:    check mate !
                IFACE:    pgn_write modality
