@@ -78,7 +78,7 @@ chess_db_alias( Alias, Path ) :-
 :- lib(chess_pgn_limos/2).
 :- lib(chess_annotate_freq/3).
 
-:- debug(chess_db(true)).
+:- debuc(chess_db(true)).
 :- lib(end(chess_db)).
 
 /**  <module> PGN and chess game databases.
