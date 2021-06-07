@@ -22,6 +22,7 @@
                         chess_dict_inpo/2,                      % ?Brd, ?Inpo
                         chess_pgn_limos/2,                      % +PgnTerm, -Limos
                         chess_dict_move/3,chess_dict_move/4,    % +Move, +DictI, [+Turn,] -DictO
+                        chess_dict_piece/3,                     % +DictPiece, +Colour, +Piece
                         chess_annotate_freq/3,                  % +Pgn, +CheDbLoc, +Args
                         chess_fen_square/2,                     % ?Fen, ?Sqr
                         chess_algebraic_square/2,               % ?Alg, ?Sqr
