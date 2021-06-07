@@ -281,7 +281,7 @@ chess_dict_move_pin( Board, End, Start ) :-
      chess_dict_piece( Diece, Clr, _ ),
      chess_dict_piece( Ding, Clr, king ),
      chess_dict_piece_positions( Board, Ding, Poss ),
-     ( Poss -> [Pos] ->
+     ( Poss = [Pos] ->
           true
           ;
           throw( too_many_kings(Board,Poss) )
@@ -321,12 +321,66 @@ chess_dict_empty_cross_line_between( Start, End, Elev ) :-
 /** chess_dict_move_pin_source( +Dict, +Clr, +Start, +Elv, -Source ).
     
 Returns the Source square for a Clr coloured piece that attacks Start 
-when Elev line is followed.
+when Elev line is followed. 
+
+As only one piece can attack on a directed line, the predicate succeeds at most once.
+
+==
+?- chess_dict_start_board(Board0), 
+   chess_dict_move(e4,Board0,Board1),
+   chess_dict_move(d5,Board1,Board2),
+   chess_dict_move('Nf3',Board2,Board3),
+   chess_dict_move('Bg4',Board3,Board4),
+   chess_dict_pos_algebraic( F3, f3 ),
+   chess_dict_move_pin_source( Board4, 1, F3, 9, Src ),
+   chess_dict_pos_algebraic( Src, SrcAlg ).
+   
+   % chess_dict_pos_algebraic( e5, E5 ),
+==
 
 */
 chess_dict_move_pin_source( Dict, Clr, Start, Elev, Src ) :-
+     ( Clr =:= 1 -> ClrAtm = black; ClrAtm = white ),
      % Next is Start + + ,
-     here(Dict,Clr,Start,Elev,Src).
+     Next is Start + Elev,
+     0 < Next, Next < 65,
+     get_dict( Next, Dict, Diece ),
+     chess_dict_move_pin_source_1( Diece, Dict, ClrAtm, Next, Elev, Src ).
+     % here(Dict,Clr,Start,Elev,Src).
+
+chess_dict_move_pin_source_1( 0, Dict, Clr, Curr, Elev, Src ) :-
+     !,
+     Next is Curr + Elev,
+     0 < Next, Next < 65,
+     get_dict( Next, Dict, Diece ),
+     chess_dict_move_pin_source_1( Diece, Dict, Clr, Next, Elev, Src ).
+% if non empty, then the piece is one of: attacker, non-attacker, blocker.
+chess_dict_move_pin_source_1( Diece, _Dict, Clr, Curr, Elev, Src ) :-
+     chess_dict_piece( Diece, Clr, Piece ),
+     chess_piece_moves_on_line_elev( Piece, Elev ),
+     Src = Curr,
+     !.
+
+
+% bishops
+chess_piece_moves_on_line_elev(bishop, -9).
+chess_piece_moves_on_line_elev(bishop, -7).
+chess_piece_moves_on_line_elev(bishop,  7).
+chess_piece_moves_on_line_elev(bishop,  9).
+% rooks
+chess_piece_moves_on_line_elev(rook, -8).
+chess_piece_moves_on_line_elev(rook, -1).
+chess_piece_moves_on_line_elev(rook,  1).
+chess_piece_moves_on_line_elev(rook,  8).
+% queen
+chess_piece_moves_on_line_elev(queen, -9).
+chess_piece_moves_on_line_elev(queen, -8).
+chess_piece_moves_on_line_elev(queen, -7).
+chess_piece_moves_on_line_elev(queen, -1).
+chess_piece_moves_on_line_elev(queen,  1).
+chess_piece_moves_on_line_elev(queen,  7).
+chess_piece_moves_on_line_elev(queen,  8).
+chess_piece_moves_on_line_elev(queen,  9).
 
 % Knights
 chess_dict_move_possible( 2, _Dict, ToPos, FromPos ) :-

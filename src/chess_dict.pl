@@ -125,7 +125,7 @@ Lipo = 1000000000000000000000000000000000000000000000000000000000000000000000000
 
 We also need to factor in [castling + turn to move] + en passant square ;  BUT NOT (?) halfmove clock and fullmove number.
 
-So in db storing might need a position table (for the numeric only) + (half.move +full.move table) to make it tranlseatable to dics.
+So in db storing might need a position table (for the numeric only) + (half.move +full.move table) to make it transletable to dics.
 
 @author nicos angelopoulos
 @version  0:1 19.9.15
