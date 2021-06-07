@@ -266,12 +266,26 @@ chess_dict_positions_uniqued( row, DscC, Poss, Unique ) :-
 
 ==
 ?- chess_dict_start_board(Board0),
-   chess_dict_move(e4,Board0,Board1),
-   chess_dict_move(d5,Board1,Board2),
-   chess_dict_move('Nf3',Board2,Board3),
-   chess_dict_move('Bg4',Board3,Board4),
-   chess_dict_move_pin(Board4,
+   chess_dict_move(d4,Board0,Board1),
+   chess_dict_move(e5,Board1,Board2),
+   chess_dict_move('Nc3',Board2,Board3),
+   chess_dict_move('Bb4',Board3,Board4),
+   chess_dict_pos_algebraic( C3, c3 ),
+   chess_dict_pos_algebraic( D5, d5 ),
+   chess_dict_move_pin( Board4, D5, C3 ).
 
+Board0 = board{...},
+C3 = 19,
+D5 = 29.
+
+?- chess_dict_start_board(Board0),
+   chess_dict_move(d4,Board0,Board1),
+   chess_dict_move(e5,Board1,Board2),
+   chess_dict_move('Nc3',Board2,Board3),
+   chess_dict_move('Bb4',Board3,Board4),
+   chess_dict_move('Nd5',Board4,Board5).
+
+ERROR: Unhandled exception: non_unique_starts_1([],'Nd5')
 ==
 
 
@@ -287,9 +301,9 @@ chess_dict_move_pin( Board, End, Start ) :-
           throw( too_many_kings(Board,Poss) )
      ),
      chess_dict_empty_cross_line_between( Pos, Start, Elev ),
-     flip( Clr, OppClr ),
+     ( Clr == white -> OppClr = black; OppClr = white ),
      chess_dict_move_pin_source( Board, OppClr, Start, Elev, Src ),
-     here(End,is,not,between,Src,and,Start,at,Elev),
+     \+ chess_dict_empty_cross_line_between( End, Src, Elev ),
      !. % only need first success
 % predicate fails if Start is not pinned
 
@@ -335,17 +349,20 @@ As only one piece can attack on a directed line, the predicate succeeds at most 
    chess_dict_move_pin_source( Board4, 1, F3, 9, Src ),
    chess_dict_pos_algebraic( Src, SrcAlg ).
    
-   % chess_dict_pos_algebraic( e5, E5 ),
+Board0 = board{...},
+...
+F3 = 43,
+Src = 52,
+SrcAlg = g4.
 ==
 
 */
 chess_dict_move_pin_source( Dict, Clr, Start, Elev, Src ) :-
-     ( Clr =:= 1 -> ClrAtm = black; ClrAtm = white ),
      % Next is Start + + ,
      Next is Start + Elev,
      0 < Next, Next < 65,
      get_dict( Next, Dict, Diece ),
-     chess_dict_move_pin_source_1( Diece, Dict, ClrAtm, Next, Elev, Src ).
+     chess_dict_move_pin_source_1( Diece, Dict, Clr, Next, Elev, Src ).
      % here(Dict,Clr,Start,Elev,Src).
 
 chess_dict_move_pin_source_1( 0, Dict, Clr, Curr, Elev, Src ) :-
