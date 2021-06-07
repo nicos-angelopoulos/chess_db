@@ -78,12 +78,22 @@ chess_db_games_add( [], _Gid, _CdbHs ).
 chess_db_games_add( [G|Gs], Gid, CdbHs ) :-
     % fixme: ignore position for now
     G = pgn(Info,Moves,_Res,Orig),
+    chess_db_debug_info( Info, 'adding to db' ),
     chess_db_handle( info, CdbHs, InfoHandle ),
     chess_db_handle( move, CdbHs, MoveHandle ),
     chess_db_handle( orig, CdbHs, OrigHandle ),
     chess_db_handle( posi, CdbHs, PosiHandle ),
     chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, MoveHandle, OrigHandle, PosiHandle, Nid ),
     chess_db_games_add( Gs, Nid, CdbHs ).
+
+chess_db_debug_info( Info, Pfx ) :-
+   memberchk( 'White'-White, Info ),
+   memberchk( 'Black'-Black, Info ),
+   atomic_list_concat( [White,vs,Black], ' ', Mess ),
+   !,
+   debug( chess_db, '~w: ~w', [Pfx,Mess] ).
+chess_db_debug_info( Info, Pfx ) :-
+   debug( chess_db, '~w: ~w', [Pfx,Info] ).
 
 chess_db_game_add( InfoHandle, Info, _Moves, _Orig, Gid, _MoHa, _OrHa, _PoHa, Gid ) :-
     chess_db_game_info_exists( Info, InfoHandle, ExGid ),

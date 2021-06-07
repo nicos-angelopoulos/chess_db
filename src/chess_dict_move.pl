@@ -177,7 +177,8 @@ chess_dict_move_piece( PieceC, BegC, [NumC], DictI, _Move, Turn, Constr, DictO )
         chess_dict_inc( DictN, hmv, DictM ),
         chess_dict_flip_turn_from( DictM, Turn, DictO )
         ;
-        throw( non_unique_starts_1(Starts) )
+        atom_codes( Piece, [PieceC] ),
+        throw( non_unique_starts_1(Starts,Piece,BegC,NumC) )
     ).
 % Nce4, N3e4
 chess_dict_move_piece( PieceC, DscC, [BegC,NumC], DictI, _Move, Turn, Constr, DictO ) :-
