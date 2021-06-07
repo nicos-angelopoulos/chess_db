@@ -28,30 +28,31 @@ chess_dict_start_board( Board ) :-
             4:0 ,12:0,20:0,28:0 ,36:0 ,44:0,52:0,60:0 ,
             3:0 ,11:0,19:0,27:0 ,35:0 ,43:0,51:0,59:0 ,
             2:1 ,10:1,18:1,26:1 ,34:1 ,42:1,50:1,58:1 ,
-            1:4,  9:2,17:3,25:5 ,33:6 ,41:3,49:2,57:4,
+            1:4,  9:2,17:3,25:5 ,33:6 ,41:3,49:2,57:4 ,
             0:0 % white move = 0; black = 1
     }.
 
 /** chess_dict.
 
-A documentation predicate, 
+A documentation predicate.
 
-Coding, each sqaure in board is in dictionary key: 1-64 (see algebraic_turn_piece/3).
+Coding each square in board is in dictionary key: 1-64 (see algebraic_turn_piece/3).
 Numbering starts at bottom left and goes numbers (rows) first before it sweeps to the next column. 
+
 Values for each square key are:
- *  0 empty
- *  1 white pawn 
- *  2 white knight
- *  3 white bishop 
- *  4 white rook
- *  5 white queen
- *  6 white king
- *  7 black pawn   (P)
- *  8 black knight
- *  9 black bishop 
- * 10 black rook
- * 11 black queen
- * 12 black king
+  *  0 empty
+  *  1 white pawn 
+  *  2 white knight
+  *  3 white bishop 
+  *  4 white rook
+  *  5 white queen
+  *  6 white king
+  *  7 black pawn   (P)
+  *  8 black knight
+  *  9 black bishop 
+  * 10 black rook
+  * 11 black queen
+  * 12 black king
 
 En passant, eps
   * eps(Eps=0)
@@ -59,23 +60,42 @@ En passant, eps
   [here we store the number, unlike FEN which stores the algebraic]
 
 Castling + Turn 
- * cwk:1
+  * cwk:1
     can white still castle king side ?
- * cwq:1
+  * cwq:1
     can white still castle queen side ?
- * cbk:1
+  * cbk:1
     can black still castle king side ?
- * cbq:1
+  * cbq:1
     can black still castle queen side ?
- * 0:0 
+  * 0:0 
     active move turn (0:white to move, 1: black to move)
 
 Clocks
- * hmv:0
+  * hmv:0
      half moves clock: since last take
- * fmv:0
+  * fmv:0
      full moves: played so far
 
+This is how the empty Board dictioary is defined.
+==
+chess_dict_start_board( Board ) :-
+    Board = board{
+            cwk:1,cwq:1,cbk:1,cbq:1,
+            eps:0,
+            hmv:0,
+            fmv:0,
+            8:10,16:8,24:9,32:11,40:12,48:9,56:8,64:10,
+            7:7 ,15:7,23:7,31:7 ,39:7 ,47:7,55:7,63:7 ,
+            6:0 ,14:0,22:0,30:0 ,38:0 ,46:0,54:0,62:0 ,
+            5:0 ,13:0,21:0,29:0 ,37:0 ,45:0,53:0,61:0 ,
+            4:0 ,12:0,20:0,28:0 ,36:0 ,44:0,52:0,60:0 ,
+            3:0 ,11:0,19:0,27:0 ,35:0 ,43:0,51:0,59:0 ,
+            2:1 ,10:1,18:1,26:1 ,34:1 ,42:1,50:1,58:1 ,
+            1:4,  9:2,17:3,25:5 ,33:6 ,41:3,49:2,57:4 ,
+            0:0
+    }.
+==
 */
 chess_dict.
 
