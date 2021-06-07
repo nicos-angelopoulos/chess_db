@@ -1,7 +1,7 @@
 :- lib(chess_algebraic_turn_piece/3).
 :- lib(chess_pos_coord/3).
 
-/** chess_dict_move( +Move, +DictI, +Turn, -DictO ).
+/** chess_dict_move( +Move, +DictI, ?Turn, -DictO ).
     chess_dict_move( +Move, +DictI, -DictO ).
 
 Enact Move and Turn in dictionary board DictI into new chess position DictO.
