@@ -25,7 +25,7 @@
                         chess_dict_piece/3,                     % +DictPiece, +Colour, +Piece
                         chess_annotate_freq/3,                  % +Pgn, +CheDbLoc, +Args
                         chess_fen_square/2,                     % ?Fen, ?Sqr
-                        chess_algebraic_square/2,               % ?Alg, ?Sqr
+                        chess_dict_pos_algebraic/2,             % ?Pos, ?Alg
                         % etc
                         chess_db_version/2                      % -Vers, -Date
                      ] ).
@@ -74,10 +74,10 @@ chess_db_alias( Alias, Path ) :-
 :- lib(chess_db_messages/0).
 :- lib(chess_dict/0).
 :- lib(chess_fen_square/2).
-:- lib(chess_algebraic_square/2).
 :- lib(chess_dict_move/4).
 :- lib(chess_pgn_limos/2).
 :- lib(chess_annotate_freq/3).
+:- lib(chess_dict_pos_algebraic/2).
 
 :- debuc(chess_db(true)).
 :- lib(end(chess_db)).

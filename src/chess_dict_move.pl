@@ -92,15 +92,15 @@ chess_dict_move_1( Move, DictI, Turn, DictO ) :-
     !,
     chess_algebraic_turn_piece( Right, Turn, NewPiece ),
     ( atomic_list_concat([FromPfx,To],x,Left) ->
-        chess_algebraic_square( To, ToSqr ),
+        chess_dict_pos_algebraic( ToSqr, To ),
         (Turn =:= 0 -> FromSfx ='7' ; FromSfx = '2'),
         atom_concat( FromPfx, FromSfx, FromAlg ),
-        chess_algebraic_square( FromAlg, FromSqr ),
+        chess_dict_pos_algebraic( FromSqr, FromAlg ),
         put_dict( FromSqr, DictI, 0, DictJ ),
         put_dict( ToSqr, DictJ, NewPiece, DictK ),
         put_dict( hmv, DictK, 0, DictO )
         ;
-        chess_algebraic_square( Left, Sqr ),
+        chess_dict_pos_algebraic( Sqr, Left ),
         (Turn =:= 0 -> From is Sqr - 1 ; From is Sqr + 1),
         put_dict( From, DictI, 0, DictJ ),
         put_dict( Sqr, DictJ, NewPiece, DictK ),
@@ -317,10 +317,15 @@ chess_dict_empty_cross_line_between( Start, End, Elev ) :-
      End is Start + (I * Elev),
      !.
 
-/*
-chess_dict_move_pin_source( Dict, OppClr, Start, Xelv, Yel, Src ) :-
-     Next is Start + + ,
-     */
+/** chess_dict_move_pin_source( +Dict, +Clr, +Start, +Elv, -Source ).
+    
+Returns the Source square for a Clr coloured piece that attacks Start 
+when Elev line is followed.
+
+*/
+chess_dict_move_pin_source( Dict, Clr, Start, Elev, Src ) :-
+     % Next is Start + + ,
+     here(Dict,Clr,Start,Elev,Src).
 
 % Knights
 chess_dict_move_possible( 2, _Dict, ToPos, FromPos ) :-
