@@ -173,7 +173,7 @@ chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, Constr, DictO ) 
     chess_codes_pos( BegC, NumC, EndPos ),
     % include( chess_dict_move_possible(ProtoPiece,DictI,EndPos), PossPoss, Starts ),
     include( chess_dict_move_possible(ProtoPiece,DictI,EndPos), PossPoss, StartsProv ),
-    include( chess_dict_move_does_not_uncover(DictI,EndPos), StartsProv, Starts ),
+    exclude( chess_dict_move_pin(DictI,EndPos), StartsProv, Starts ),
     ( Starts = [StartPos] ->
         chess_dict_move_piece_from_to(DictI, StartPos-Piece, EndPos-Piece, true, DictN),
         chess_dict_inc( DictN, hmv, DictM ),
@@ -257,17 +257,59 @@ chess_dict_positions_uniqued( row, DscC, Poss, Unique ) :-
     TrgRow is DscC - 0'0,
     findall( Pos, (member(Pos,Poss), chess_pos_coord(Pos,_,TrgRow)), [Unique] ).
 
-/** chess_dict_move_does_not_uncover(+BoardDict, +EndPos, +Pos).
+/** chess_dict_move_pin(+BoardDict, +EndPos, +Pos).
      
      True iff moving a (any) piece from Pos to EndPos does not uncover a check in the Board.
 
+     The predicate only succeeds once.
+
 */
-chess_dict_move_does_not_uncover( Dict, End, Start ) :-
-     get_dict( Start, Dict, Diece ),
+chess_dict_move_pin( Board, End, Start ) :-
+     get_dict( Start, Board, Diece ),
      chess_dict_piece( Diece, Clr, _ ),
      chess_dict_piece( Ding, Clr, king ),
-     chess_dict_piece_positions( Dict, Ding, Locs ),
-     here( End, Diece, Locs ).
+     chess_dict_piece_positions( Board, Ding, Poss ),
+     ( Poss -> [Pos] ->
+          true
+          ;
+          throw( too_many_kings(Board,Poss) )
+     ),
+     chess_dict_empty_cross_line_between( Pos, Start, Elev ),
+     flip( Clr, OppClr ),
+     chess_dict_move_pin_source( Board, OppClr, Start, Elev, Src ),
+     here(End,is,not,between,Src,and,Start,at,Elev),
+     !. % only need first success
+% predicate fails if Start is not pinned
+
+/** chess_dict_empty_cross_line_between(+Start, +End, +Board, -Elev ).
+
+True iff End is at a direct cross fire line from Start in direction of unit Elevation.
+Succeeds at most once.
+
+There should only be empty square in the path between Start and End. Lines are considered 
+in horisontal and vertical straight lines and diagonals.
+
+Current implementation is very naive.
+
+==
+?- chess_dict_start_board(Board),
+   chess_dict_empty_cross_line_between(25,33,Elev).
+
+Board = board{...},
+Elev = 8.
+==
+
+*/
+chess_dict_empty_cross_line_between( Start, End, Elev ) :-
+     member( Elev, [-9,-8,-7,-1,1,7,8,9] ),
+     between( 1, 7, I ),
+     End is Start + (I * Elev),
+     !.
+
+/*
+chess_dict_move_pin_source( Dict, OppClr, Start, Xelv, Yel, Src ) :-
+     Next is Start + + ,
+     */
 
 % Knights
 chess_dict_move_possible( 2, _Dict, ToPos, FromPos ) :-
@@ -443,11 +485,11 @@ chess_codes_pos( BegC, NumC, Pos ) :-
     Pos is (End8Pad * 8) + Num.
 
 chess_dict_flip_turn_from( DictN, FromBit, DictO ) :-
-    flip_turn_bit( FromBit, ToBit ),
+    flip( FromBit, ToBit ),
     chess_dict_flip_turn_to( DictN, ToBit, DictO ).
 
-flip_turn_bit(0, 1).
-flip_turn_bit(1, 0).
+flip(0, 1).
+flip(1, 0).
 
 chess_dict_flip_turn_to( DictN, ToBit, DictO ) :-
     chess_dict_flip_turn_bit( ToBit, DictN, DictO ),
