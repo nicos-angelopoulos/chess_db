@@ -161,8 +161,8 @@ chess_dict_move_castle_long( 1, DictI, DictO ) :-
     chess_dict_move_piece_from_to( DictM,  8-10, 32-10, true, DictN ),
     chess_dict_flip_turn_to( DictN, 0, DictO ).
 
-% piece
-chess_dict_move_piece( PieceC, BegC, [NumC], DictI, _Move, Turn, Constr, DictO ) :-
+% piece, base case: letter + square; Rc5
+chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, Constr, DictO ) :-
     BegC > 96,
     0'0 =< NumC,
     NumC =< 0'9,
@@ -177,8 +177,7 @@ chess_dict_move_piece( PieceC, BegC, [NumC], DictI, _Move, Turn, Constr, DictO )
         chess_dict_inc( DictN, hmv, DictM ),
         chess_dict_flip_turn_from( DictM, Turn, DictO )
         ;
-        atom_codes( Piece, [PieceC] ),
-        throw( non_unique_starts_1(Starts,Piece,BegC,NumC) )
+        throw( non_unique_starts_1(Starts,Move) )
     ).
 % Nce4, N3e4
 chess_dict_move_piece( PieceC, DscC, [BegC,NumC], DictI, _Move, Turn, Constr, DictO ) :-
