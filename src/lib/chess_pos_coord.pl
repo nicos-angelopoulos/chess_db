@@ -1,6 +1,7 @@
-/** chess_pos_coord( Pos, X, Y ).
+/** chess_pos_coord( +Pos, -X, -Y ).
+    chess_pos_coord( -Pos, +X, +Y ).
 
-Convert from Board position to coordinate.
+Convert between Board position and coordinates.
 
 Called from calculating Knight sources.
 
