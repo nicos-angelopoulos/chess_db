@@ -1,5 +1,5 @@
 :- lib(chess_algebraic_turn_piece/3).
-:- lib(chess_pos_coord/3).
+:- lib(chess_dict_pos_coord/3).
 
 /** chess_dict_move( +Move, +DictI, ?Turn, -DictO ).
     chess_dict_move( +Move, +DictI, -DictO ).
@@ -255,13 +255,24 @@ chess_dict_positions_uniqued( col, DscC, Poss, Unique ) :-
 
 chess_dict_positions_uniqued( row, DscC, Poss, Unique ) :-
     TrgRow is DscC - 0'0,
-    findall( Pos, (member(Pos,Poss), chess_pos_coord(Pos,_,TrgRow)), [Unique] ).
+    findall( Pos, (member(Pos,Poss), chess_dict_pos_coord(Pos,_,TrgRow)), [Unique] ).
 
 /** chess_dict_move_pin(+BoardDict, +EndPos, +Pos).
      
      True iff moving a (any) piece from Pos to EndPos does not uncover a check in the Board.
 
      The predicate only succeeds once.
+
+==
+?- chess_dict_start_board(Board0),
+   chess_dict_move(e4,Board0,Board1),
+   chess_dict_move(d5,Board1,Board2),
+   chess_dict_move('Nf3',Board2,Board3),
+   chess_dict_move('Bg4',Board3,Board4),
+   chess_dict_move_pin(Board4,
+
+==
+
 
 */
 chess_dict_move_pin( Board, End, Start ) :-
@@ -315,13 +326,13 @@ chess_dict_move_pin_source( Dict, OppClr, Start, Xelv, Yel, Src ) :-
 chess_dict_move_possible( 2, _Dict, ToPos, FromPos ) :-
     % member( Dist, [-17,-15,-10,-6,6,10,15,17] ),
     % FromPos is ToPos + Dist,
-    chess_pos_coord( ToPos, X, Y ),
+    chess_dict_pos_coord( ToPos, X, Y ),
     member(Zx,[1,2,-1,-2]), 
     member(Zy,[1,2,-1,-2]), 
     abs(Zx) =\= abs(Zy),
     X1 is X + Zx, X1 > 0, X1 < 9,
     Y1 is Y + Zy, Y1 > 0, Y1 < 9,
-    chess_pos_coord( FromPos, X1, Y1 ),
+    chess_dict_pos_coord( FromPos, X1, Y1 ),
     !.  % fixme: this should be higher up surely ???
 % Bishops
 % 30 can be landed from 39, 48 (upper right);  23, 16 (upper left); 21, 12, 3 (lower left) 37, 44, 51, 58 (lower right)
