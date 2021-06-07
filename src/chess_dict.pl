@@ -36,7 +36,9 @@ chess_dict_start_board( Board ) :-
 
 A documentation predicate, 
 
-Coding, 1-64 (see algebraic_turn_piece/3).
+Coding, each sqaure in board is in dictionary key: 1-64 (see algebraic_turn_piece/3).
+Numbering starts at bottom left and goes numbers (rows) first before it sweeps to the next column. 
+Values for each square key are:
  *  0 empty
  *  1 white pawn 
  *  2 white knight

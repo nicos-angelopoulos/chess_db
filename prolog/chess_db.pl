@@ -246,7 +246,8 @@ info interactions
   * chess_db_list/1
   * chess_db_max_id/2
 
-miscellaneous
+documentation
+  * chess_dict/0
   * chess_db_version/2
 
 ---+++ Pack info

@@ -171,7 +171,9 @@ chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, Constr, DictO ) 
     findall( PossPos, (between(1,64,PossPos), Piece =:= DictI.PossPos, call(Constr,PossPos)), PossPoss ),
     (  Piece > 6 -> ProtoPiece is Piece - 6; ProtoPiece is Piece ),
     chess_codes_pos( BegC, NumC, EndPos ),
-    include( chess_dict_move_possible(ProtoPiece,DictI,EndPos), PossPoss, Starts ),
+    % include( chess_dict_move_possible(ProtoPiece,DictI,EndPos), PossPoss, Starts ),
+    include( chess_dict_move_possible(ProtoPiece,DictI,EndPos), PossPoss, StartsProv ),
+    include( chess_dict_move_does_not_uncover(DictI,EndPos), StartsProv, Starts ),
     ( Starts = [StartPos] ->
         chess_dict_move_piece_from_to(DictI, StartPos-Piece, EndPos-Piece, true, DictN),
         chess_dict_inc( DictN, hmv, DictM ),
@@ -254,6 +256,14 @@ chess_dict_positions_uniqued( col, DscC, Poss, Unique ) :-
 chess_dict_positions_uniqued( row, DscC, Poss, Unique ) :-
     TrgRow is DscC - 0'0,
     findall( Pos, (member(Pos,Poss), chess_pos_coord(Pos,_,TrgRow)), [Unique] ).
+
+/** chess_dict_move_does_not_uncover(+BoardDict, +EndPos, +Pos).
+     
+     True iff moving a (any) piece from Pos to EndPos does not uncover a check in the Board.
+
+*/
+chess_dict_move_does_not_uncover( Dict, End, ToPos ) :-
+     chess_dict_
 
 % Knights
 chess_dict_move_possible( 2, _Dict, ToPos, FromPos ) :-
