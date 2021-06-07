@@ -2,8 +2,8 @@
 --------------------
 
 1.0  
-
      21.06.07  IFACE:    chess_dict_piece/3
+               ADDED:    chess_dict_piece_positions/3
      20.03.28  FIXED:    en_passant for black ... 
                IFACE:    check mate !
                IFACE:    pgn_write modality

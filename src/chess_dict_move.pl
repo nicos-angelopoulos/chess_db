@@ -263,8 +263,11 @@ chess_dict_positions_uniqued( row, DscC, Poss, Unique ) :-
 
 */
 chess_dict_move_does_not_uncover( Dict, End, Start ) :-
-     get_dict( Start, Dict, DPiece ),
-     here( End, DPiece ).
+     get_dict( Start, Dict, Diece ),
+     chess_dict_piece( Diece, Clr, _ ),
+     chess_dict_piece( Ding, Clr, king ),
+     chess_dict_piece_positions( Dict, Ding, Locs ),
+     here( End, Diece, Locs ).
 
 % Knights
 chess_dict_move_possible( 2, _Dict, ToPos, FromPos ) :-
@@ -464,6 +467,30 @@ chess_dict_flip_bits( Bit1, Bit2 ) :-
     !.
 chess_dict_flip_bits( Bit1, Bit2 ) :-
     throw( incompatible_flipping_bits(Bit1,Bit2) ).
+
+/** chess_dict_piece_positions( +Dict, +Diece, -Poss ).
+     Returns all the Positions of Diece (dictionary encoded piece), in board Dict.
+
+==
+?- chess_dict_start_board(Board),
+   chess_dict_piece( WhKing, white, king ),
+   chess_dict_piece_positions(Board,WhKing,Poss).
+
+Board = board{...},
+WhKing = 6,
+Poss = [33].
+
+?- chess_dict_start_board(Board),
+   chess_dict_piece( BlKing, black, king ),
+   chess_dict_piece_positions(Board,BlKing,Poss).
+
+Board = board{...},
+BlKing = 12,
+Poss = [40].
+==
+*/
+chess_dict_piece_positions( Dict, Diece, Poss ) :-
+     findall( Pos, (between(1,64,Pos),get_dict(Pos,Dict,Diece)), Poss ).
 
 /** chess_dict_piece(+DictPiece, +Colour, +Piece).
 
