@@ -225,6 +225,30 @@ Listens to:
   * chess_db(true) 
      (on-by-default channel, turn off for silent operation)
 
+
+---+++ Databases
+
+Each chess_db database directory contains 3 DBs each holding a single table:
+  * game_info.sqlite
+     contains game_info(Gid,Key,Val) info Key->Val pairs about each game
+
+  * game_move.sqlite
+     table is, game_move(Gid,Ply,Hmv,Move)
+     * Gid is the game id
+     * Num is the ply move for the move in the game
+     * Hmv is the half moves since last take
+     * Move is the original (algebraic form of the move)
+
+  * game_orig.sqlite
+     table is game_orig(Gid,Orig); where Orig is the verbatim of the section in the PGN for that game
+
+  * game_posi.sqlite
+     table is game_posi(Pos,GPPairs), where GPPairs is a ; seperated Gid-Ply pairs stored as text (eg '1-2;2-4')
+
+Positions are encoded as long integers.
+
+A number of chess_dbs can be opened at the same time. 
+
 ---+++ Pack predicates
 
 parsing of and saving to pgn files, and storing/retriving on/from chess_dbs

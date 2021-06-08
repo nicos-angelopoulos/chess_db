@@ -18,7 +18,7 @@ Inpos = [limo(0, 0, e4, 10070000000001040807000000000102090700000000010312070000
 chess_pgn_limos( Pgn, Limos ) :-
     Pgn = pgn(_Info,Moves,_Res,_Text),
     chess_dict_start_board( Start ),
-    chess_pgn_moves_limos( Moves, 0, Start, Limos ).
+    chess_pgn_moves_limos( Moves, 1, Start, Limos ).
 
 chess_pgn_moves_limos( [], Ply, Board, Limo ) :-
     chess_dict_inpo( Board, Inpo ),

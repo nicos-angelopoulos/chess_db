@@ -164,6 +164,7 @@ chess_dict_move_castle_long( 1, DictI, DictO ) :-
 
 % piece, base case: letter + square; Rc5
 chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, Constr, DictO ) :-
+    % ( Move == 'Qg6' -> trace; true ),
     BegC > 96,
     0'0 =< NumC,
     NumC =< 0'9,
@@ -174,7 +175,7 @@ chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, Constr, DictO ) 
     chess_codes_pos( BegC, NumC, EndPos ),
     % include( chess_dict_move_possible(ProtoPiece,DictI,EndPos), PossPoss, Starts ),
     include( chess_dict_move_possible(ProtoPiece,DictI,EndPos), PossPoss, StartsProv ),
-    exclude( chess_dict_move_pin(DictI,EndPos), StartsProv, Starts ),
+    ( ProtoPiece =:= 6 -> Starts = StartsProv; exclude(chess_dict_move_pin(DictI,EndPos), StartsProv, Starts) ),
     ( Starts = [StartPos] ->
         chess_dict_move_piece_from_to(DictI, StartPos-Piece, EndPos-Piece, true, DictN),
         chess_dict_inc( DictN, hmv, DictM ),
@@ -184,6 +185,7 @@ chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, Constr, DictO ) 
     ).
 % Nce4, N3e4
 chess_dict_move_piece( PieceC, DscC, [BegC,NumC], DictI, _Move, Turn, Constr, DictO ) :-
+    DscC =\= 0'x,  % avoic Rxd3
     BegC > 96,
     0'0 =< NumC,
     NumC =< 0'9,
@@ -213,11 +215,12 @@ chess_dict_move_piece( PieceC, DscC, [0'x,BegC,NumC], DictI, Move, Turn, Constr,
     !,
     put_dict( hmv, DictI, 0, DictM ),
     chess_dict_move_piece( PieceC, DscC, [BegC,NumC], DictM, Move, Turn, Constr, DictO ).
-% piece takes:
+% piece takes: Rxd3
 chess_dict_move_piece( PieceC, 0'x, [BegC,NumC], DictI, Move, Turn, Constr, DictO ) :-
     !,
     put_dict( hmv, DictI, 0, DictM ),
     chess_dict_move_piece( PieceC, BegC, [NumC], DictM, Move, Turn, Constr, DictO ).
+%? 
 chess_dict_move_piece( PieceC, FromC, [BegC,NumC], DictI, Move, Turn, _ConstrIn, DictO ) :-
     % fixme: check ConstrIn is = true
     BegC > 96,
@@ -260,7 +263,7 @@ chess_dict_positions_uniqued( row, DscC, Poss, Unique ) :-
 
 /** chess_dict_move_pin(+BoardDict, +EndPos, +Pos).
      
-     True iff moving a (any) piece from Pos to EndPos does not uncover a check in the Board.
+     True iff moving a (any) piece from Pos to EndPos uncovers a check in the Board.
 
      The predicate only succeeds once.
 
@@ -293,21 +296,61 @@ ERROR: Unhandled exception: non_unique_starts_1([],'Nd5')
 chess_dict_move_pin( Board, End, Start ) :-
      get_dict( Start, Board, Diece ),
      chess_dict_piece( Diece, Clr, _ ),
+     ( Clr == white -> OppClr = black; OppClr = white ),
      chess_dict_piece( Ding, Clr, king ),
-     chess_dict_piece_positions( Board, Ding, Poss ),
-     ( Poss = [Pos] ->
+     chess_dict_piece_positions( Board, Ding, KingPoss ),
+     ( KingPoss = [KingPos] ->
           true
           ;
-          throw( too_many_kings(Board,Poss) )
+          throw( too_many_kings(Board,KingPoss) )
      ),
-     chess_dict_empty_cross_line_between( Pos, Start, Elev ),
-     ( Clr == white -> OppClr = black; OppClr = white ),
-     chess_dict_move_pin_source( Board, OppClr, Start, Elev, Src ),
-     \+ chess_dict_empty_cross_line_between( End, Src, Elev ),
-     !. % only need first success
+     % NEW approach
+     % remove defender king and check blocker can reach king's position 
+     % get location of paossible attackers and then
+     %  then also remove possible blocker and check if attackers reach blocker position and king position
+
+     % bishops and queens
+     chess_dict_piece( Bish, OppClr, bishop ),
+     chess_dict_piece_positions( Board, Bish, PossB ),
+     chess_dict_piece( Quen, OppClr, queen ),
+     chess_dict_piece_positions( Board, Quen, PossQ ),
+     append( PossB, PossQ, PossBQ ),
+     % put_dict( [KingPoss=0], Board, NoKDict ),
+     put_dict( [Start=0,KingPos=0], Board, NoSKDict ),
+
+     ( (chess_dict_move_possible(3,NoSKDict,Start,KingPos,Dir),
+        member(PosBQ,PossBQ),
+        chess_dict_move_possible(3,NoSKDict,PosBQ,KingPos,Dir),
+        \+ chess_dict_move_possible(3,NoSKDict,End,KingPos,Dir),
+        % this is probably no needed:
+        \+ chess_dict_move_possible(3,NoSKDict,PosBQ,End,Dir)
+        ) ->
+          true
+          ;
+          chess_dict_piece( Rook, OppClr, rook ),
+          chess_dict_piece_positions( Board, Rook, PossR ),
+          append( PossR, PossQ, PossRQ ),
+          chess_dict_move_possible(4,NoSKDict,Start,KingPos,Dir),
+          member(PosRQ,PossRQ),
+          chess_dict_move_possible(4,NoSKDict,PosRQ,KingPos,Dir),
+          \+ chess_dict_move_possible(4,NoSKDict,End,KingPos,Dir),
+          % this is probably no needed:
+          \+ chess_dict_move_possible(4,NoSKDict,PosRQ,End,Dir)
+     ),
+     !.
+          % findall( Pos, (between(1,64,Pos),get_dict(Pos,Board,Diece)), Poss ).
+     % rooks and queens
+     % chess_dict_move_possible(4,Board,Start,KingPos) ),
+
+     % old stuff
+     % chess_dict_empty_cross_line_between( KingPos, Start, Elev ),
+     % chess_dict_move_pin_source( Board, OppClr, Start, Elev, Src ),
+     % \+ chess_dict_empty_cross_line_between( End, Src, Elev ),
+     % !. % only need first success
 % predicate fails if Start is not pinned
 
-/** chess_dict_empty_cross_line_between(+Start, +End, +Board, -Elev ).
+
+/** chess_dict_empty_cross_line_between(+Start, +End, +Board, -XElev, -YElev ).
 
 True iff End is at a direct cross fire line from Start in direction of unit Elevation.
 Succeeds at most once.
@@ -328,6 +371,7 @@ Elev = 8.
 */
 chess_dict_empty_cross_line_between( Start, End, Elev ) :-
      member( Elev, [-9,-8,-7,-1,1,7,8,9] ),
+     % member( 
      between( 1, 7, I ),
      End is Start + (I * Elev),
      !.
@@ -399,8 +443,11 @@ chess_piece_moves_on_line_elev(queen,  7).
 chess_piece_moves_on_line_elev(queen,  8).
 chess_piece_moves_on_line_elev(queen,  9).
 
+chess_dict_move_possible( ProtoPiece, Dict, ToPos, FromPos ) :-
+     chess_dict_move_possible( ProtoPiece, Dict, ToPos, FromPos, _Dir ).
+
 % Knights
-chess_dict_move_possible( 2, _Dict, ToPos, FromPos ) :-
+chess_dict_move_possible( 2, _Dict, ToPos, FromPos, Dir ) :-
     % member( Dist, [-17,-15,-10,-6,6,10,15,17] ),
     % FromPos is ToPos + Dist,
     chess_dict_pos_coord( ToPos, X, Y ),
@@ -410,41 +457,50 @@ chess_dict_move_possible( 2, _Dict, ToPos, FromPos ) :-
     X1 is X + Zx, X1 > 0, X1 < 9,
     Y1 is Y + Zy, Y1 > 0, Y1 < 9,
     chess_dict_pos_coord( FromPos, X1, Y1 ),
+    Dir = Zx/Zy,
     !.  % fixme: this should be higher up surely ???
+    % should we check destination is empty in Dict ? 
+
 % Bishops
 % 30 can be landed from 39, 48 (upper right);  23, 16 (upper left); 21, 12, 3 (lower left) 37, 44, 51, 58 (lower right)
 %
-chess_dict_move_possible( 3, _Dict, ToPos, FromPos ) :-
+chess_dict_move_possible( 3, Dict, ToPos, FromPos, Dir ) :-
     member( Div, [7,9] ),
     0 =:= (abs(ToPos - FromPos) mod Div),
     Steps is abs( ((ToPos - 1) // 8) - ( (FromPos - 1) //8) ) - 1, % diff in columns
-    Steps > -1, % -1 means they are no same column
+    Steps > -1, % -1 means they are on same column
     Steps is ( abs(ToPos - FromPos) // Div ) - 1,
+    Min is min(ToPos,FromPos),
+    findall( Btw, (between(1,Steps,Step),Btw is  Min + (Div * Step), Dict.Btw =:= 0), Btws ),
+    length( Btws, Steps ),
+    (FromPos > ToPos -> Dir is Div * -1; Dir is Div),
     !.
 % Rooks, same row
-chess_dict_move_possible( 4, Dict, ToPos, FromPos ) :-
+chess_dict_move_possible( 4, Dict, ToPos, FromPos, Dir ) :-
     0 =:= (abs(ToPos - FromPos) mod 8 ),
+    (FromPos > ToPos -> Dir is -8; Dir is 8),
     Steps is (abs(ToPos - FromPos) // 8) - 1,
     Min is min(ToPos,FromPos),
     findall( Btw, (between(1,Steps,Step),Btw is Min + (8 * Step), Dict.Btw =:= 0), Btws ),
     length( Btws, Steps ),
     !.
 % Rooks, same column
-chess_dict_move_possible( 4, Dict, ToPos, FromPos ) :-
+chess_dict_move_possible( 4, Dict, ToPos, FromPos, Dir ) :-
     Clm is (FromPos - 1) // 8,
     Clm is (ToPos - 1) // 8,
+    (FromPos > ToPos -> Dir is -1; Dir is 1),
     Steps is abs(ToPos - FromPos) - 1,
     Min is min(ToPos,FromPos),
     findall( Btw, (between(1,Steps,Step),Btw is Min + Step, Dict.Btw =:= 0), Btws ),
     length( Btws, Steps ),
     !.
 % Queens = bishop or rook
-chess_dict_move_possible( 5, Dict, ToPos, FromPos ) :-
-    chess_dict_move_possible( 3, Dict, ToPos, FromPos ).
-chess_dict_move_possible( 5, Dict, ToPos, FromPos ) :-
-    chess_dict_move_possible( 4, Dict, ToPos, FromPos ).
+chess_dict_move_possible( 5, Dict, ToPos, FromPos, Dir ) :-
+    chess_dict_move_possible( 3, Dict, ToPos, FromPos, Dir ).
+chess_dict_move_possible( 5, Dict, ToPos, FromPos, Dir ) :-
+    chess_dict_move_possible( 4, Dict, ToPos, FromPos, Dir ).
 % fixme: King
-chess_dict_move_possible( 6, _Dict, ToPos, FromPos ) :-
+chess_dict_move_possible( 6, _Dict, ToPos, FromPos, Diff ) :-
     member( Diff, [1,-1,8,-8,-7,-9,+7,+9] ),
     FromPos is ToPos + Diff,
     !.

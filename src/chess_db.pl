@@ -119,13 +119,36 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, MoHa, OrHa, PoHa, Nid ) :
     findall( game_move(Nid,Ply,Hmv,NxtMv), member(limo(Ply,Hmv,NxtMv,_Inpo),Limos),  Moals ),
     db_assert( MoHa, Moals, _ ),
 
-    findall( game_posi(Nid,Ply,Inpo), member(limo(Ply,_Hmv,_Mv,Inpo),Limos),  Poals ),
-    db_assert( PoHa, Poals, _ ),
+    chess_db_limos_game_posi( Limos, Nid, PoHa ),
+
 
     maplist( atom_codes, OrigAtms, Orig ),
     atomic_list_concat( OrigAtms, '\n', OrigAtm ),
     debug( chess_db(original), '~a', OrigAtm ),
     db_assert( OrHa, game_orig(Nid,OrigAtm), _ ).
+
+/** chess_db_limos_game_posi( +Limos, +Gid, +Db ).
+
+     Add a number of positions from Limos structures from game Gid, on to position table with db handle PoHa.
+
+*/
+chess_db_limos_game_posi( [], _Gid, _PosDb ).
+chess_db_limos_game_posi( [limo(Ply,_Hmv,Mv,Inpo)|T], Gid, PosDb ) :-
+     % write( mv(Mv) ), nl,
+     % ( Mv == 'c4' -> trace; true ),
+    ( Mv == [] ->
+          true
+          ; 
+          atomic_list_concat( [Gid,Ply,Mv], '-', This ),
+          ( (db_holds(PosDb,game_posi(Inpo,Curr)),db_retractall(PosDb,game_posi(Inpo,_),_) ) -> 
+               atomic_list_concat( [Curr,This], ';', Next )
+               ;
+               Next = This
+          ),
+          % ( integer(Inpo) -> InpoInt = Inpo; atom_number(Inpo,InpoInt) ),
+          db_assert( PosDb, game_posi(Inpo,Next), _ )
+    ),
+    chess_db_limos_game_posi( T, Gid, PosDb ).
 
 chess_db_game_info_exists( [], _InfHa, _ExGid ).
 chess_db_game_info_exists( [K-V|T], InfHa, ExGid ) :-
@@ -136,7 +159,8 @@ chess_db_table_fields( game_info, [gid+integer,key+text,value-text] ).
 % chess_db_table_fields( game_move, [gid+integer,move_no+integer,turn+boolean,move-text] ).
 chess_db_table_fields( game_move, [gid+integer,ply+integer,hmv-integer,move-text] ).
 chess_db_table_fields( game_orig, [gid+integer,original-text] ).
-chess_db_table_fields( game_posi, [gid+integer,ply+integer,position-text] ).
+% chess_db_table_fields( game_posi, [gid+integer,ply+integer,position-text] ).
+chess_db_table_fields( game_posi, [position+text,pairs-text] ).
 
 chess_db_dir( Dir, _Create, AbsDir ) :-
     AbsOpts = [file_type(directory),file_errors(fail)], % fixme: assumes dir-based db

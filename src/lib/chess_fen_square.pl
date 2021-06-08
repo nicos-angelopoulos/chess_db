@@ -1,6 +1,8 @@
 /** chess_fen_square( ?Fen, ?Square ).
 
-As chess_dict_pos_algebraic/2 but allows null location which is used in FEN for en passat-able square.
+As chess_dict_pos_algebraic/2 but allows null location when 
+
+Fen null can be either '-' which is what FEN uses, or 0 (which is how chess_db represents non
 
 ==
 ?- chess_fen_square( '-', Sq ).
@@ -15,6 +17,7 @@ A1 = a1.
 @version  0:1 2020/3/26
 
 */
-chess_fen_square( '-', 0 ) :- !.
+% chess_fen_square( '-', 0 ) :- !.
+chess_fen_square( 0, 0 ) :- !.
 chess_fen_square( Alg, Sqr ) :-
     chess_dict_pos_algebraic( Sqr, Alg ).
