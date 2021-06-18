@@ -34,11 +34,12 @@ chess_db_opening( Moves, PgnF ) :-
 chess_db_opening_game_id( Moves, CdbHs:Gid ) :-
     chess_db_current( CdbHs ),
     chess_db_handle( move, CdbHs, MovHle ),
-    chess_db_opening_moves( Moves, 1, false, MovHle, Gid ).
+    chess_db_opening_moves( Moves, 0, 0, MovHle, Gid ).
 
 chess_db_opening_moves( [], _NoMov, _Dir, _MovHle, Gid ) :-
     \+ var(Gid).
 chess_db_opening_moves( [Mv|Mvs], NoMov, Dir, MovHle, Gid ) :-
-    db_holds( MovHle, game_move(Gid,NoMov,Dir,Mv) ),
+    Ply is (NoMov * 2) + Dir,
+    db_holds( MovHle, game_move(Gid,Ply,_Hmv,Mv) ),
     chess_db_move_next( Dir, NoMov, NxDir, NxNoMov ),
     chess_db_opening_moves( Mvs, NxNoMov, NxDir, MovHle, Gid ).

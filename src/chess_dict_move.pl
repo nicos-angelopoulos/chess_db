@@ -34,14 +34,13 @@ Two = board{0:0, 1:4, 2:1, 3:0, 4:0, 5:0, 6:0, 7:7, 8:10, 9:2, 10:1, 11:0, 12:0,
 
 @author nicos angelopoulos
 @version  0:1 2020/03/27
-@tbd discard illegal moves when establishing possible moves
 
 */
 chess_dict_move( Move, DictI, DictO ) :- 
     chess_dict_move( Move, DictI, DictI.0, DictO ).
 
 chess_dict_move( Move, DictI, Turn, DictO ) :- 
-    debug( chess(move), 'Move: ~w', [Move] ),
+    debug( chess_db(move), 'Move: ~w', [Move] ),
     Durn = DictI.0,
     ( var(Turn) -> 
         Turn = Durn
@@ -51,19 +50,22 @@ chess_dict_move( Move, DictI, Turn, DictO ) :-
     !,
     put_dict( eps, DictI, 0, DictJ ),
     (chess_dict_move_1(Move,DictJ,Turn,DictM) -> true; throw(failed_on_move(Move,Turn,DictJ)) ),
+    chess_dict_fmv_inc( DictM, DictO ).
+    /*
     ( Turn =:= 1 -> 
         chess_dict_inc( DictM, fmv, DictL ),
         put_dict( 0, DictL, 0, DictO )
         ;
         put_dict( 0, DictM, 1, DictO )
     ).
+    */
 
 chess_dict_move_1( MoveCheck, DictI, Turn, DictO ) :- 
     ( atom_concat( Move, '+', MoveCheck ) ;
       atom_concat( Move, '#', MoveCheck ) ),
     !,
     chess_dict_move_1( Move, DictI, Turn, DictO ).
-chess_dict_move_1( 'O-O', DictI, Turn, DictO ) :- 
+chess_dict_move_1( 'O-O', DictI, Turn, DictP ) :- 
     !,
     chess_dict_move_castle_short( Turn, DictI, DictJ ),
     ( Turn =:= 0 ->
@@ -74,8 +76,10 @@ chess_dict_move_1( 'O-O', DictI, Turn, DictO ) :-
         % cbk:1,cbq:1,
         put_dict( cbk, DictJ, 0, DictK ),
         put_dict( cbq, DictK, 0, DictO )
-    ).
-chess_dict_move_1( 'O-O-O', DictI, Turn, DictO ) :- 
+    ),
+    chess_dict_hmv_inc( DictO, DictP ).
+
+chess_dict_move_1( 'O-O-O', DictI, Turn, DictP ) :- 
     !,
     chess_dict_move_castle_long( Turn, DictI, DictJ ),
     ( Turn =:= 0 ->
@@ -86,7 +90,8 @@ chess_dict_move_1( 'O-O-O', DictI, Turn, DictO ) :-
         % cbk:1,cbq:1,
         put_dict( cbk, DictJ, 0, DictK ),
         put_dict( cbq, DictK, 0, DictO )
-    ).
+    ),
+    chess_dict_hmv_inc( DictO, DictP ).
 % pawn.promotion
 chess_dict_move_1( Move, DictI, Turn, DictO ) :- 
     atomic_list_concat( [Left,Right], '=', Move ),
@@ -130,17 +135,14 @@ chess_dict_move_castle_short( 0, DictI, DictO ) :-
     DictI.49 =:= 0,
     DictI.57 =:= 4,  % white rook
     chess_dict_move_piece_from_to( DictI, 33-6, 49-6, true, DictM ),
-    chess_dict_move_piece_from_to( DictM, 57-4, 41-4, true, DictN ),
-    chess_dict_flip_turn_to( DictN, 1, DictO ).
-
+    chess_dict_move_piece_from_to( DictM, 57-4, 41-4, true, DictO ).
 chess_dict_move_castle_short( 1, DictI, DictO ) :-
     DictI.40 =:= 12,  % black king
     DictI.48 =:= 0,
     DictI.56 =:= 0,
     DictI.64 =:= 10,  % black rook
     chess_dict_move_piece_from_to( DictI, 40-12, 56-12, true, DictM ),
-    chess_dict_move_piece_from_to( DictM, 64-10, 48-10, true, DictN ),
-    chess_dict_flip_turn_to( DictN, 0, DictO ).
+    chess_dict_move_piece_from_to( DictM, 64-10, 48-10, true, DictO ).
 
 % long Castle white
 chess_dict_move_castle_long( 0, DictI, DictO ) :-
@@ -150,8 +152,7 @@ chess_dict_move_castle_long( 0, DictI, DictO ) :-
     DictI.9  =:= 0,
     DictI.1  =:= 4,  % white rook
     chess_dict_move_piece_from_to( DictI, 33-6, 17-6, true, DictM ),
-    chess_dict_move_piece_from_to( DictM,  1-4, 25-4, true, DictN ),
-    chess_dict_flip_turn_to( DictN, 1, DictO ).
+    chess_dict_move_piece_from_to( DictM,  1-4, 25-4, true, DictO ).
 chess_dict_move_castle_long( 1, DictI, DictO ) :-
     DictI.40 =:= 12,  % black king
     DictI.32 =:= 0,
@@ -159,8 +160,7 @@ chess_dict_move_castle_long( 1, DictI, DictO ) :-
     DictI.16 =:= 0,
     DictI.8  =:= 10,  % black rook
     chess_dict_move_piece_from_to( DictI, 40-12, 24-12, true, DictM ),
-    chess_dict_move_piece_from_to( DictM,  8-10, 32-10, true, DictN ),
-    chess_dict_flip_turn_to( DictN, 0, DictO ).
+    chess_dict_move_piece_from_to( DictM,  8-10, 32-10, true, DictO ).
 
 % piece, base case: letter + square; Rc5
 chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, Constr, DictO ) :-
@@ -178,8 +178,9 @@ chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, Constr, DictO ) 
     ( ProtoPiece =:= 6 -> Starts = StartsProv; exclude(chess_dict_move_pin(DictI,EndPos), StartsProv, Starts) ),
     ( Starts = [StartPos] ->
         chess_dict_move_piece_from_to(DictI, StartPos-Piece, EndPos-Piece, true, DictN),
-        chess_dict_inc( DictN, hmv, DictM ),
-        chess_dict_flip_turn_from( DictM, Turn, DictO )
+        % chess_dict_inc( DictN, hmv, DictM ),
+        % chess_dict_flip_turn_from( DictM, Turn, DictO )
+        chess_dict_hmv_inc( DictN, DictO )
         ;
         throw( non_unique_starts_1(Starts,Move) )
     ).
@@ -197,13 +198,15 @@ chess_dict_move_piece( PieceC, DscC, [BegC,NumC], DictI, _Move, Turn, Constr, Di
     include( chess_dict_move_possible(ProtoPiece,DictI,EndPos), PossPoss, Starts ),
     ( Starts = [StartPos] ->
         chess_dict_move_piece_from_to( DictI, StartPos-Piece, EndPos-Piece, true, DictN ),
-        chess_dict_inc( DictN, hmv, DictM ),
-        chess_dict_flip_turn_from( DictM, Turn, DictO )
+        % chess_dict_inc( DictN, hmv, DictM ),
+        % chess_dict_flip_turn_from( DictM, Turn, DictO )
+        chess_dict_hmv_inc( DictN, DictO )
         ;
         ( chess_dict_positions_uniqued(Starts,DscC,StartPos) ->
             chess_dict_move_piece_from_to( DictI, StartPos-Piece, EndPos-Piece, true, DictN ),
-            chess_dict_inc( DictN, hmv, DictM ),
-            chess_dict_flip_turn_from( DictM, Turn, DictO )
+            chess_dict_hmv_inc( DictN, DictO )
+            % chess_dict_inc( DictN, hmv, DictM ),
+            % chess_dict_flip_turn_from( DictM, Turn, DictO )
             ;
             atom_codes( ToSqr, [BegC,NumC] ),
             atom_codes( PieceAtm, [PieceC] ),
@@ -213,13 +216,13 @@ chess_dict_move_piece( PieceC, DscC, [BegC,NumC], DictI, _Move, Turn, Constr, Di
 % Ncxe4, N3xe4
 chess_dict_move_piece( PieceC, DscC, [0'x,BegC,NumC], DictI, Move, Turn, Constr, DictO ) :-
     !,
-    put_dict( hmv, DictI, 0, DictM ),
-    chess_dict_move_piece( PieceC, DscC, [BegC,NumC], DictM, Move, Turn, Constr, DictO ).
+    chess_dict_move_piece( PieceC, DscC, [BegC,NumC], DictI, Move, Turn, Constr, DictM ),
+    put_dict( hmv, DictM, 0, DictO ).
 % piece takes: Rxd3
 chess_dict_move_piece( PieceC, 0'x, [BegC,NumC], DictI, Move, Turn, Constr, DictO ) :-
     !,
-    put_dict( hmv, DictI, 0, DictM ),
-    chess_dict_move_piece( PieceC, BegC, [NumC], DictM, Move, Turn, Constr, DictO ).
+    chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, Constr, DictM ),
+    put_dict( hmv, DictM, 0, DictO ).
 %? 
 chess_dict_move_piece( PieceC, FromC, [BegC,NumC], DictI, Move, Turn, _ConstrIn, DictO ) :-
     % fixme: check ConstrIn is = true
@@ -422,7 +425,6 @@ chess_dict_move_pin_source_1( Diece, _Dict, Clr, Curr, Elev, Src ) :-
      Src = Curr,
      !.
 
-
 % bishops
 chess_piece_moves_on_line_elev(bishop, -9).
 chess_piece_moves_on_line_elev(bishop, -7).
@@ -505,45 +507,52 @@ chess_dict_move_possible( 6, _Dict, ToPos, FromPos, Diff ) :-
     FromPos is ToPos + Diff,
     !.
 
-% no need to do anything with DictI.eps 
-% 
+% pawn takes
 chess_dict_move_pawn( FromC, [0'x,BegC,NumC], DictI, _Move, Turn, _ConstrI, DictO ) :-
     0'a =< FromC, FromC =< 0'h,
     !,
     chess_codes_pos( BegC, NumC, EndPos ),
     % chess_piece_pawn_turn( Turn, Pawn ),
-    chess_dict_move_pawn_takes( Turn, FromC, EndPos, DictI, DictN ),
-    put_dict( hmv, DictN, 0, DictM ),
-    chess_dict_flip_turn_from( DictM, Turn, DictO ).
+    chess_dict_move_pawn_takes( Turn, FromC, EndPos, DictI, DictJ ),
+    % chess_dict_hmv_inc( DictJ, 1, DictK ),
+    % chess_dict_fmv_inc( DictJ, DictL ),
+    put_dict( hmv, DictJ, 0, DictM ),
+    put_dict( eps, DictM, 0, DictO ).
+    % chess_dict_flip_turn_from( DictN, Turn, DictO ).
 % pawn push
 chess_dict_move_pawn( BegC, [NumC], DictI, Move, Turn, Constr, DictO ) :-
     0'0 =< NumC,
     NumC =< 0'9,
     !,
+    % chess_dict_fmv_inc( DictI, DictJ ),
     chess_codes_pos( BegC, NumC, EndPos ),
     chess_piece_pawn_turn( Turn, Pawn ),
     chess_move_piece_pawn_turn_step( Turn, EndPos, 1, Single ),
-    ( (call(Constr,Single),DictI.Single =:= Pawn) -> 
-        % ignore DictI.eps for single square moves
+    ( (call(Constr,Single),DictI.Single =:= Pawn) ->   % single square move
         chess_dict_move_piece_from_to(DictI, Single-Pawn, EndPos-Pawn, true, DictN),
-        put_dict( hmv, DictN, 0, DictM ),
-        chess_dict_flip_turn_from( DictM, Turn, DictO )
+        % put_dict( hmv, DictN, 0, DictM ),
+        chess_dict_hmv_inc( DictN, DictM ),
+        put_dict( eps, DictM, 0, DictO )
+        % chess_dict_flip_turn_from( DictL, Turn, DictO )
         ;
         chess_move_piece_pawn_turn_step( Turn, EndPos, 2, Double ),
         ( (call(Constr,Double),DictI.Double =:= Pawn) -> 
             chess_move_piece_pawn_turn_step( Turn, EndPos, 1, EnPassant ),
             chess_dict_move_piece_from_to(DictI, Double-Pawn, EndPos-Pawn, true, DictN),
-            put_dict( hmv, DictN, 0, DictM ),
+            % put_dict( hmv, DictN, 0, DictM ),
+            chess_dict_hmv_inc( DictN, DictM ),
             chess_fen_square( EnPAlg, EnPassant ),
             % put_dict( eps, DictM, EnPassant, DictL ),
-            put_dict( eps, DictM, EnPAlg, DictL ),
-            chess_dict_flip_turn_from( DictL, Turn, DictO )
+            put_dict( eps, DictM, EnPAlg, DictO )
+            % chess_dict_hmv_inc( DictJ, 0, DictK )
+            % chess_dict_flip_turn_from( DictL, Turn, DictO )
             ;
             throw( cannot_find_pawn_to_move_to(Move) )
         )
     ).
+    % put_dict( lwt, DictO, 0, DictP ).
 
-chess_dict_move_pawn_takes( 0, FromC, EndPos, DictI, DictO ) :-
+chess_dict_move_pawn_takes( 0, FromC, EndPos, DictI, DictP ) :-
     Pawn = 1,
     ColMax is (FromC - 0'a) * 8,
     ( EndPos > ColMax -> SrcPos is EndPos - 9; SrcPos is EndPos + 7 ),
@@ -558,7 +567,8 @@ chess_dict_move_pawn_takes( 0, FromC, EndPos, DictI, DictO ) :-
             chess_dict_move_piece_from_to( DictI, SrcPos-Pawn, EndPos-Pawn, RemPos, DictO )
             % throw(no_en_passe_yet(EndPos,SrcPos,0)) 
         )
-    ).
+    ),
+    put_dict( lwt, DictO, 1, DictP ).
 chess_dict_move_pawn_takes( 1, FromC, EndPos, DictI, DictO ) :-
     Pawn = 7,
     ColMax is (FromC - 0'a) * 8,
@@ -628,34 +638,27 @@ chess_codes_pos( BegC, NumC, Pos ) :-
     End8Pad is BegC - 0'a,
     Pos is (End8Pad * 8) + Num.
 
-chess_dict_flip_turn_from( DictN, FromBit, DictO ) :-
-    flip( FromBit, ToBit ),
-    chess_dict_flip_turn_to( DictN, ToBit, DictO ).
+chess_dict_fmv_inc( DictI, DictK ) :-
+     get_dict( 0, DictI, Amt ),
+     ( Amt =:= 1 -> 
+          get_dict( fmv, DictI, Fmv ),
+          Fnv is Fmv + 1,
+          put_dict( 0, DictI, 0, DictJ ),
+          put_dict( fmv, DictJ, Fnv, DictK )
+          ;
+          put_dict( 0, DictI, 1, DictK )
+     ).
 
-flip(0, 1).
-flip(1, 0).
-
-chess_dict_flip_turn_to( DictN, ToBit, DictO ) :-
-    chess_dict_flip_turn_bit( ToBit, DictN, DictO ),
-    !.
-chess_dict_flip_turn_to( _DictN, ToBit, _DictO ) :-
-    throw( un_recognised_bit(ToBit) ).
-
-chess_dict_flip_turn_bit( 1, DictN, DictO ) :-
-    chess_dict_flip_bits( DictN.0, 1 ),
-    put_dict( 0, DictN, 1, DictO ).
-chess_dict_flip_turn_bit( 0, DictN, DictO ) :-
-    chess_dict_flip_bits( DictN.0, 0 ),
-    put_dict( 0, DictN, 0, DictO ).
-
-chess_dict_flip_bits( Bit1, Bit2 ) :-
-    1 is Bit1 + Bit2,
-    !.
-chess_dict_flip_bits( Bit1, Bit2 ) :-
-    throw( incompatible_flipping_bits(Bit1,Bit2) ).
+chess_dict_hmv_inc( DictI, DictO ) :-
+     % ( Take =:= 1 -> 
+          % put_dict( hmv, DictI, 0, DictO )
+     get_dict( hmv, DictI, Hmv ),
+     Imv is Hmv + 1,
+     put_dict( hmv, DictI, Imv, DictO ).
 
 /** chess_dict_piece_positions( +Dict, +Diece, -Poss ).
-     Returns all the Positions of Diece (dictionary encoded piece), in board Dict.
+
+Returns all the Positions of Diece (dictionary encoded piece), in board Dict.
 
 ==
 ?- chess_dict_start_board(Board),
@@ -674,6 +677,7 @@ Board = board{...},
 BlKing = 12,
 Poss = [40].
 ==
+
 */
 chess_dict_piece_positions( Dict, Diece, Poss ) :-
      findall( Pos, (between(1,64,Pos),get_dict(Pos,Dict,Diece)), Poss ).

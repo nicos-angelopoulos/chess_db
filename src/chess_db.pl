@@ -39,7 +39,7 @@ Db = '/tmp/fourNCL'.
 
 @author nicos angelopoulos
 @version  0.1 2018/3/14
-@version  0.2 2018/8/17, 
+@version  0.2 2018/8/17
 @see options_append/3
 
 */
@@ -103,25 +103,11 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, MoHa, OrHa, PoHa, Nid ) :
     Nid is Gid + 1,
     findall( game_info(Nid,K,V), member(K-V,Info), Goals ),
     db_assert( InfoHandle, Goals, _ ),
-    % findall( game_move(Nid,N,Turn,Move), (
-    /*
-    findall( game_move(Nid,Ply,Move), (
-                                            member( move(N,Mv1,Mv2,_Cmm1,_Cms2),Moves),
-                                            nth1( Idx, [Mv1,Mv2], Move ),
-                                            Move \== [],   % Mv2 really
-                                            % nth1( Idx, [false,true], Turn )  % check values are db asserted properly
-                                            Ply is ((N-1) * 2 ) + (Idx - 1)
-                                         ), Moals ),
-                                         */
-
     chess_dict_start_board( Start ),
-    chess_pgn_moves_limos( Moves, 0, Start, Limos ),
-    findall( game_move(Nid,Ply,Hmv,NxtMv), member(limo(Ply,Hmv,NxtMv,_Inpo),Limos),  Moals ),
+    chess_pgn_moves_limos( Moves, 1, Start, Limos ),
+    findall( game_move(Nid,Ply,Hmv,NxtMv), member(limo(Ply,Hmv,NxtMv,_Inpo),Limos), Moals ),
     db_assert( MoHa, Moals, _ ),
-
     chess_db_limos_game_posi( Limos, Nid, PoHa ),
-
-
     maplist( atom_codes, OrigAtms, Orig ),
     atomic_list_concat( OrigAtms, '\n', OrigAtm ),
     debug( chess_db(original), '~a', OrigAtm ),

@@ -31,7 +31,7 @@ french_db( French ) :-
     chess_db_connect( short, [db(French),profile(false)] ).
 
 french_disp :-
-    debug( short, '(short) Following games start with 1.e4,e6', true ),
+    debug( short, '(short) Following games start with 1.e4,e6', [] ),
     chess_db_opening( [e4,e6], Gid ),
     write( gid(Gid) ), nl,
     fail.

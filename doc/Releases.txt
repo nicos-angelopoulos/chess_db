@@ -1,8 +1,10 @@
 ---   Releases   ---
 --------------------
 
-1.0  
-     21.06.08  CHANGE:   many internal change to pin logic and position table
+1.0         @  21.06.17
+     21.06.18  IFACE:    chess_db_position/3
+     21.06.17  FIXED:    opening preds work with numeric plies
+     21.06.08  CHANGE:   many internal changes to pin logic and position table
      21.06.07  IFACE:    chess_dict_piece/3
                ADDED:    chess_dict_piece_positions/3
                ADDED:    chess_dict_empty_cross_line_between/3

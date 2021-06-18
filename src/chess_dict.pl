@@ -19,7 +19,7 @@ chess_dict_start_board( Board ) :-
             cwk:1,cwq:1,cbk:1,cbq:1,
             % en passant square
             eps:0,
-            hmv:0,  % half moves clock: since last 
+            hmv:0,  % half moves clock: since last take (0 if this is a take, 1 if last was, and this isn't)
             fmv:0,  % full moves: played so far
             8:10,16:8,24:9,32:11,40:12,48:9,56:8,64:10,
             7:7 ,15:7,23:7,31:7 ,39:7 ,47:7,55:7,63:7 ,
@@ -59,7 +59,7 @@ En passant, eps
   position for En passant-able pawn
   [here we store the number, unlike FEN which stores the algebraic]
 
-Castling + Turn 
+Booleans: Castling, Turn and last was a take
   * cwk:1
     can white still castle king side ?
   * cwq:1
@@ -68,23 +68,25 @@ Castling + Turn
     can black still castle king side ?
   * cbq:1
     can black still castle queen side ?
+  % * lwt:0
+    % last move was a take (1 if true)
   * 0:0 
     active move turn (0:white to move, 1: black to move)
 
 Clocks
   * hmv:0
-     half moves clock: since last take
+     half moves clock: since last take  (0 if this is a take, 1 if last was, and this isn't)
   * fmv:0
      full moves: played so far
 
-This is how the empty Board dictioary is defined.
+This is how the empty Board dictinary is defined.
 ==
 chess_dict_start_board( Board ) :-
     Board = board{
             cwk:1,cwq:1,cbk:1,cbq:1,
             eps:0,
-            hmv:0,
             fmv:0,
+            hmv:0,
             8:10,16:8,24:9,32:11,40:12,48:9,56:8,64:10,
             7:7 ,15:7,23:7,31:7 ,39:7 ,47:7,55:7,63:7 ,
             6:0 ,14:0,22:0,30:0 ,38:0 ,46:0,54:0,62:0 ,
