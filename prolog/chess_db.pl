@@ -45,6 +45,7 @@ chess_db_alias( Alias, Path ) :-
 % user:file_search_path( pgn, pack('chess_db_data/pgn') ).
 % user:file_search_path( chess_db, pack('chess_db_data/dbs') ).
 
+:- use_module(library(apply)).       % include/3,...
 :- use_module(library(lists)).       % append/3,...
 :- use_module(library(debug)).       % debug/1,3.  % should replace with debuc/1,3
 :- use_module(library(pure_input)).  % phrase_from_file/2.
