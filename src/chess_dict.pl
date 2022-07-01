@@ -144,7 +144,7 @@ chess_dict_inpo( Dict, Inpo ) :-
            ),
     chess_fen_square( Dict.eps, ENFactNat ), ENFact is ENFactNat * 100,
     CTFact is Dict.0 + (Dict.cwk * 2) + (Dict.cwq * 4) + (Dict.cbk * 8) + (Dict.cbq * 16),
-    sumlist( [CTFact,ENFact|Factors], InpoNum ),
+    sum_list( [CTFact,ENFact|Factors], InpoNum ),
     atom_number( Inpo, InpoNum ).
 % fixme: incomplete.
 chess_dict_inpo( Dict, Inpo ) :-

@@ -3,6 +3,7 @@
 
 1.1
      22.07.01  DEPS:     sys libraries lists, pure_io and debug.
+               CHANGED:  sumlist/2 -> sum_list/2
 1.0         @  21.06.17
      21.06.18  IFACE:    chess_db_position/3
      21.06.17  FIXED:    opening preds work with numeric plies

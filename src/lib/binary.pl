@@ -36,7 +36,7 @@ binary( DecInter, Binary ) :-
     atom_codes( Binary, RevBinCodes ),
     reverse( RevBinCodes, BinCodes ),
     findall( Summand, (nth1(I,BinCodes,0'1),Summand is 2 ^ (I-1)), Summands ),
-    sumlist( Summands, DecInter ).
+    sum_list( Summands, DecInter ).
 
 to_binary( 0, _Digits, Chars ) :-
     !,
