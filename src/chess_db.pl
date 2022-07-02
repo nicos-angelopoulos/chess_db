@@ -8,15 +8,19 @@ chess_db_defaults( [create(false),position(true)] ).
 
 Add games from a PGN file or a PGN term, PgnOrF, to the chess database 
 pointed to by Db and/or Opts. If Db is given both as argument and option,
-the argument overrides. If argument Db or option Db is a variable,
-then the full location of the Db used is returned. To distinguish between
-the two arity 2 versions, Opts in that case need be a list.
+the argument overrides. If argument Db and/or option OptDb is a variable,
+then the full location of the Db used is returned. 
+If =|Create = false|=, PgnOrF points to a file and both Db and OptDb are variables,
+then the stem of the PgnOrF is used as the name of Db. It is created in an existing directory
+pointed to by a current alias defined in user:file_search_path/2- or the current directory
+if no such alias exists.
+To distinguish between the two arity 2 versions, Opts in that case need be a list.
 
 Opts
   * create(Create=false)
      how to behave if ChessDb exists (see chess_db_connect/2)
 
-  * db(Db)
+  * db(OptDb)
      database location (see chess_db_connect/2)
 
   * dir(Dir)
@@ -62,17 +66,35 @@ chess_db( PgnIn, ArgDb, Args ) :-
     % options( create(Create), Opts ),
     % options( position(Pos), Opts ),
     pgn( PgnIn, Pgn ),
-    ( ground(ArgDb) -> Db = ArgDb; Db = OptDb ),
-    ( var(Db) -> throw(variable_location(ArgDb,Args)); true ),
+    ( ground(ArgDb) -> PrvDb = ArgDb; PrvDb = OptDb ),
+    % ( var(Db) -> throw(variable_location(ArgDb,Args)); true ),
+    ( var(PrvDb) -> 
+            absolute_file_name(PgnIn,AbsPgnF), % if you ever add options to pgn/2 abs_file could be one of them. 
+            os_base( AbsPgnF, BaseF ),
+            os_ext( _, Stem, BaseF ),
+            ( chess_db_alias_exists_dir(AliasDir) ->
+                os_path( AliasDir, Stem, Db )
+                ;
+                Db = Stem
+            )
+            % throw(variable_location(ArgDb,Args));
+            ; 
+            Db = PrvDb
+    ),
     chess_db_connect( Db, [db(AbsDb),handles(CdbHs)|Opts] ),
     % chess_db_handles( Create, Pos, Dir, CdbHs, AbsDb ),
     chess_db_handle( info, CdbHs, InfoHandle ),
     chess_db_max_id( InfoHandle, LaGid ),
-    chess_db_games_add( Pgn, LaGid, CdbHs),
+    chess_db_games_add( Pgn, LaGid, CdbHs ),
     ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
     % chess_db_handles_close( CdbHs ),
     ( var(ArgDb) -> ArgDb = AbsDb; true ),
     ( var(OptDb) -> OptDb = AbsDb; true ).
+
+chess_db_alias_exists_dir( AliasDir ) :-
+    user:file_search_path( chess_db, AliasDir ),
+    exists_directory( AliasDir ),
+    !.
 
 chess_db_games_add( [], _Gid, _CdbHs ).
 chess_db_games_add( [G|Gs], Gid, CdbHs ) :-

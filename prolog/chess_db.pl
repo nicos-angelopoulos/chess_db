@@ -185,7 +185,7 @@ linux> chessx short/french.pgn
 
 The above example in detail.
 
-Turn debugging of writing out the original games as they are added to the database.
+Turn debugging on- writing out the original games as they are added to the database.
 
 ==
 ?- debug(chess_db(original)).
