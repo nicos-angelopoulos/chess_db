@@ -20,24 +20,24 @@ Note that commonly used database directories can be defined long term in
 
 Opts
   * create(Create=false)
-     if true create dir and/or db files if they do not exist
-     if =|true|= create ChessDb if doesn't exist (and use current if it does)
-     if =|false|= only proceed if ChessDb exists
-     if =|new|= only proceed if ChessDb does not exist (call creates it)
-     if =|fresh|= overwrites if a current exists
-
+    values for this options:
+    * true
+      create ChessDb if doesn't exist (and use current if it does)
+    * false 
+      only proceed if ChessDb exists
+    * new 
+      only proceed if ChessDb does not exist (call creates it)
+    * fresh
+      overwrites if a current exists
   * db(Db)
-     returns the absolute locations of the dbs successfully connected (a list iff more than one)
-
+    returns the absolute locations of the dbs successfully connected (a list iff more than one)
   * dir(Dir)
-     parent directory of chess database (mutliple are allowed)
-
+    parent directory of chess database (mutliple are allowed)
   * handles(Handles)
-     returns the handles term of connected databases (a list if multiple were established)
-
+    returns the handles term of connected databases (a list if multiple were established)
   * profile(Prof=Prof)
-     whether to mix, true, or ignore, false, profile based dir options (see options_append/4)
-     if no dir(Dir) option is present in Opts, then Prof is ignored
+    whether to mix, true, or ignore, false, profile based dir options (see options_append/4)
+    if no dir(Dir) option is present in Opts, then Prof is ignored
 
 ==
 % connect with alias
