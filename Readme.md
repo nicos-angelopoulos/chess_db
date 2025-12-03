@@ -25,14 +25,20 @@ There are two example databases in data/ and an example program, examples/short.
 ### Dependencies
 
 These are all [stoics](https://stoics.org.uk/~nicos/sware/packs) packs, available from SWI-Prolog [packs installer](https://www.swi-prolog.org/pack/list):
-  * prosqlite   
+  * lib
+     (2.11)
+  * prosqlite
      (1.5)
   * db_facts    
      (0.5)
-  * stoics_lib  
-     (1.0)
+  * debug_call
+     (2.1)
   * options     
      (1.0)
+  * stoics_lib  
+     (1.0)
+
+Pack lib, is the only dependency loaded at installation. The rest will be installed on first run (code in pack(lib)).
 
 ### Basics
 
