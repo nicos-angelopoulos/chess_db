@@ -20,7 +20,7 @@ The pack includes code to:
   * manipulate the resulting databases
      chess_db_opening_pgn/2
 
-There are two example databases in data/ and an example program, examples/short.pl
+There are two example databases in data/ and an example program, examples/short.pl.
 
 ### Dependencies
 
