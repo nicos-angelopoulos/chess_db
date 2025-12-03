@@ -24,7 +24,7 @@ There are two example databases in data/ and an example program, examples/short.
 
 ### Dependencies
 
-Packs:
+These are all [stoics](https://stcoics.org.uk/~nicos/sware/packs) packs, available from SWI-Prolog [packs](https://www.swi-prolog.org/pack/list):
   * prosqlite   
      (1.5)
   * db_facts    
