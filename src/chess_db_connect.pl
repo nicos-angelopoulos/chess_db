@@ -9,7 +9,7 @@ chess_db_connect_defaults( Defs ) :-
 /** chess_db_connect( +DbS ).
     chess_db_connect( +DbS, +Opts ).
 
-Connect to a number of chess_dbs (DbS) and provide make their db handles available<br>
+Connect to a number of chess_dbs (DbS) and make their db handles available<br>
 to a number of predicates that access the information: eg chess_db_opening/3.<br>
 The library provides two conveniencies for locating chess dbs. First, via aliases:<br>
 chess_db (by default expands to pack(chess_db_data/dbs)). Second, via dir(Dir) option.<br>
