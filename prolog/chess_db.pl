@@ -411,4 +411,4 @@ documentation
 true.
 ==
 */
-chess_db_version( 1:0:0, date(2021,6,18) ).
+chess_db_version(1:0:1, date(2025,12,3)).
