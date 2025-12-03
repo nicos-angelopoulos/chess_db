@@ -64,6 +64,7 @@ writting_to_file(short/french.pgn)
 true.
 
 % open file french.pgn on program that can play the games
+==
 
 ---+++ Pack info
 
