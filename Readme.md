@@ -38,7 +38,8 @@ These are all [stoics](https://stoics.org.uk/~nicos/sware/packs) packs, availabl
   * stoics_lib  
      (1.0)
 
-Pack lib, is the only dependency loaded at installation. The rest will be installed on first run (code in pack(lib)).
+Pack lib, is the only dependency installed with chess_db. The rest will be installed on first run (code in 
+[pack(lib)](https://stoics.org.uk/~nicos/sware/lib/)).
 
 ### Basics
 
