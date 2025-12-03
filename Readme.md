@@ -1,12 +1,12 @@
-This library produces chess games databases from PGN files and provides some<br>
+This library produces chess games databases from PGN files and provides some
 predicates for manipulating these databases.
 
-Once connected to a number of chess_db databases, all kinds of information about the games <br>
+Once connected to a number of chess_db databases, all kinds of information about the games
 can be interrogated. (see chess_db_opening/2 for an example).
 
 Ideally we want to hook this pack to a web-page interface for playing the games as we select them.
 
----+++ Installation: 
+### Installation: 
 
 ?- pack_install( chess_db ).
 
@@ -20,7 +20,7 @@ The pack includes code to:
 
 There are two example databases in data/ and an example program, examples/short.pl
 
----+++ Dependencies
+### Dependencies
 
 Packs:
   * prosqlite   
@@ -32,8 +32,7 @@ Packs:
   * options     
      (1.0)
 
-
----+++ Basics
+### Basics
 
 By default, chess database dirs contain 3 sqlite databases:
   * game_info.sqlite
@@ -48,7 +47,7 @@ A number of databases can be connected at the same time.
 For example a number of databases can be declared in dir/1 terms within file: <br>
 ~/.pl/chess_db_connect.pl  see options_append/3.
 
----+++ Example
+### Example
 
 ==
 ?- [pack('chess_db/examples/short.pl')].
@@ -66,7 +65,7 @@ true.
 % open file french.pgn on program that can play the games
 ==
 
----+++ Pack info
+### Pack info
 
 @author nicos angelopoulos
 @version  0.1 2018/3/18
