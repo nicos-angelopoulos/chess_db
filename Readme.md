@@ -8,7 +8,9 @@ Ideally we want to hook this pack to a web-page interface for playing the games 
 
 ### Installation: 
 
+```
 ?- pack_install( chess_db ).
+```
 
 The pack includes code to:
   * parse PGN's 
@@ -49,7 +51,7 @@ For example a number of databases can be declared in dir/1 terms within file: <b
 
 ### Example
 
-==
+```
 ?- [pack('chess_db/examples/short.pl')].
 ?- short.      % creates a chess_db in subdirectory short/ from data/4ncl_short.pgn
                % and displays the game ids for games that start with [e4,e6] (French defence)
@@ -63,14 +65,14 @@ writting_to_file(short/french.pgn)
 true.
 
 % open file french.pgn on program that can play the games
-==
+```
 
 ### Pack info
 
-@author nicos angelopoulos
-@version  0.1 2018/3/18
-@see  http://stoics.org.uk/~nicos/sware/chess_db
-@see  https://github.com/nicos-angelopoulos/chess_db
-@see  [pack('chess_db/examples/short.pl')]
-@see  pack(prosqlite), pack(db_facts), pack(stoics_lib), pack(options)
+* author nicos angelopoulos
+* version  0.1 2018/3/18
+* see  http://stoics.org.uk/~nicos/sware/chess_db
+* see  https://github.com/nicos-angelopoulos/chess_db
+* see  [pack('chess_db/examples/short.pl')]
+* see  pack(prosqlite), pack(db_facts), pack(stoics_lib), pack(options)
 
