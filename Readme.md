@@ -2,7 +2,7 @@ This library produces chess games databases from PGN files and provides some
 predicates for manipulating these databases.
 
 Once connected to a number of chess_db databases, all kinds of information about the games
-can be interrogated. (see chess_db_opening/2 for an example).
+can be interrogated. See chess_db_opening/2 for an example.
 
 Ideally we want to hook this pack to a web-page interface for playing the games as we select them.
 
