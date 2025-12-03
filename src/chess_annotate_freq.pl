@@ -72,6 +72,3 @@ chess_annotate_pgn_moves( [move(Mvn,Wht,Blc,_,_)|Mvs], I, Board, CheDb, [move(Mv
     ),
     J is I + 1,
     chess_annotate_pgn_moves( Mvs, J, Noard, CheDb, Nvs ).
-
-kv_transpose( KVs, Trans ) :-
-    findall( V-K, member(K-V,KVs), Trans ).
