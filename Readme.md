@@ -9,7 +9,7 @@ Ideally we want to hook this pack to a web-page interface for playing the games 
 ### Installation: 
 
 ```
-?- pack_install( chess_db ).
+?- pack_install(chess_db).
 ```
 
 The pack includes code to:
@@ -71,8 +71,7 @@ true.
 
 * author nicos angelopoulos
 * version  0.1 2018/3/18
-* see  http://stoics.org.uk/~nicos/sware/chess_db
+* see  https://stoics.org.uk/~nicos/sware/chess_db
 * see  https://github.com/nicos-angelopoulos/chess_db
 * see  [pack('chess_db/examples/short.pl')]
 * see  pack(prosqlite), pack(db_facts), pack(stoics_lib), pack(options)
-
