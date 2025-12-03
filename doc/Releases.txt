@@ -2,7 +2,8 @@
 --------------------
 
 1.1
-     22.12.03  DOC:      changed the headings in Readme.md to markdown notation
+     25.12.03  DOC:      changed the headings in Readme.md to markdown notation
+               DEPS:     there is a dependency to stoics_lib in sources and now we remove kv_transpose/2
      22.07.01  DEPS:     system library(apply), library(lists), library(pure_io) and library(debug)
                CHANGED:  sumlist/2 -> sum_list/2
                IFACE:    use stem of pgn file to create default db stem
