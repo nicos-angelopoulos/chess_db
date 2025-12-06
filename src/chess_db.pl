@@ -101,14 +101,14 @@ chess_db( PgnIn, ArgDb, Args ) :-
      options( incr_progress(IProg), Opts ),
      chess_db_incr( Incr, IProg, PgnIn, LaGid, CdbHs, AbsDb, ArgDb, OptDb ).
 
-chess_db_incr( false, _IProg, PgnIn, LaGid, CdbHs, AbsDb, ArgDb, OptDb ) :-
+chess_db_incr( false, PgnIn, LaGid, _IProg, CdbHs, AbsDb, ArgDb, OptDb ) :-
      pgn( PgnIn, Pgn ),
      chess_db_games_add( Pgn, LaGid, CdbHs ),
      ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
      % chess_db_handles_close( CdbHs ),
      ( var(ArgDb) -> ArgDb = AbsDb; true ),
      ( var(OptDb) -> OptDb = AbsDb; true ).
-chess_db_incr( true, IProg, PgnIn, LaGid, CdbHs, AbsDb, ArgDb, OptDb ) :-
+chess_db_incr( true, PgnIn, LaGid, IProg, CdbHs, AbsDb, ArgDb, OptDb ) :-
      open( PgnIn, read, Pin ),
      tmp_file( chess_db_tmp, TmpF ),
      chess_db_incr_stream( Pin, TmpF, LaGid, IProg, CdbHs ), 
@@ -122,7 +122,7 @@ chess_db_incr_stream( Pin, TmpF, LaGid, IProg, CdbHs ) :-
      open( TmpF, write, TempO ),
      chess_db_incr_stream_pgn( Pin, TempO, Eof ),
      close( TempO ),
-     chess_db_incr_stream_cont( Eof, Pin, TmpF, LaGid, CdbHs ).
+     chess_db_incr_stream_cont( Eof, Pin, TmpF, LaGid, IProg, CdbHs ).
 
 chess_db_incr_stream_cont( true, _Pin, _TmpF, _LaGid, _IProg, _CdbHs ).
 chess_db_incr_stream_cont( false, Pin, TmpF, LaGid, IProg, CdbHs ) :-
