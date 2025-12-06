@@ -99,7 +99,7 @@ chess_db( PgnIn, ArgDb, Args ) :-
      chess_db_max_id( InfoHandle, LaGid ),
      options( incr(Incr), Opts ),
      options( incr_progress(IProg), Opts ),
-     chess_db_incr( Incr, IProg, PgnIn, LaGid, CdbHs, AbsDb, ArgDb, OptDb ).
+     chess_db_incr( Incr, PgnIn, LaGid, IProg, CdbHs, AbsDb, ArgDb, OptDb ).
 
 chess_db_incr( false, PgnIn, LaGid, _IProg, CdbHs, AbsDb, ArgDb, OptDb ) :-
      pgn( PgnIn, Pgn ),
