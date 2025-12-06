@@ -91,7 +91,7 @@ pgn_dcg( [H|T] ) -->
     pgn_dcg( T ).
 pgn_dcg( [] ) --> {true}.
     
-pgn_dcg_game( pgn(Info,Moves,Res) ) --> 
+pgn_dcg_game( pgn(Info,Moves,Res) ) -->
     pgn_dcg_info( InfoPrv ),
     { debug_call( chess_db, chess_db:chess_db_info_kvs(InfoPrv) ) },
     pgn_dcg_moves( Moves, MovesInfo ),

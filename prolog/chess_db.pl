@@ -135,9 +135,11 @@ The source code for the pack is available at github: https://github.com/nicos-an
 Packs:
   * [prosqlite](http://stoics.org.uk/~nicos/sware/prosqlite)   (1.6)
   * [db_facts](http://stoics.org.uk/~nicos/sware/stoics_lib)   (0.5)
-  * [stoics_lib](http://stoics.org.uk/~nicos/sware/stoics_lib) (1.4)
+  * [stoics_lib](http://stoics.org.uk/~nicos/sware/stoics_lib) (>= 1.9)
   * [options](http://stoics.org.uk/~nicos/sware/options)       (1.4)
   * [debug_call](http://stoics.org.uk/~nicos/sware/debug_call) (1.4)
+
+Latest test on SWI-Prolog 9.3.34 (2025/12/04).
 
 ---+++ Basics
 

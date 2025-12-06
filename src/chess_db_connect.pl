@@ -34,7 +34,7 @@ Opts
   * dir(Dir)
     parent directory of chess database (mutliple are allowed)
   * handles(Handles)
-    returns the handles term of connected databases (a list if multiple were established)
+    returns a handle term for connected database (a list if DbS was a list)
   * profile(Prof=Prof)
     whether to mix, true, or ignore, false, profile based dir options (see options_append/4)
     if no dir(Dir) option is present in Opts, then Prof is ignored

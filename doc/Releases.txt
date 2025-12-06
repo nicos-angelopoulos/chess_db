@@ -2,6 +2,7 @@
 --------------------
 
 1.1
+     25.12.06  OPT:      added option incr_report(1000)
      25.12.03  DOC:      changed the headings in Readme.md to markdown notation
                DEPS:     there is a dependency to stoics_lib in sources, so removed kv_transpose/2 definition
      22.07.01  DEPS:     system library(apply), library(lists), library(pure_io) and library(debug)

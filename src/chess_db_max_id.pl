@@ -14,5 +14,4 @@ Max = 31.
 */
 chess_db_max_id( HandleST, Max ) :-
     ( atomic(HandleST) -> Handle = HandleST; chess_db_handle(info,HandleST,Handle) ),
-    ( (db_max(Handle,game_info,1,Max),Max\=='') -> true; Max is 0).
-
+    ( (db_max(Handle,game_info,1,Max),Max\=='',Max\=='$null$') -> true; Max is 0).
