@@ -4,6 +4,7 @@ chess_db_defaults( Defs ) :-
                                              create(false),
                                              incr(false),
                                              incr_progress(1000),
+                                             max_games(inf),
                                              position(true)
                                              ].
 
@@ -22,6 +23,8 @@ pointed to by a current alias defined in user:file_search_path/2- or the current
 if no such alias exists.
 To distinguish between the two arity 2 versions, Opts in that case need be a list.
 
+Games in the database get a incremental unique id starting at 1 for first game.
+
 Opts
   * create(Create=false)
      how to behave if ChessDb exists (see chess_db_connect/2)
@@ -38,6 +41,9 @@ Opts
 
   * incr_progress(IProg=1000)
      report (via debug(chess_db(true))) at every IProg games have been processed
+
+  * max_games(MxG=inf)
+    only process first MxG number of games- only enforced when =|Incr=true|=
 
   * position(Pos=true)
      if true, use position table
@@ -57,6 +63,7 @@ Db = '/tmp/fourNCL'.
 @author nicos angelopoulos
 @version  0.1 2018/3/14
 @version  0.2 2018/8/17
+@version  0.3 2025/12/8,  options incr(), incr_progress(), max_games()
 @see options_append/3
 
 */
@@ -99,42 +106,45 @@ chess_db( PgnIn, ArgDb, Args ) :-
      chess_db_max_id( InfoHandle, LaGid ),
      options( incr(Incr), Opts ),
      options( incr_progress(IProg), Opts ),
-     chess_db_incr( Incr, PgnIn, LaGid, IProg, CdbHs, AbsDb, ArgDb, OptDb ).
+     options( max_games(MxG), Opts ),
+     OfG is LaGid + MxG,
+     chess_db_incr( Incr, PgnIn, LaGid, OfG, IProg, CdbHs, AbsDb, ArgDb, OptDb ).
 
-chess_db_incr( false, PgnIn, LaGid, _IProg, CdbHs, AbsDb, ArgDb, OptDb ) :-
+chess_db_incr( false, PgnIn, LaGid, _MxG, _IProg, CdbHs, AbsDb, ArgDb, OptDb ) :-
      pgn( PgnIn, Pgn ),
      chess_db_games_add( Pgn, LaGid, CdbHs ),
      ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
      % chess_db_handles_close( CdbHs ),
      ( var(ArgDb) -> ArgDb = AbsDb; true ),
      ( var(OptDb) -> OptDb = AbsDb; true ).
-chess_db_incr( true, PgnIn, LaGid, IProg, CdbHs, AbsDb, ArgDb, OptDb ) :-
+chess_db_incr( true, PgnIn, LaGid, MxG, IProg, CdbHs, AbsDb, ArgDb, OptDb ) :-
      open( PgnIn, read, Pin ),
      tmp_file( chess_db_tmp, TmpF ),
-     chess_db_incr_stream( Pin, TmpF, LaGid, IProg, CdbHs ), 
+     chess_db_incr_stream( Pin, TmpF, LaGid, MxG, IProg, CdbHs ), 
      close( Pin ),
      ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
      % chess_db_handles_close( CdbHs ),
      ( var(ArgDb) -> ArgDb = AbsDb; true ),
      ( var(OptDb) -> OptDb = AbsDb; true ).
 
-chess_db_incr_stream( Pin, TmpF, LaGid, IProg, CdbHs ) :-
+chess_db_incr_stream( Pin, TmpF, LaGid, MxG, IProg, CdbHs ) :-
      open( TmpF, write, TempO ),
      chess_db_incr_stream_pgn( Pin, TempO, Eof ),
      close( TempO ),
-     chess_db_incr_stream_cont( Eof, Pin, TmpF, LaGid, IProg, CdbHs ).
+     ( (Eof ; (MxG < LaGid) ) -> Termin = true; Termin = false ),
+     chess_db_incr_stream_termin( Termin, Pin, TmpF, LaGid, MxG, IProg, CdbHs ).
 
-chess_db_incr_stream_cont( true, _Pin, _TmpF, _LaGid, _IProg, _CdbHs ).
-chess_db_incr_stream_cont( false, Pin, TmpF, LaGid, IProg, CdbHs ) :-
+chess_db_incr_stream_termin( true, _Pin, _TmpF, _LaGid, _MxG, _IProg, _CdbHs ).
+chess_db_incr_stream_termin( false, Pin, TmpF, LaGid, MxG, IProg, CdbHs ) :-
      pgn( TmpF, Game ),
      chess_db_games_add( Game, LaGid, CdbHs ),
      MaGid is LaGid + 1,
-     ( (LaGid mod IProg) =:= 0 -> 
+     ( (LaGid mod IProg) =:= 0 ->
                debuc( chess_db(true), task(stop), 'Added game no: ~d', [farg(LaGid)] )
-               ; 
+               ;
                true
      ),
-     chess_db_incr_stream( Pin, TmpF, MaGid, IProg, CdbHs ).
+     chess_db_incr_stream( Pin, TmpF, MaGid, MxG, IProg, CdbHs ).
 
 chess_db_incr_stream_pgn( Pin, TempO, Eof ) :-
      io_line( Pin, Line ),

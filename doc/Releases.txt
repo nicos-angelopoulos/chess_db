@@ -3,6 +3,8 @@
 
 1.1
      25.12.08  CHANGE:   New version of integer/numerical representation.
+               OPT:      mxG() maximum games to process              
+               FIXED:    despite the docs chess_dict_move/4 was putting algebraic to D.eps (en passant location)
      25.12.06  OPT:      added incremental db loading and option incr_report(1000)
      25.12.03  DOC:      changed the headings in Readme.md to markdown notation
                DEPS:     there is a dependency to stoics_lib in sources, so removed kv_transpose/2 definition

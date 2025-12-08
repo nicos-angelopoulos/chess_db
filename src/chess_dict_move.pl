@@ -541,9 +541,9 @@ chess_dict_move_pawn( BegC, [NumC], DictI, Move, Turn, Constr, DictO ) :-
             chess_dict_move_piece_from_to(DictI, Double-Pawn, EndPos-Pawn, true, DictN),
             % put_dict( hmv, DictN, 0, DictM ),
             chess_dict_hmv_inc( DictN, DictM ),
-            chess_fen_square( EnPAlg, EnPassant ),
-            % put_dict( eps, DictM, EnPassant, DictL ),
-            put_dict( eps, DictM, EnPAlg, DictO )
+            % chess_fen_square( EnPAlg, EnPassant ),  % 25.12.08, despite docs we were putting the FEN here...
+            put_dict( eps, DictM, EnPassant, DictO )
+            % put_dict( eps, DictM, EnPAlg, DictO )
             % chess_dict_hmv_inc( DictJ, 0, DictK )
             % chess_dict_flip_turn_from( DictL, Turn, DictO )
             ;
