@@ -101,9 +101,11 @@ chess_dict_start_board( Board ) :-
 */
 chess_dict.
 
-/** chess_dict_inpo( ?Dict, ?Inpo ).
+/** chess_dict_inpo_obsolete( ?Dict, ?Inpo ).
 
 Convert between dictionary and (long) integer position representation.
+
+This is the OLD IMPLEMENTATION, please use chess_dict_inpo/2 instead.
 
 Dict is a chess_dict/0 dictionary and Inpo is very long integer.
 
@@ -133,7 +135,7 @@ So in db storing might need a position table (for the numeric only) + (half.move
 @version  0:1 19.9.15
 
 */
-chess_dict_inpo( Dict, Inpo ) :-
+chess_dict_inpo_obsolete( Dict, Inpo ) :-
     ground( Dict ),
     !,
     findall( Factor, ( between(1,64,I), Rel is I + 1, 
@@ -147,15 +149,15 @@ chess_dict_inpo( Dict, Inpo ) :-
     sum_list( [CTFact,ENFact|Factors], InpoNum ),
     atom_number( Inpo, InpoNum ).
 % fixme: incomplete.
-chess_dict_inpo( Dict, Inpo ) :-
+chess_dict_inpo_obsolete( Dict, Inpo ) :-
     var( Dict ),
     DictE = board{},
     chess_dict_inpo( 1, DictE, Inpo, Dict ).
 
-chess_dict_inpo( 67, DictE, _Inpo, Dict ) :-
+chess_dict_inpo_obsolete( 67, DictE, _Inpo, Dict ) :-
     !,
     DictE = Dict.
-chess_dict_inpo( I, DictE, Inpo, Dict ) :-
+chess_dict_inpo_obsolete( I, DictE, Inpo, Dict ) :-
     V is Inpo mod (100 ^ I) // (100 ^ (I - 1)), 
     debug( chess_db(inpo), 'Component: ~w', [I+V] ),
     ( I =:= 1 -> 
@@ -189,3 +191,149 @@ chess_dict_inc( DictI, Key, DictO ) :-
     Val is DictI.Key + 1,
     put_dict( Key, DictI, Val, DictO ).
 
+/** chess_dict_inpo( +Dict, -Inpo ).
+
+We changing Inpo representation to something similar to training representation for stockfish which 
+was also adopted by lichess in 2024 according to a blog on their web-site.
+
+Encode the occupied squares + 4 bit for 16 piece encoding 
+  * 0 an en-passant-able pawn; (we don't need empty square as we mark pieces)
+  * 1-12 pieces; as in dictionary
+  * 13 w rook avail for castle
+  * 14 b rook avail for castle
+  * 15 black king when is black to  move;
+
++ 8 bits for half move clock + 8 bits for ply + variant data.
+
+==
+?- chess_dict_start_board(Start), chess_dict_inpo(Start,Inpo).
+Inpo = 4800136621178049995892176369597901265598272573836252205342.
+==
+
+This is less than half (58) the size of the old representation (132).
+
+Also in atom represented binary 
+==
+40 ?- chess_dict_start_board(Start), chess_db:chess_dict_inpo_binary(Start,Bnpo).
+Bnpo = '110000111100001111000011110000111100001111000011110000111100001111010001000111100010000100011000001100010001100101010001000110110110000100010110001100010001100100100001000110001101000100011110'.
+
+==
+
+@author nicos angelopoulos
+@version  0:2 25.12.07,   new integer/binary representation
+@see https://lichess.org/@/revoof/blog/adapting-nnue-pytorchs-binary-position-format-for-lichess/cpeeAMeY
+
+*/
+
+chess_dict_inpo( Dict, Inpo ) :-
+     chess_dict_inpo_binary( Dict, Bin ),
+     binary( Inpo, Bin ).
+
+/* Add this to public. */
+chess_dict_inpo_binary( Dict, Bin ) :-
+     ground( Dict ),
+     !,
+     findall( Bool, (between(0,7,I),between(1,8,J),K is (I * 8) + J, (Dict.K > 0 -> Bool is 1 ; Bool is 0)), Bools ),
+     atomic_list_concat( Bools, Atom ),
+     findall( Pc, ( between(0,7,I),between(1,8,J),K is (I * 8) + J, Dc = Dict.K, Dc > 0,
+                    chess_dict_inpo_v2_piece(Dc,Dict,K,PcInt),int_padded_bin(PcInt,4,Pc)
+                  ), Pcs ),
+     atomic_list_concat( Pcs, Ptom ),
+     atom_concat( Atom, Ptom, Bin ).
+
+/** chess_dict_inpo_v2_piece(+Dc, +Dict, +K, -Pc).
+
+Encode a piece within the Dict.
+
+  *  1 white pawn 
+  *  2 white knight
+  *  3 white bishop 
+  *  4 white rook
+  *  5 white queen
+  *  6 white king
+  *  7 black pawn   (P)
+  *  8 black knight
+  *  9 black bishop 
+  * 10 black rook
+  * 11 black queen
+  * 12 black king
+
+  * eps(Eps=0)
+Booleans: Castling, Turn and last was a take
+  * cwk:1
+    can white still castle king side ?
+  * cwq:1
+    can white still castle queen side ?
+  * cbk:1
+    can black still castle king side ?
+  * cbq:1
+  */
+chess_dict_inpo_v2_piece( 1, Dict, K, Pc ) :-   % white pawn
+     ( Dict.eps =:= K -> Pc is 0; Pc is 1 ).
+chess_dict_inpo_v2_piece( 2, _Dict, _K, Pc ) :-   % white knight
+     Pc is 2.
+chess_dict_inpo_v2_piece( 3, _Dict, _K, Pc ) :-   % white bishop
+     Pc is 3.
+chess_dict_inpo_v2_piece( 4, Dict, K, Pc ) :-   % white rook
+     ( K =:= 1 ->
+          ( Dict.cwq =:= 1 ->
+               Pc is 13
+               ;
+               Pc is 4
+          )
+          ;
+          ( K =:= 57 ->
+               ( Dict.cwk =:= 1 ->
+                    Pc is 13
+                    ;
+                    Pc is 4
+               )
+          )
+     ).
+chess_dict_inpo_v2_piece( 5, _Dict, _K, Pc ) :-   % white queen
+     Pc is 5.
+chess_dict_inpo_v2_piece( 6, _Dict, _K, Pc ) :-   % white king
+     Pc is 6.
+chess_dict_inpo_v2_piece( 7, Dict, K, Pc ) :-   % black pawn
+     ( Dict.eps =:= K -> Pc is 0; Pc is 1 ).
+chess_dict_inpo_v2_piece( 8, _Dict, _K, Pc ) :-   % black knight
+     Pc is 8.
+chess_dict_inpo_v2_piece( 9, _Dict, _K, Pc ) :-   % black bishop
+     Pc is 9.
+chess_dict_inpo_v2_piece(10, Dict, K, Pc ) :-   % black rook
+     ( K =:= 8 ->
+          ( Dict.cbq =:= 1 ->
+               Pc is 14
+               ;
+               Pc is 10
+          )
+          ;
+          ( K =:= 64 ->
+               ( Dict.cbk =:= 1 ->
+                    Pc is 14
+                    ;
+                    Pc is 10
+               )
+          )
+     ).
+chess_dict_inpo_v2_piece( 11, _Dict, _K, Pc ) :-  % black queen
+     Pc is 11.
+chess_dict_inpo_v2_piece( 12, Dict, _K, Pc ) :-   % black king, 15 indicates black to move- else white move is assumed
+     (Dict.0 =:= 1 -> Pc is 15 ; Pc is 6).
+
+int_padded_bin( Int, N, Bin ) :-
+     binary( Int, ShortBin ), 
+     atom_codes( ShortBin, ShortCs ),
+     length( ShortCs, Len ),
+     ( Len < N -> 
+          Nxt is Len + 1,
+          findall( 0'0, between(Nxt,N,_), PadCs ),
+          append( PadCs, ShortCs, Codes ),
+          atom_codes( Bin, Codes )
+          ;
+          ( Len =:= N -> 
+               atom_codes( Bin, ShortCs )
+               ;
+               throw( too_long_int(Int,int_padded_bin/3) )
+          )
+     ).
