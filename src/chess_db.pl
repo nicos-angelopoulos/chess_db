@@ -131,7 +131,7 @@ chess_db_incr_stream( Pin, TmpF, LaGid, MxG, IProg, CdbHs ) :-
      open( TmpF, write, TempO ),
      chess_db_incr_stream_pgn( Pin, TempO, Eof ),
      close( TempO ),
-     ( (Eof ; (MxG < LaGid) ) -> Termin = true; Termin = false ),
+     ( (Eof ; (MxG =< LaGid) ) -> Termin = true; Termin = false ),
      chess_db_incr_stream_termin( Termin, Pin, TmpF, LaGid, MxG, IProg, CdbHs ).
 
 chess_db_incr_stream_termin( true, _Pin, _TmpF, _LaGid, _MxG, _IProg, _CdbHs ).
