@@ -140,7 +140,7 @@ chess_db_incr_stream_termin( false, Pin, TmpF, LaGid, MxG, IProg, CdbHs ) :-
      chess_db_games_add( Game, LaGid, CdbHs ),
      MaGid is LaGid + 1,
      ( (LaGid mod IProg) =:= 0 ->
-               debuc( chess_db(true), task(stop), 'Added game no: ~d', [farg(LaGid)] )
+               debuc( chess_db(true), task(stop), 'Added game no: ~d', [farg(MaGid)] )
                ;
                true
      ),
