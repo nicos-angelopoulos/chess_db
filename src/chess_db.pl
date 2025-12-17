@@ -198,13 +198,13 @@ chess_db_alias_exists_dir( AliasDir ) :-
 chess_db_games_add( [], _Gid, _CdbHs ).
 chess_db_games_add( [G|Gs], Gid, CdbHs ) :-
      % fixme: ignore position for now
-     G = pgn(Info,Moves,_Res,Orig),
+     G = pgn(Info,Moves,Res,Orig),
      chess_db_debug_info( Info, 'adding to db' ),
      chess_db_handle( info, CdbHs, InfoHandle ),
      chess_db_handle( move, CdbHs, MoveHandle ),
      chess_db_handle( orig, CdbHs, OrigHandle ),
      chess_db_handle( posi, CdbHs, PosiHandle ),
-     chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, MoveHandle, OrigHandle, PosiHandle, Nid ),
+     chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoveHandle, OrigHandle, PosiHandle, Nid ),
      chess_db_games_add( Gs, Nid, CdbHs ).
 
 chess_db_debug_info( Info, Pfx ) :-
@@ -216,11 +216,12 @@ chess_db_debug_info( Info, Pfx ) :-
 chess_db_debug_info( Info, Pfx ) :-
    debug( chess_db, '~w: ~w', [Pfx,Info] ).
 
-chess_db_game_add( InfoHandle, Info, _Moves, _Orig, Gid, _MoHa, _OrHa, _PoHa, Gid ) :-
+chess_db_game_add( InfoHandle, Info, _Moves, _Orig, Gid, _Res, _MoHa, _OrHa, _PoHa, Gid ) :-
      chess_db_game_info_exists( Info, InfoHandle, ExGid ),
      !, % fixme: add option for erroring
      debug( chess_db(info), 'Info match existing game: ~d', ExGid ).
-chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, MoHa, OrHa, PoHa, Nid ) :-
+
+chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, PoHa, Nid ) :-
      Nid is Gid + 1,
      findall( game_info(Nid,K,V), member(K-V,Info), Goals ),
      db_assert( InfoHandle, Goals, _ ),
@@ -228,19 +229,29 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, MoHa, OrHa, PoHa, Nid ) :
      chess_pgn_moves_limos( Moves, 1, Start, Limos ),
      findall( game_move(Nid,Ply,Hmv,NxtMv), member(limo(Ply,Hmv,NxtMv,_Inpo),Limos), Moals ),
      db_assert( MoHa, Moals, _ ),
-     chess_db_limos_game_posi( Limos, Nid, PoHa ),
+     chess_db_limos_game_posi( Limos, Nid, Res, PoHa ),
      maplist( atom_codes, OrigAtms, Orig ),
      atomic_list_concat( OrigAtms, '\n', OrigAtm ),
      debug( chess_db(original), '~a', OrigAtm ),
      db_assert( OrHa, game_orig(Nid,OrigAtm), _ ).
 
-/** chess_db_limos_game_posi( +Limos, +Gid, +Db ).
+/** chess_db_limos_game_posi( +Limos, +Gid, +Res, +Db ).
 
      Add a number of positions from Limos structures from game Gid, on to position table with db handle PoHa.
 
+     25.12.09: new implementation. we plan to split this to 2 tables, 
+               testing implementation of first. 
+               The (new) integer position points to string of the form
+                    [w:d:b;]M1:#G1-w:d:b;M2...
+
+@author nicos angelopoulos
+@version  0:2 2025/12/09
+@tbd how are games that finish at a position are represented ?
+@tbd some code to ensure that e4+ and e4 are the same ?
+     
 */
-chess_db_limos_game_posi( [], _Gid, _PosDb ).
-chess_db_limos_game_posi( [limo(Ply,_Hmv,Mv,Inpo)|T], Gid, PosDb ) :-
+chess_db_limos_game_posi( [], _Gid, _Res, _PosDb ).
+chess_db_limos_game_posi( [limo(Ply,_Hmv,Mv,Inpo)|T], Gid, Rex, PosDb ) :-
      % write( mv(Mv) ), nl,
      % ( Mv == 'c4' -> trace; true ),
      ( Mv == [] ->
@@ -255,7 +266,35 @@ chess_db_limos_game_posi( [limo(Ply,_Hmv,Mv,Inpo)|T], Gid, PosDb ) :-
           % ( integer(Inpo) -> InpoInt = Inpo; atom_number(Inpo,InpoInt) ),
           db_assert( PosDb, game_posi(Inpo,Next), _ )
      ),
-     chess_db_limos_game_posi( T, Gid, PosDb ).
+     chess_db_limos_game_posi( T, Gid, Res, PosDb ).
+
+
+/** chess_db_limos_game_posi_obsolete( +Limos, +Gid, +Db ).
+
+     Add a number of positions from Limos structures from game Gid, on to position table with db handle PoHa.
+     
+     Each position points to a string of Gid-Ply-Mv trips separated by ';'
+
+     25.12.09 parking this as we plan to split this to two tables, 
+     one keeping stats of next moves, (rather the refs to the gaems as 
+*/
+chess_db_limos_game_posi_obsolete( [], _Gid, _PosDb ).
+chess_db_limos_game_posi_obsolete( [limo(Ply,_Hmv,Mv,Inpo)|T], Gid, PosDb ) :-
+     % write( mv(Mv) ), nl,
+     % ( Mv == 'c4' -> trace; true ),
+     ( Mv == [] ->
+          true
+          ; 
+          atomic_list_concat( [Gid,Ply,Mv], '-', This ),
+          ( (db_holds(PosDb,game_posi(Inpo,Curr)),db_retractall(PosDb,game_posi(Inpo,_),_) ) -> 
+               atomic_list_concat( [Curr,This], ';', Next )
+               ;
+               Next = This
+          ),
+          % ( integer(Inpo) -> InpoInt = Inpo; atom_number(Inpo,InpoInt) ),
+          db_assert( PosDb, game_posi(Inpo,Next), _ )
+     ),
+     chess_db_limos_game_posi_obsolete( T, Gid, PosDb ).
 
 chess_db_game_info_exists( [], _InfHa, _ExGid ).
 chess_db_game_info_exists( [K-V|T], InfHa, ExGid ) :-

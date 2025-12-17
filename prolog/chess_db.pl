@@ -151,8 +151,7 @@ The pack includes code to:
   * interact
      with the resulting databases: chess_db_game_info/3, chess_db_opening_pgn/2
   * dictionary 
-     representation of chess games: chess_dict_start
-_board/1, chess_dict_move/3
+     representation of chess games: chess_dict_start_board/1, chess_dict_move/3
   * integer 
     representation of game positions: chess_dict_inpo/2
   * logic
@@ -320,7 +319,7 @@ In the following, a + sign prefixes a key field:
      table is game_orig(+Gid,Orig); where Orig is the verbatim of the section in the PGN for that game
 
   * game_posi.sqlite
-     table is game_posi(Posi,GPPairs), where GPPairs is a ; seperated Gid-Ply-Move pairs stored as text (eg '1-2-e4;2-4-e3'), Posi
+     table is game_posi(+Posi,GPPairs), where GPPairs is a ; seperated Gid-Ply-Move pairs stored as text (eg '1-2-e4;2-4-e3'), Posi
      is a long integer stored as a string
 
   * game_posi.sqlite 

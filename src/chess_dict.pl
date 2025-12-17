@@ -210,7 +210,7 @@ Encode the occupied squares + 4 bit for 16 piece encoding
 Inpo = 4800136621178049995892176369597901265598272573836252205342.
 ==
 
-This is less than half (58) the size of the old representation (132).
+This is less than half (58) the digits of the size of the old representation (132).
 
 Also in atom represented binary 
 ==
