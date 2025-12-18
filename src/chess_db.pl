@@ -277,14 +277,14 @@ chess_db_limos_game_posi( [limo(_Ply,_Hmv,Mv,Inpo)|T], Gid, Rex, PosDb ) :-
                     chess_db_inc_res_index( Rex, res(Ws,Ds,Bs), NxRes )
                     ;
                     RMprs = MDprs,
-                    chess_db_inc_res_index( Rex, res(0,0,0), NxRes )
+                    chess_db_inc_res_index( Rex, res('0','0','0'), NxRes )
                ),
                NXprs = [Mv-NxRes|RMprs],
                findall( ACont, (member(MvY-res(WY,DY,BY),NXprs),atomic_list_concat([MvY,WY,DY,BY],':',ACont)), NxConts ),
                atomic_list_concat( NxConts, ';', Next )
                ;
                % Next = This
-               chess_db_inc_res_index( Rex, res(0,0,0), res(WN,DN,BN) ),
+               chess_db_inc_res_index( Rex, res('0','0','0'), res(WN,DN,BN) ),
                atomic_list_concat( [Mv,WN,DN,BN], ':', Next )
           ),
           % ( integer(Inpo) -> InpoInt = Inpo; atom_number(Inpo,InpoInt) ),
@@ -293,13 +293,16 @@ chess_db_limos_game_posi( [limo(_Ply,_Hmv,Mv,Inpo)|T], Gid, Rex, PosDb ) :-
      chess_db_limos_game_posi( T, Gid, Rex, PosDb ).
 
 chess_db_inc_res_index( 1, res(Ws,Ds,Bs), Res ) :-
-     NxWs is Ws + 1,
+     atom_number( Ws, WsN ),
+     NxWs is WsN + 1,
      Res = res(NxWs,Ds,Bs).
 chess_db_inc_res_index( 2, res(Ws,Ds,Bs), Res ) :-
-     NxDs is Ds + 1,
+     atom_number( Ds, DsN ),
+     NxDs is DsN + 1,
      Res = res(Ws,NxDs,Bs).
 chess_db_inc_res_index( 3, res(Ws,Ds,Bs), Res ) :-
-     NxBs is Bs + 1,
+     atom_number( Bs, BsN ),
+     NxBs is BsN + 1,
      Res = res(Ws,Ds,NxBs).
 
 chess_db_res_index( '1-0', 1 ) :- !.
