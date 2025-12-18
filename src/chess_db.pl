@@ -229,7 +229,8 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, PoHa, Ni
      chess_pgn_moves_limos( Moves, 1, Start, Limos ),
      findall( game_move(Nid,Ply,Hmv,NxtMv), member(limo(Ply,Hmv,NxtMv,_Inpo),Limos), Moals ),
      db_assert( MoHa, Moals, _ ),
-     chess_db_limos_game_posi( Limos, Nid, Res, PoHa ),
+     chess_db_res_index( Res, Rex ),
+     chess_db_limos_game_posi( Limos, Nid, Rex, PoHa ),
      maplist( atom_codes, OrigAtms, Orig ),
      atomic_list_concat( OrigAtms, '\n', OrigAtm ),
      debug( chess_db(original), '~a', OrigAtm ),
@@ -300,6 +301,11 @@ chess_db_inc_res_index( 2, res(Ws,Ds,Bs), Res ) :-
 chess_db_inc_res_index( 3, res(Ws,Ds,Bs), Res ) :-
      NxBs is Bs + 1,
      Res = res(Ws,Ds,NxBs).
+
+chess_db_res_index( '1-0', 1 ) :- !.
+chess_db_res_index( '1/2-1/2', 2 ) :- !.
+chess_db_res_index( '0-1', 3 ) :- !.
+chess_db_res_index( Res, _ ) :- throw( cannot_convert_to_res_index(Res) ).
 
 /** chess_db_limos_game_posi_obsolete( +Limos, +Gid, +Db ).
 
