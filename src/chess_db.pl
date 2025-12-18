@@ -235,14 +235,23 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, PoHa, Ni
      debug( chess_db(original), '~a', OrigAtm ),
      db_assert( OrHa, game_orig(Nid,OrigAtm), _ ).
 
-/** chess_db_limos_game_posi( +Limos, +Gid, +Res, +Db ).
+/** chess_db_limos_game_posi( +Limos, +Gid, +Rex, +Db ).
 
      Add a number of positions from Limos structures from game Gid, on to position table with db handle PoHa.
 
-     25.12.09: new implementation. we plan to split this to 2 tables, 
+     Rex is the result index 1-> white win, 2-> draw, 3-> black win
+
+     25.12.09: new implementation. we plan to split this to 3 tables, 
                testing implementation of first. 
-               The (new) integer position points to string of the form
+               The (new) integer position points to an atom/string of the form
                     [w:d:b;]M1:#G1-w:d:b;M2...
+                    * Mov1:w:d:b;Mov2... [this assumes all games have a known result...]
+
+     25.12.18
+          the second table will contain unique sequences by which position has been arrived 
+          that way all games can potentially be traced
+
+          the third table will store the Gid and sum of Elos of the players of top N games that reached this position
 
 @author nicos angelopoulos
 @version  0:2 2025/12/09
@@ -250,24 +259,47 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, PoHa, Ni
 @tbd some code to ensure that e4+ and e4 are the same ?
      
 */
-chess_db_limos_game_posi( [], _Gid, _Res, _PosDb ).
-chess_db_limos_game_posi( [limo(Ply,_Hmv,Mv,Inpo)|T], Gid, Rex, PosDb ) :-
+chess_db_limos_game_posi( [], _Gid, _Rex, _PosDb ).
+chess_db_limos_game_posi( [limo(_Ply,_Hmv,Mv,Inpo)|T], Gid, Rex, PosDb ) :-
      % write( mv(Mv) ), nl,
      % ( Mv == 'c4' -> trace; true ),
      ( Mv == [] ->
           true
           ; 
-          atomic_list_concat( [Gid,Ply,Mv], '-', This ),
+          % atomic_list_concat( [Gid,Ply,Mv], '-', This ),
           ( (db_holds(PosDb,game_posi(Inpo,Curr)),db_retractall(PosDb,game_posi(Inpo,_),_) ) -> 
-               atomic_list_concat( [Curr,This], ';', Next )
+               % atomic_list_concat( [Curr,This], ';', Next )
+               atomic_list_concat( Conts, ';', Curr ),
+               % this doesn't fail if there is a problem
+               findall( MvX-res(WX,DX,BX), (member(Cont,Conts),atomic_list_concat([MvX,WX,DX,BX],':',Cont)), MDprs ),
+               ( select(Mv-res(Ws,Ds,Bs),MDprs,RMprs) ->
+                    chess_db_inc_res_index( Rex, res(Ws,Ds,Bs), NxRes )
+                    ;
+                    RMprs = MDprs,
+                    chess_db_inc_res_index( Rex, res(0,0,0), NxRes )
+               ),
+               NXprs = [Mv-NxRes|RMprs],
+               findall( ACont, (member(MvY-res(WY,DY,BY),NXprs),atomic_list_concat([MvY,WY,DY,BY],':',ACont)), NxConts ),
+               atomic_list_concat( NxConts, ';', Next )
                ;
-               Next = This
+               % Next = This
+               chess_db_inc_res_index( Rex, res(0,0,0), res(WN,DN,BN) ),
+               atomic_list_concat( [Mv,WN,DN,BN], ':', Next )
           ),
           % ( integer(Inpo) -> InpoInt = Inpo; atom_number(Inpo,InpoInt) ),
           db_assert( PosDb, game_posi(Inpo,Next), _ )
      ),
-     chess_db_limos_game_posi( T, Gid, Res, PosDb ).
+     chess_db_limos_game_posi( T, Gid, Rex, PosDb ).
 
+chess_db_inc_res_index( 1, res(Ws,Ds,Bs), Res ) :-
+     NxWs is Ws + 1,
+     Res = res(NxWs,Ds,Bs).
+chess_db_inc_res_index( 2, res(Ws,Ds,Bs), Res ) :-
+     NxDs is Ds + 1,
+     Res = res(Ws,NxDs,Bs).
+chess_db_inc_res_index( 3, res(Ws,Ds,Bs), Res ) :-
+     NxBs is Bs + 1,
+     Res = res(Ws,Ds,NxBs).
 
 /** chess_db_limos_game_posi_obsolete( +Limos, +Gid, +Db ).
 
