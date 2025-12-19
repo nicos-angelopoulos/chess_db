@@ -107,7 +107,7 @@ chess_db( PgnIn, ArgDb, Args ) :-
      options( incr(Incr), Opts ),
      options( incr_progress(IProg), Opts ),
      options( max_games(MxG), Opts ),
-     OfG is LaGid + MxG,
+     ( MxG =:= inf -> OfG is inf ; OfG is LaGid + MxG ),
      chess_db_incr( Incr, PgnIn, LaGid, OfG, IProg, CdbHs, AbsDb, ArgDb, OptDb ).
 
 chess_db_incr( false, PgnIn, LaGid, _MxG, _IProg, CdbHs, AbsDb, ArgDb, OptDb ) :-
