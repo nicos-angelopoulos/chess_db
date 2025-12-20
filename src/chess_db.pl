@@ -284,7 +284,7 @@ chess_db_limos_game_posi( [limo(_Ply,_Hmv,Mv,Inpo)|T], Gid, Rex, Rosi, PosDb ) :
           ( chess_db_holds(game_posi(Rosi),PosDb,[Inpo,Mv],Curr) ->
                     chess_db_posi_value_update( Rosi, Curr, Rex, Mv, Next )
                     ;
-                    chess_db_posi_value_create( Rosi, Mv, Next )
+                    chess_db_posi_value_create( Rosi, Rex, Mv, Next )
           ),
           chess_db_table_update( game_posi(Rosi), PosDb, [Inpo,Mv], Next )
      ),
@@ -331,6 +331,10 @@ chess_db_posi_value_update( kvx, Curr, Rex, Mv, Next ) :-  % kvx: Key-Val where 
      NXprs = [Mv-NxRes|RMprs],
      findall( ACont, (member(MvY-res(WY,DY,BY),NXprs),atomic_list_concat([MvY,WY,DY,BY],':',ACont)), NxConts ),
      atomic_list_concat( NxConts, ';', Next ).
+
+chess_db_posi_value_create( kvx, Rex, Mv, Next ) :-
+     chess_db_inc_res_index( Rex, res('0','0','0'), res(WN,DN,BN) ),
+     atomic_list_concat( [Mv,WN,DN,BN], ':', Next ).
 
 chess_db_inc_res_index( 1, res(Ws,Ds,Bs), Res ) :-
      atom_number( Ws, WsN ),
