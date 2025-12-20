@@ -6,6 +6,7 @@
                ERROR:    when the required handle is not on the handle structure
                OPTS:     check type
                FIXED:    position(false) is now respected in creating dbs from PGNs
+               ADDED:    started different backend files in src/lib/chess_db_backends_<>.pl
      25.12.08  CHANGE:   New version of integer/numerical representation.
                OPT:      mxG() maximum games to process              
                FIXED:    despite the docs chess_dict_move/4 was putting algebraic to D.eps (en passant location)

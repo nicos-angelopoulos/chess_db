@@ -60,6 +60,19 @@ chess_db_alias( Alias, Path ) :-
 :- lib(debug_call).
 :- lib(pack_errors).
 
+:- ( current_prolog_flag(chess_db_backend,Bace) ->
+          true
+          ;
+          debuc(_,'To surpress this message set flag "chess_db_backend,{prosqlite,rocksdb,both}"',true),
+          ( pack_property(rocksdb,_Prop) -> debuc(_,'RocksDB is installed using it as the chess_db backend',true),
+                                            Bace = rocksdb
+                                            ; 
+                                            Bace = prosqlite
+          )
+    ),
+    atom_concat( 'src/lib/chess_db_backend_', Bace, Src ),
+    ensure_loaded( pack(chess_db/Src) ).
+
 :- dynamic(chess_db_handles/2).       % +Dir, +HandlesTerm
 
 :- lib(source(chess_db),homonyms(true)).
