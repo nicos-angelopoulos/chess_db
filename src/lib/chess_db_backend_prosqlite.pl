@@ -1,7 +1,8 @@
 
-chess_db_holds( Db, _Table, Args, Val ) :-
+chess_db_holds( game_posi(kvx), Db, Args, Val ) :-
      ( Args = [Key|_] -> true; Args = Key ),
-     rocks_get( Db, Key, Val ).
+     db_holds( Db, game_posi(Key,Val) ).
+     % rocks_get( Db, Key, Val ).
 
 chess_db_table_update( game_posi(kvx), Db, [Inpo,_Mv], Next ) :-
      db_retractall( Db, game_posi(Inpo,_), _ ),
