@@ -282,7 +282,7 @@ chess_db_limos_game_posi( [limo(_Ply,_Hmv,Mv,Inpo)|T], Gid, Rex, Rosi, PosDb ) :
                     ;
                     chess_db_posi_value_create( Rosi, Mv, Next )
           ),
-          chess_db_table_update( game_posi(Roxi), PosDb, [Inpo,Mv], Next )
+          chess_db_table_update( game_posi(Rosi), PosDb, [Inpo,Mv], Next )
      ),
      chess_db_limos_game_posi( T, Gid, Rex, Rosi, PosDb ).
 
