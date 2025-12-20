@@ -5,8 +5,15 @@ chess_db_defaults( Defs ) :-
                                              incr(false),
                                              incr_progress(1000),
                                              max_games(inf),
-                                             position(true)
-                                             ].
+                                             position(true),
+                                             check_types(Types)
+                                             ],
+                              Types = [
+                                        create-one_of([true,false,new,fresh]),
+                                        incr-boolean,
+                                        incr_progress-integer,
+                                        position-boolean
+                                     ].
 
 /** chess_db( +PgnOrF ).
      chess_db( +PgnOrF, +ChessDb ).
@@ -84,10 +91,10 @@ chess_db( PgnIn, ArgDb, Args ) :-
      options_append( chess_db, Args, Opts ),
      ( memberchk(db(OptDb),Opts) -> true; true ),
      % options( create(Create), Opts ),
-     % options( position(Pos), Opts ),
+     options( position(Posi), Opts ),
+
      ( ground(ArgDb) -> PrvDb = ArgDb; PrvDb = OptDb ),
-     % ( var(Db) -> throw(variable_location(ArgDb,Args)); true ),
-     ( var(PrvDb) -> 
+     ( var(PrvDb) ->
             absolute_file_name(PgnIn,AbsPgnF), % if you ever add options to pgn/2 abs_file could be one of them. 
             os_base( AbsPgnF, BaseF ),
             os_ext( _, Stem, BaseF ),
@@ -96,55 +103,53 @@ chess_db( PgnIn, ArgDb, Args ) :-
                 ;
                 Db = Stem
             )
-            % throw(variable_location(ArgDb,Args));
             ; 
             Db = PrvDb
      ),
      chess_db_connect( Db, [db(AbsDb),handles(CdbHs)|Opts] ),
-     % chess_db_handles( Create, Pos, Dir, CdbHs, AbsDb ),
      chess_db_handle( info, CdbHs, InfoHandle ),
      chess_db_max_id( InfoHandle, LaGid ),
      options( incr(Incr), Opts ),
      options( incr_progress(IProg), Opts ),
      options( max_games(MxG), Opts ),
      ( MxG =:= inf -> OfG is inf ; OfG is LaGid + MxG ),
-     chess_db_incr( Incr, PgnIn, LaGid, OfG, IProg, CdbHs, AbsDb, ArgDb, OptDb ).
+     chess_db_incr( Incr, PgnIn, LaGid, OfG, IProg, Posi, CdbHs, AbsDb, ArgDb, OptDb ).
 
-chess_db_incr( false, PgnIn, LaGid, _MxG, _IProg, CdbHs, AbsDb, ArgDb, OptDb ) :-
+chess_db_incr( false, PgnIn, LaGid, _MxG, _IProg, Posi, CdbHs, AbsDb, ArgDb, OptDb ) :-
      pgn( PgnIn, Pgn ),
-     chess_db_games_add( Pgn, LaGid, CdbHs ),
+     chess_db_games_add( Pgn, LaGid, Posi, CdbHs ),
      ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
      % chess_db_handles_close( CdbHs ),
      ( var(ArgDb) -> ArgDb = AbsDb; true ),
      ( var(OptDb) -> OptDb = AbsDb; true ).
-chess_db_incr( true, PgnIn, LaGid, MxG, IProg, CdbHs, AbsDb, ArgDb, OptDb ) :-
+chess_db_incr( true, PgnIn, LaGid, MxG, IProg, Posi, CdbHs, AbsDb, ArgDb, OptDb ) :-
      open( PgnIn, read, Pin ),
      tmp_file( chess_db_tmp, TmpF ),
-     chess_db_incr_stream( Pin, TmpF, LaGid, MxG, IProg, CdbHs ), 
+     chess_db_incr_stream( Pin, TmpF, LaGid, MxG, IProg, Posi, CdbHs ), 
      close( Pin ),
      ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
      % chess_db_handles_close( CdbHs ),
      ( var(ArgDb) -> ArgDb = AbsDb; true ),
      ( var(OptDb) -> OptDb = AbsDb; true ).
 
-chess_db_incr_stream( Pin, TmpF, LaGid, MxG, IProg, CdbHs ) :-
+chess_db_incr_stream( Pin, TmpF, LaGid, MxG, IProg, Posi, CdbHs ) :-
      open( TmpF, write, TempO ),
      chess_db_incr_stream_pgn( Pin, TempO, Eof ),
      close( TempO ),
      ( (Eof ; (MxG =< LaGid) ) -> Termin = true; Termin = false ),
-     chess_db_incr_stream_termin( Termin, Pin, TmpF, LaGid, MxG, IProg, CdbHs ).
+     chess_db_incr_stream_termin( Termin, Pin, TmpF, LaGid, MxG, IProg, Posi, CdbHs ).
 
-chess_db_incr_stream_termin( true, _Pin, _TmpF, _LaGid, _MxG, _IProg, _CdbHs ).
-chess_db_incr_stream_termin( false, Pin, TmpF, LaGid, MxG, IProg, CdbHs ) :-
+chess_db_incr_stream_termin( true, _Pin, _TmpF, _LaGid, _MxG, _IProg, _Posi, _CdbHs ).
+chess_db_incr_stream_termin( false, Pin, TmpF, LaGid, MxG, IProg, Posi, CdbHs ) :-
      pgn( TmpF, Game ),
-     chess_db_games_add( Game, LaGid, CdbHs ),
+     chess_db_games_add( Game, LaGid, Posi, CdbHs ),
      MaGid is LaGid + 1,
      ( (LaGid mod IProg) =:= 0 ->
                debuc( chess_db(true), task(stop), 'Added game no: ~d', [farg(MaGid)] )
                ;
                true
      ),
-     chess_db_incr_stream( Pin, TmpF, MaGid, MxG, IProg, CdbHs ).
+     chess_db_incr_stream( Pin, TmpF, MaGid, MxG, IProg, Posi, CdbHs ).
 
 chess_db_incr_stream_pgn( Pin, TempO, Eof ) :-
      io_line( Pin, Line ),
@@ -195,17 +200,17 @@ chess_db_alias_exists_dir( AliasDir ) :-
      exists_directory( AliasDir ),
      !.
 
-chess_db_games_add( [], _Gid, _CdbHs ).
-chess_db_games_add( [G|Gs], Gid, CdbHs ) :-
+chess_db_games_add( [], _Gid, _Posi, _CdbHs ).
+chess_db_games_add( [G|Gs], Gid, Posi, CdbHs ) :-
      % fixme: ignore position for now
      G = pgn(Info,Moves,Res,Orig),
      chess_db_debug_info( Info, 'adding to db' ),
      chess_db_handle( info, CdbHs, InfoHandle ),
      chess_db_handle( move, CdbHs, MoveHandle ),
      chess_db_handle( orig, CdbHs, OrigHandle ),
-     chess_db_handle( posi, CdbHs, PosiHandle ),
-     chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoveHandle, OrigHandle, PosiHandle, Nid ),
-     chess_db_games_add( Gs, Nid, CdbHs ).
+     ( Posi == true -> chess_db_handle( posi, CdbHs, PosiHandle ) ; true ),
+     chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoveHandle, OrigHandle, Posi, PosiHandle, Nid ),
+     chess_db_games_add( Gs, Nid, Posi, CdbHs ).
 
 chess_db_debug_info( Info, Pfx ) :-
    memberchk( 'White'-White, Info ),
@@ -216,12 +221,12 @@ chess_db_debug_info( Info, Pfx ) :-
 chess_db_debug_info( Info, Pfx ) :-
    debug( chess_db, '~w: ~w', [Pfx,Info] ).
 
-chess_db_game_add( InfoHandle, Info, _Moves, _Orig, Gid, _Res, _MoHa, _OrHa, _PoHa, Gid ) :-
+chess_db_game_add( InfoHandle, Info, _Moves, _Orig, Gid, _Res, _MoHa, _OrHa, _Posi, _PoHa, Gid ) :-
      chess_db_game_info_exists( Info, InfoHandle, ExGid ),
      !, % fixme: add option for erroring
      debug( chess_db(info), 'Info match existing game: ~d', ExGid ).
 
-chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, PoHa, Nid ) :-
+chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, Posi, PoHa, Nid ) :-
      Nid is Gid + 1,
      findall( game_info(Nid,K,V), member(K-V,Info), Goals ),
      db_assert( InfoHandle, Goals, _ ),
@@ -229,8 +234,13 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, PoHa, Ni
      chess_pgn_moves_limos( Moves, 1, Start, Limos ),
      findall( game_move(Nid,Ply,Hmv,NxtMv), member(limo(Ply,Hmv,NxtMv,_Inpo),Limos), Moals ),
      db_assert( MoHa, Moals, _ ),
-     chess_db_res_index( Res, Rex ),
-     chess_db_limos_game_posi( Limos, Nid, Rex, PoHa ),
+
+     ( Posi == true ->
+          chess_db_res_index( Res, Rex ),
+          chess_db_limos_game_posi( Limos, Nid, Rex, PoHa )
+          ;
+          true
+     ),
      maplist( atom_codes, OrigAtms, Orig ),
      atomic_list_concat( OrigAtms, '\n', OrigAtm ),
      debug( chess_db(original), '~a', OrigAtm ),
