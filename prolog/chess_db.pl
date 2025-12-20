@@ -64,10 +64,13 @@ chess_db_alias( Alias, Path ) :-
 :- ( current_prolog_flag(chess_db_backend,Bace) ->
           true
           ;
-          debuc(_,'To surpress this message set flag "chess_db_backend,{prosqlite,rocksdb,both}"',true),
-          ( pack_property(rocksdb,_Prop) -> debuc(_,'RocksDB is installed using it as the chess_db backend',true),
+          write('To surpress this message set flag "chess_db_backend,{prosqlite,rocksdb,both}"'), nl,
+          ( pack_property(rocksdb,_Prop) -> 
+                                            write('RocksDB is installed using it as the chess_db backend'), nl,
                                             Bace = rocksdb
                                             ; 
+                                            % fixme: check for prosqlite
+                                            write('RocksDB is not installed using proSQLite as the chess_db backend'), nl,
                                             Bace = prosqlite
           )
     ),
