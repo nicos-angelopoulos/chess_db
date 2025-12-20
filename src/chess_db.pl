@@ -6,6 +6,7 @@ chess_db_defaults( Defs ) :-
                                              incr_progress(1000),
                                              max_games(inf),
                                              position(true),
+                                             position_type(kvx),
                                              check_types(Types)
                                              ],
                               Types = [
@@ -54,6 +55,9 @@ Opts
 
   * position(Pos=true)
      if true, use position table
+  * position_type(Pos=kvx)
+     type of the position table representation
+     * kvx kv value where v is a text
 
 Options can also be picked up from ~/.pl/chess_db.pl (see options_append/3).
 
