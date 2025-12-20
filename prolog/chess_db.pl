@@ -58,6 +58,7 @@ chess_db_alias( Alias, Path ) :-
 :- lib(prosqlite).
 :- lib(stoics_lib).
 :- lib(debug_call).
+:- lib(pack_errors).
 
 :- dynamic(chess_db_handles/2).       % +Dir, +HandlesTerm
 

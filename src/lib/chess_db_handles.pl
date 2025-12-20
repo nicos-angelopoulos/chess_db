@@ -25,13 +25,21 @@ chess_db_connect_subs( [Sub|Subs], Dir, Create, [SubHa|Has] ) :-
     chess_db_connect_sub( Dir, Create, Sub, SubHa ),
     chess_db_connect_subs( Subs, Dir, Create, Has ).
 
-chess_db_handle( info, CdbHs, InfoHandle ) :-
+chess_db_handle( Table, CdbHs, Handle ) :-
+     ( chess_db_handle_arg(Table, CdbHs, Handle) ->
+          true
+          ;
+          % fixme: add caller trail...
+          throw( no_handle(Table,CdbHs), [pack(chess_db),pred(chess_db_handle/3)] )
+     ).
+
+chess_db_handle_arg( info, CdbHs, InfoHandle ) :-
     arg( 1, CdbHs, InfoHandle ).
-chess_db_handle( move, CdbHs, MoveHandle ) :-
+chess_db_handle_arg( move, CdbHs, MoveHandle ) :-
     arg( 2, CdbHs, MoveHandle ).
-chess_db_handle( orig, CdbHs, MoveHandle ) :-
+chess_db_handle_arg( orig, CdbHs, MoveHandle ) :-
     arg( 3, CdbHs, MoveHandle ).
-chess_db_handle( posi, CdbHs, PosiHandle ) :-
+chess_db_handle_arg( posi, CdbHs, PosiHandle ) :-
     arg( 4, CdbHs, PosiHandle ).
 
 chess_db_handles_close( CdbHs ) :-

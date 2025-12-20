@@ -14,3 +14,6 @@ chess_db_info_kvs( KVs, Mess, Args ) :-
     ( memberchk( 'Black'-Black, KVs ) -> true; Black = '$null' ),
     atomic_list_concat( [White,vs,Black], ' ', Mess ),
     Args = [].
+
+pack_errors:message( no_handle(Table,Handles) ) -->
+    ['No handle for table: ~w in term ~w'-[Table,Handles]].
