@@ -49,6 +49,7 @@ chess_db_alias( Alias, Path ) :-
 :- use_module(library(lists)).       % append/3,...
 :- use_module(library(debug)).       % debug/1,3.  % should replace with debuc/1,3
 :- use_module(library(pure_input)).  % phrase_from_file/2.
+:- use_module(library(prolog_pack)). % pack_property/2.
 
 :- use_module(library(lib)).
 
