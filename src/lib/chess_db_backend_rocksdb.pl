@@ -50,7 +50,7 @@ chess_db_max_id( HandleST, Max ) :-
      ),
      rocks_get( Dbh, -1, Max ).
 
-chess_db_inc_id( Dbh, Gid ) :-
+chess_db_inc_id( Dbh/_, Gid ) :-
      rocks_put( Dbh, -1, Gid ).
 
 
