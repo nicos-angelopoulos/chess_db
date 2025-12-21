@@ -43,8 +43,12 @@ chess_db_game_add_info( Dbh/Dbv, Info, Gid ) :-
      rocks_put( Dbv, InfoAtm, Gid ).
 
 chess_db_max_id( HandleST, Max ) :-
-    ( atomic(HandleST) -> Dbh = HandleST; chess_db_handle(info,HandleST,Dbh) ),
-    rocks_get( Dbh, -1, Max ).
+     ( atomic(HandleST) -> Dbh = HandleST; 
+          ( HandleST = Dbh/_ -> true
+                              ; chess_db_handle(info,HandleST,Dbh) 
+          )
+     ),
+     rocks_get( Dbh, -1, Max ).
 
 chess_db_inc_id( Dbh, Gid ) :-
      rocks_put( Dbh, -1, Gid ).
