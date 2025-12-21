@@ -218,13 +218,13 @@ chess_db_games_add( [G|Gs], Gid, Posi, Rosi, CdbHs ) :-
      chess_db_games_add( Gs, Nid, Posi, Rosi, CdbHs ).
 
 chess_db_debug_info( Info, Pfx ) :-
-   memberchk( 'White'-White, Info ),
-   memberchk( 'Black'-Black, Info ),
-   atomic_list_concat( [White,vs,Black], ' ', Mess ),
-   !,
-   debug( chess_db, '~w: ~w', [Pfx,Mess] ).
+     memberchk( 'White'-White, Info ),
+     memberchk( 'Black'-Black, Info ),
+     atomic_list_concat( [White,vs,Black], ' ', Mess ),
+     !,
+     debug( chess_db, '~w: ~w', [Pfx,Mess] ).
 chess_db_debug_info( Info, Pfx ) :-
-   debug( chess_db, '~w: ~w', [Pfx,Info] ).
+     debug( chess_db, '~w: ~w', [Pfx,Info] ).
 
 chess_db_game_add( InfoHandle, Info, _Moves, _Orig, Gid, _Res, _MoHa, _OrHa, _Posi, _Rosi, _PoHa, Gid ) :-
      chess_db_game_info_exists( Info, InfoHandle, ExGid ),
@@ -236,7 +236,8 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, Posi, Ro
      chess_db_game_add_info( InfoHandle, Info, Nid ),
      chess_dict_start_board( Start ),
      chess_pgn_moves_limos( Moves, 1, Start, Limos ),
-     chess_db_limos_game_moves( MoHa, Limos ),
+     trace,
+     chess_db_limos_game_moves( MoHa, Nid, Limos ),
      ( Posi == true ->
           chess_db_res_index( Res, Rex ),
           chess_db_limos_game_posi( Limos, Nid, Rex, Rosi, PoHa )
