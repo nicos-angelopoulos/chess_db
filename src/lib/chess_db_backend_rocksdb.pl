@@ -51,7 +51,8 @@ chess_db_inc_id( Dbh, Gid ) :-
 chess_db_base_ext( Base, DbF ) :-
      file_name_extension( Base, rocksdb, DbF ).
 
-chess_db_rocksdb_table_fields(game_info, int64, term).   % Gid -> InfosList -> [keyInfo-valInfo|...]
+chess_db_rocksdb_table_fields(game_info, atom, term).   % Gid -> InfosList -> [keyInfo-valInfo|...]
+% chess_db_rocksdb_table_fields(game_info, int64, term).   % Gid -> InfosList -> [keyInfo-valInfo|...]
 % chess_db_rocksdb_table_fields(game_info, atom, int64).     % InfosList (=> atom(K:V;KVs)) -> Gid  // -1 => max_int -> 0
 % chess_db_rocksdb_table_fields(game_move, atom, term).      % Gid'+'ply -> [Hmv,Move]
 chess_db_rocksdb_table_fields(game_move, int64, term).      % Gid -> list(Mv)
