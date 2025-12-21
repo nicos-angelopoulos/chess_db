@@ -28,8 +28,8 @@ chess_db_game_info_exists( KVs, Dbh, ExGid ) :-
      atomic_list_concat( KVas, ';', InfoAtm ),
      rocks_get( Dbh, InfoAtm, ExGid ).
 
-chess_db_limos_game_moves( Dbh, Nid, Moals ) :-
-     findall( NxtMv, member(limo(Ply,Hmv,NxtMv,_Inpo),Limos), Mvs ),
+chess_db_limos_game_moves( Dbh, Nid, Limos ) :-
+     findall( NxtMv-Hmv, member(limo(_Ply,Hmv,NxtMv,_Inpo),Limos), Mvs ),
      % atomic_list_concat( Mvs, ';', MvsAtm ),
      rocks_put( Dbh, Nid, Mvs ).
 
@@ -50,8 +50,8 @@ chess_db_inc_id( Dbh, Gid ) :-
 chess_db_base_ext( Base, DbF ) :-
      file_name_extension( Base, rocksdb, DbF ).
 
-% chess_db_rocksdb_table_fields(game_info, int64, term).   % Gid -> InfosList -> [keyInfo-valInfo|...]
-chess_db_rocksdb_table_fields(game_info, atom, int64).     % InfosList (=> atom(K:V;KVs)) -> Gid  // -1 => max_int -> 0
+chess_db_rocksdb_table_fields(game_info, int64, term).   % Gid -> InfosList -> [keyInfo-valInfo|...]
+% chess_db_rocksdb_table_fields(game_info, atom, int64).     % InfosList (=> atom(K:V;KVs)) -> Gid  // -1 => max_int -> 0
 % chess_db_rocksdb_table_fields(game_move, atom, term).      % Gid'+'ply -> [Hmv,Move]
 chess_db_rocksdb_table_fields(game_move, int64, term).      % Gid -> list(Mv)
 chess_db_rocksdb_table_fields(game_orig, int64, atom).     % Gid -> original text Lines ? 
