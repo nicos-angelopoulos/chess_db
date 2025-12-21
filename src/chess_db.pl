@@ -386,13 +386,6 @@ chess_db_game_info_exists( [K-V|T], InfHa, ExGid ) :-
      db_holds( InfHa, game_info(ExGid,K,V) ),
      chess_db_game_info_exists( T, InfHa, ExGid ).
 
-chess_db_table_fields( game_info, [gid+integer,key+text,value-text] ).
-% chess_db_table_fields( game_move, [gid+integer,move_no+integer,turn+boolean,move-text] ).
-chess_db_table_fields( game_move, [gid+integer,ply+integer,hmv-integer,move-text] ).
-chess_db_table_fields( game_orig, [gid+integer,original-text] ).
-% chess_db_table_fields( game_posi, [gid+integer,ply+integer,position-text] ).
-chess_db_table_fields( game_posi, [position+text,pairs-text] ).
-
 chess_db_dir( Dir, _Create, AbsDir ) :-
      AbsOpts = [file_type(directory),file_errors(fail)], % fixme: assumes dir-based db
      absolute_file_name( Dir, AbsDir, AbsOpts ),

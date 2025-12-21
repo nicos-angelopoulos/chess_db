@@ -34,40 +34,38 @@ chess_db_handle( Table, CdbHs, Handle ) :-
      ).
 
 chess_db_handle_arg( info, CdbHs, InfoHandle ) :-
-    arg( 1, CdbHs, InfoHandle ).
+     arg( 1, CdbHs, InfoHandle ).
 chess_db_handle_arg( move, CdbHs, MoveHandle ) :-
-    arg( 2, CdbHs, MoveHandle ).
+     arg( 2, CdbHs, MoveHandle ).
 chess_db_handle_arg( orig, CdbHs, MoveHandle ) :-
-    arg( 3, CdbHs, MoveHandle ).
+     arg( 3, CdbHs, MoveHandle ).
 chess_db_handle_arg( posi, CdbHs, PosiHandle ) :-
-    arg( 4, CdbHs, PosiHandle ).
+     arg( 4, CdbHs, PosiHandle ).
 
 chess_db_handles_close( CdbHs ) :-
-    arg( _, CdbHs, Handle ),
-    db_disconnect( Handle ),
-    fail.
+     arg( _, CdbHs, Handle ),
+     db_disconnect( Handle ),
+     fail.
 chess_db_handles_close( _CdbHs ).
 
 chess_db_connect_sub( Dir, Create, Db, Handle ) :-
-    atomic_list_concat( [game,Db], '_', Base ),
-    file_name_extension( Base, sqlite, SqliteF ),
-    directory_file_path( Dir, SqliteF, DbF ),
-    chess_db_connect_to( DbF, Create, Base, Handle ).
+     atomic_list_concat( [game,Db], '_', Base ),
+     file_name_extension( Base, sqlite, SqliteF ),
+     directory_file_path( Dir, SqliteF, DbF ),
+     chess_db_connect_to( DbF, Create, Base, Handle ).
 
 % fixme: see chess_db_connect_dir
 chess_db_connect_to( DbF, _Create, _Base, Handle ) :-
-    exists_file( DbF ),
-    !,
-    sqlite_connect( DbF, Handle, as_predicates(false) ).
+     ( exists_file(DbF) ; exists_directory(DbF) ),
+     !,
+     chess_db_connect_handle( DbF, Handle ).
 chess_db_connect_to( DbF, Create, Base, Handle ) :-
-    chess_db_connect_to_create( Create, DbF, Base, Handle ).
+     chess_db_connect_to_create( Create, DbF, Base, Handle ).
 
 chess_db_connect_to_create( false, DbF, _Base, _Handle ) :-
-    debug( chess_db(info), 'Not creating chess_db file: ~p', DbF ),
-    !,
-    fail.
+     debug( chess_db(info), 'Not creating chess_db file: ~p', DbF ),
+     !,
+     fail.
 chess_db_connect_to_create( true, DbF, Base, Handle ) :-
-    sqlite_connect( DbF, Handle, exists(false) ),
-    chess_db_table_fields( Base, Cnms ),
-    Goal =.. [Base|Cnms],
-    db_create( Handle, Goal ).
+     chess_db_create( DbF, Base, Handle ).
+
