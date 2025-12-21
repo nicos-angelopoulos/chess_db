@@ -1,4 +1,9 @@
 
+chess_db_game_info_exists( [], _InfHa, _ExGid ).
+chess_db_game_info_exists( [K-V|T], InfHa, ExGid ) :-
+     db_holds( InfHa, game_info(ExGid,K,V) ),
+     chess_db_game_info_exists( T, InfHa, ExGid ).
+
 chess_db_create( Db, Base, Handle ) :-
      sqlite_connect( Db, Handle, exists(false) ),
      chess_db_table_fields( Base, Cnms ),

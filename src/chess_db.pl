@@ -226,6 +226,7 @@ chess_db_debug_info( Info, Pfx ) :-
    debug( chess_db, '~w: ~w', [Pfx,Info] ).
 
 chess_db_game_add( InfoHandle, Info, _Moves, _Orig, Gid, _Res, _MoHa, _OrHa, _Posi, _Rosi, _PoHa, Gid ) :-
+     trace,
      chess_db_game_info_exists( Info, InfoHandle, ExGid ),
      !, % fixme: add option for erroring
      debug( chess_db(info), 'Info match existing game: ~d', ExGid ).
@@ -365,8 +366,6 @@ chess_db_res_index( Res, _ ) :- throw( cannot_convert_to_res_index(Res) ).
 */
 chess_db_limos_game_posi_obsolete( [], _Gid, _PosDb ).
 chess_db_limos_game_posi_obsolete( [limo(Ply,_Hmv,Mv,Inpo)|T], Gid, PosDb ) :-
-     % write( mv(Mv) ), nl,
-     % ( Mv == 'c4' -> trace; true ),
      ( Mv == [] ->
           true
           ; 
@@ -380,11 +379,6 @@ chess_db_limos_game_posi_obsolete( [limo(Ply,_Hmv,Mv,Inpo)|T], Gid, PosDb ) :-
           db_assert( PosDb, game_posi(Inpo,Next), _ )
      ),
      chess_db_limos_game_posi_obsolete( T, Gid, PosDb ).
-
-chess_db_game_info_exists( [], _InfHa, _ExGid ).
-chess_db_game_info_exists( [K-V|T], InfHa, ExGid ) :-
-     db_holds( InfHa, game_info(ExGid,K,V) ),
-     chess_db_game_info_exists( T, InfHa, ExGid ).
 
 chess_db_dir( Dir, _Create, AbsDir ) :-
      AbsOpts = [file_type(directory),file_errors(fail)], % fixme: assumes dir-based db
