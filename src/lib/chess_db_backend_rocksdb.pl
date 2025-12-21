@@ -22,7 +22,7 @@ chess_db_game_info_exists( KVs, Dbh, ExGid ) :-
      rocks_get( Dbh, InfoAtm, ExGid ).
 
 chess_db_game_add_info( Dbh, Info, Gid ) :-
-     findall( KVa, (member(K-V,KVs),atomic_list_concat([K,V],':',KVa)), KVas ),
+     findall( KVa, (member(K-V,Info),atomic_list_concat([K,V],':',KVa)), KVas ),
      atomic_list_concat( KVas, ';', InfoAtm ),
      rocks_put( Dbh, InfoAtm, Gid ).
 
