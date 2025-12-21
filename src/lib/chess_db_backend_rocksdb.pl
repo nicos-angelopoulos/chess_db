@@ -19,11 +19,11 @@ chess_db_create( Dir, Base, Db ) :-
 
 chess_db_holds( game_posi(_Roxi), Db, Args, Val ) :-
      ( Args = [KeyNum|_] -> true; Args = KeyNum ),
-     atom_integer( Key, KeyNum ),
+     atom_number( Key, KeyNum ),
      rocks_get( Db, Key, Val ).
 
 chess_db_table_update( game_posi(_Roxi), Db, [InpoNum,_Mv], Next ) :-
-     atom_integer( Inpo, InpoNum ),
+     atom_number( Inpo, InpoNum ),
      rocks_put( Db, Inpo, Next ).
 
 chess_db_game_info_exists( KVs, _Dbh/Dbv, ExGid ) :-
