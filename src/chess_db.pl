@@ -226,20 +226,17 @@ chess_db_debug_info( Info, Pfx ) :-
    debug( chess_db, '~w: ~w', [Pfx,Info] ).
 
 chess_db_game_add( InfoHandle, Info, _Moves, _Orig, Gid, _Res, _MoHa, _OrHa, _Posi, _Rosi, _PoHa, Gid ) :-
-     trace,
      chess_db_game_info_exists( Info, InfoHandle, ExGid ),
      !, % fixme: add option for erroring
      debug( chess_db(info), 'Info match existing game: ~d', ExGid ).
 
 chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, Posi, Rosi, PoHa, Nid ) :-
      Nid is Gid + 1,
-     findall( game_info(Nid,K,V), member(K-V,Info), Goals ),
-     db_assert( InfoHandle, Goals, _ ),
+     chess_db_game_add_info( InfoHandle, Info, Nid ),
      chess_dict_start_board( Start ),
      chess_pgn_moves_limos( Moves, 1, Start, Limos ),
      findall( game_move(Nid,Ply,Hmv,NxtMv), member(limo(Ply,Hmv,NxtMv,_Inpo),Limos), Moals ),
      db_assert( MoHa, Moals, _ ),
-
      ( Posi == true ->
           chess_db_res_index( Res, Rex ),
           chess_db_limos_game_posi( Limos, Nid, Rex, Rosi, PoHa )
@@ -249,6 +246,7 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, Posi, Ro
      maplist( atom_codes, OrigAtms, Orig ),
      atomic_list_concat( OrigAtms, '\n', OrigAtm ),
      debug( chess_db(original), '~a', OrigAtm ),
+     chess_db_inc_id( InfoHandle, Nid ),
      db_assert( OrHa, game_orig(Nid,OrigAtm), _ ).
 
 /** chess_db_limos_game_posi( +Limos, +Gid, +Rex, +Db ).

@@ -21,6 +21,16 @@ chess_db_table_update( game_posi(kvx), Db, [Inpo,_Mv], Next ) :-
      db_retractall( Db, game_posi(Inpo,_), _ ),
      db_assert( Db, game_posi(Inpo,Next), _ ).
 
+chess_db_game_add_info( InfoHandle, Info, Gid ) :-
+     findall( game_info(Gid,K,V), member(K-V,Info), Goals ),
+     db_assert( InfoHandle, Goals, _ ).
+
+chess_db_inc_id( _Dbh, _Gid ). % fixme: we should store this somewhere ?
+
+chess_db_max_id( HandleST, Max ) :-
+    ( atomic(HandleST) -> Handle = HandleST; chess_db_handle(info,HandleST,Handle) ),
+    ( (db_max(Handle,game_info,1,Max),Max\=='',Max\=='$null$') -> true; Max is 0).
+
 chess_db_table_fields( game_info, [gid+integer,key+text,value-text] ).
 % chess_db_table_fields( game_move, [gid+integer,move_no+integer,turn+boolean,move-text] ).
 chess_db_table_fields( game_move, [gid+integer,ply+integer,hmv-integer,move-text] ).

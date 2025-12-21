@@ -84,7 +84,7 @@ chess_db_alias( Alias, Path ) :-
 :- lib(pgn/2).
 :- lib(chess_db/2).
 :- lib(chess_db_list/1).
-:- lib(chess_db_max_id/2).
+% :- lib(chess_db_max_id/2). now in backend files
 :- lib(chess_db_game/1).
 :- lib(chess_db_ids_pgn/2).
 :- lib(chess_db_connect/1).
