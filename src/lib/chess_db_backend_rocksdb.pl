@@ -4,16 +4,17 @@
 chess_db_connect_handle( Dir, Handle ) :-
     rocks_open( Dir, Handle, [] ).
 
-chess_db_create( Dir, Base, Dbh/Dbv ) :-
+chess_db_create( Dir, Base, Db ) :-
      chess_db_rocksdb_table_fields( Base, Key, Val ),
      rocks_open( Dir, Dbh, [key(Key),value(Val)] ),
      ( Base == game_info -> 
                rocks_put(Dbh, -1, 0),
                os_path( Par, _, Dir ),
                os_path( Par, game_info_rev, Rvr ),
-               rocks_open( Rvr, Dbv, [key(Val),value(Key)] )
+               rocks_open( Rvr, Dbv, [key(Val),value(Key)] ),
+               Db = Dbh/Dbv
                ;
-               true 
+               Db = Dbh
      ).
 
 chess_db_holds( game_posi(_Roxi), Db, Args, Val ) :-
@@ -28,7 +29,7 @@ chess_db_game_info_exists( KVs, _Dbh/Dbv, ExGid ) :-
      atomic_list_concat( KVas, ';', InfoAtm ),
      rocks_get( Dbv, InfoAtm, ExGid ).
 
-chess_db_limos_game_moves( Dbh, Nid, Limos ) :-
+chess_db_limos_game_moves( Dbh/Dbv, Nid, Limos ) :-
      findall( NxtMv-Hmv, member(limo(_Ply,Hmv,NxtMv,_Inpo),Limos), Mvs ),
      % atomic_list_concat( Mvs, ';', MvsAtm ),
      rocks_put( Dbh, Nid, Mvs ).
