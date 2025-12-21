@@ -246,7 +246,7 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, Posi, Ro
      atomic_list_concat( OrigAtms, '\n', OrigAtm ),
      debug( chess_db(original), '~a', OrigAtm ),
      chess_db_inc_id( InfoHandle, Nid ),
-     db_assert( OrHa, game_orig(Nid,OrigAtm), _ ).
+     chess_db_table_update( game_orig(Gid,Otm), Dbh ).
 
 /** chess_db_limos_game_posi( +Limos, +Gid, +Rex, +Db ).
 

@@ -17,6 +17,9 @@ chess_db_holds( game_posi(kvx), Db, Args, Val ) :-
      ( Args = [Key|_] -> true; Args = Key ),
      db_holds( Db, game_posi(Key,Val) ).
 
+chess_db_table_update( game_orig(Gid,Otm), Dbh ) :-
+     db_assert( Dbh, game_orig(Gid,Otm), _ ).
+
 chess_db_table_update( game_posi(kvx), Db, [Inpo,_Mv], Next ) :-
      db_retractall( Db, game_posi(Inpo,_), _ ),
      db_assert( Db, game_posi(Inpo,Next), _ ).
@@ -31,7 +34,7 @@ chess_db_max_id( HandleST, Max ) :-
     ( atomic(HandleST) -> Handle = HandleST; chess_db_handle(info,HandleST,Handle) ),
     ( (db_max(Handle,game_info,1,Max),Max\=='',Max\=='$null$') -> true; Max is 0).
 
-chess_db_limos_game_moves( Dbh, Moals ) :-
+chess_db_limos_game_moves( Dbh, Nid, Limos ) :-
      findall( game_move(Nid,Ply,Hmv,NxtMv), member(limo(Ply,Hmv,NxtMv,_Inpo),Limos), Moals ),
      db_assert( Dbh, Moals, _ ).
 

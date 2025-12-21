@@ -22,6 +22,9 @@ chess_db_holds( game_posi(_Roxi), Db, Args, Val ) :-
      atom_number( Key, KeyNum ),
      rocks_get( Db, Key, Val ).
 
+chess_db_table_update( game_orig(Gid,Otm), Dbh ) :-
+     rocks_put( Dbh, Gid, Otm ).
+
 chess_db_table_update( game_posi(_Roxi), Db, [InpoNum,_Mv], Next ) :-
      atom_number( Inpo, InpoNum ),
      rocks_put( Db, Inpo, Next ).
