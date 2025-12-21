@@ -213,6 +213,7 @@ chess_db_games_add( [G|Gs], Gid, Posi, Rosi, CdbHs ) :-
      chess_db_handle( move, CdbHs, MoveHandle ),
      chess_db_handle( orig, CdbHs, OrigHandle ),
      ( Posi == true -> chess_db_handle( posi, CdbHs, PosiHandle ) ; true ),
+     trace,
      chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoveHandle, OrigHandle, Posi, Rosi, PosiHandle, Nid ),
      chess_db_games_add( Gs, Nid, Posi, Rosi, CdbHs ).
 
@@ -235,8 +236,7 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, Posi, Ro
      chess_db_game_add_info( InfoHandle, Info, Nid ),
      chess_dict_start_board( Start ),
      chess_pgn_moves_limos( Moves, 1, Start, Limos ),
-     findall( game_move(Nid,Ply,Hmv,NxtMv), member(limo(Ply,Hmv,NxtMv,_Inpo),Limos), Moals ),
-     db_assert( MoHa, Moals, _ ),
+     chess_db_limos_game_moves( MoHa, Limos ),
      ( Posi == true ->
           chess_db_res_index( Res, Rex ),
           chess_db_limos_game_posi( Limos, Nid, Rex, Rosi, PoHa )

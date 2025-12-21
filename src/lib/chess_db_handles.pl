@@ -50,7 +50,7 @@ chess_db_handles_close( _CdbHs ).
 
 chess_db_connect_sub( Dir, Create, Db, Handle ) :-
      atomic_list_concat( [game,Db], '_', Base ),
-     file_name_extension( Base, sqlite, SqliteF ),
+     chess_db_base_ext( Base, SqliteF ),
      directory_file_path( Dir, SqliteF, DbF ),
      chess_db_connect_to( DbF, Create, Base, Handle ).
 
