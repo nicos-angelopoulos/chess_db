@@ -8,7 +8,8 @@ chess_db_create( Dir, Base, Db ) :-
      chess_db_rocksdb_table_fields( Base, Key, Val ),
      rocks_open( Dir, Dbh, [key(Key),value(Val)] ),
      ( Base == game_info -> 
-               rocks_put(Dbh, -1, 0),
+               % rocks_put(Dbh, -1, 0),
+               rocks_put(Dbh, max_int, 0),
                os_path( Par, _, Dir ),
                os_path( Par, game_info_rev, Rvr ),
                rocks_open( Rvr, Dbv, [key(Val),value(Key)] ),
@@ -42,10 +43,11 @@ chess_db_game_add_info( Dbh/Dbv, Info, Gid ) :-
 
 chess_db_max_id( HandleST, Max ) :-
     ( atomic(HandleST) -> Dbh = HandleST; chess_db_handle(info,HandleST,Dbh) ),
-    rocks_get( Dbh, -1, Max ).
+    rocks_get( Dbh, max_int, Max ).
 
 chess_db_inc_id( Dbh, Gid ) :-
-     rocks_put( Dbh, -1, Gid ).
+     % rocks_put( Dbh, -1, Gid ).
+     rocks_put( Dbh, max_int, Gid ).
 
 
 chess_db_base_ext( Base, DbF ) :-
