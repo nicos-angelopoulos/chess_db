@@ -235,7 +235,6 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, Posi, Ro
      chess_db_game_add_info( InfoHandle, Info, Nid ),
      chess_dict_start_board( Start ),
      chess_pgn_moves_limos( Moves, 1, Start, Limos ),
-     trace,
      chess_db_limos_game_moves( MoHa, Nid, Limos ),
      ( Posi == true ->
           chess_db_res_index( Res, Rex ),

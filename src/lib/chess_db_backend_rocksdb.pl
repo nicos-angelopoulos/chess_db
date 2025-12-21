@@ -23,10 +23,10 @@ chess_db_holds( game_posi(_Roxi), Db, Args, Val ) :-
 chess_db_table_update( game_posi(_Roxi), Db, [Inpo,_Mv], Next ) :-
      rocks_put( Db, Inpo, Next ).
 
-chess_db_game_info_exists( KVs, Dbh, ExGid ) :-
+chess_db_game_info_exists( KVs, _Dbh/Dbv, ExGid ) :-
      findall( KVa, (member(K-V,KVs),atomic_list_concat([K,V],':',KVa)), KVas ),
      atomic_list_concat( KVas, ';', InfoAtm ),
-     rocks_get( Dbh, InfoAtm, ExGid ).
+     rocks_get( Dbv, InfoAtm, ExGid ).
 
 chess_db_limos_game_moves( Dbh, Nid, Limos ) :-
      findall( NxtMv-Hmv, member(limo(_Ply,Hmv,NxtMv,_Inpo),Limos), Mvs ),
