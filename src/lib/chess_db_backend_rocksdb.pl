@@ -10,8 +10,8 @@ chess_db_create( Dir, Base, Dbh/Dbv ) :-
      ( Base == game_info -> 
                rocks_put(Dbh, -1, 0),
                os_path( Par, _, Dir ),
-               os_path( Par, game_info_rev ),
-               rocks_open( Dir, Dbv, [key(Val),value(Key)] )
+               os_path( Par, game_info_rev, Rvr ),
+               rocks_open( Rvr, Dbv, [key(Val),value(Key)] )
                ;
                true 
      ).

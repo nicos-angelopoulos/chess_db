@@ -213,7 +213,6 @@ chess_db_games_add( [G|Gs], Gid, Posi, Rosi, CdbHs ) :-
      chess_db_handle( move, CdbHs, MoveHandle ),
      chess_db_handle( orig, CdbHs, OrigHandle ),
      ( Posi == true -> chess_db_handle( posi, CdbHs, PosiHandle ) ; true ),
-     trace,
      chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoveHandle, OrigHandle, Posi, Rosi, PosiHandle, Nid ),
      chess_db_games_add( Gs, Nid, Posi, Rosi, CdbHs ).
 
