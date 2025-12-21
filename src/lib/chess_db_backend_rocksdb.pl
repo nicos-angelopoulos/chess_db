@@ -6,7 +6,7 @@ chess_db_connect_handle( Dir, Handle ) :-
 
 chess_db_create( Dir, Base, Handle ) :-
      chess_db_rocksdb_table_fields( Base, Key, Val ),
-     rocks_open( Dir, Handle [key(Key),val(Val)] ).
+     rocks_open( Dir, Handle, [key(Key),val(Val)] ).
 
 chess_db_holds( game_posi(_Roxi), Db, Args, Val ) :-
      ( Args = [Key|_] -> true; Args = Key ),
