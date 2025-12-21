@@ -29,7 +29,7 @@ chess_db_game_info_exists( KVs, _Dbh/Dbv, ExGid ) :-
      atomic_list_concat( KVas, ';', InfoAtm ),
      rocks_get( Dbv, InfoAtm, ExGid ).
 
-chess_db_limos_game_moves( Dbh/Dbv, Nid, Limos ) :-
+chess_db_limos_game_moves( Dbh, Nid, Limos ) :-
      findall( NxtMv-Hmv, member(limo(_Ply,Hmv,NxtMv,_Inpo),Limos), Mvs ),
      % atomic_list_concat( Mvs, ';', MvsAtm ),
      rocks_put( Dbh, Nid, Mvs ).
