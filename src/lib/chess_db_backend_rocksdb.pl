@@ -2,12 +2,13 @@
 :- use_module(library(rocksdb)).
 
 chess_db_connect_handle( Dir, Base, Dbh ) :-
+    chess_db_rocksdb_table_fields( Base, KeyT, ValT ),
     ( Base == game_info ->
           os_path( Par, _, Dir ),
           os_path( Par, game_info_rev, RvrStem ),
           os_ext( rocksdb, RvrStem, Rvr ),
-          rocks_open( Dir, Dbi, [] ),
-          rocks_open( Rvr, Dbv, [] ),
+          rocks_open( Dir, Dbi, [key(KeyT),value(ValT)] ),
+          rocks_open( Rvr, Dbv, [key(ValT),value(KeyT)] ),
           Dbh = Dbi/Dbv
           ;
           rocks_open( Dir, Dbh, [] )
