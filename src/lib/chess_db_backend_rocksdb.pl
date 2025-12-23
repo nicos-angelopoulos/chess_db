@@ -18,7 +18,7 @@ chess_db_create( Dir, Base, Db ) :-
      chess_db_rocksdb_table_fields( Base, Key, Val ),
      rocks_open( Dir, Dbh, [key(Key),value(Val)] ),
      ( Base == game_info -> 
-               rocks_put(Dbh, -1, 0),
+               rocks_put(Dbh, -1, '0'),
                os_path( Par, _, Dir ),
                os_path( Par, game_info_rev, Rvr ),
                rocks_open( Rvr, Dbv, [key(Val),value(Key)] ),
@@ -61,16 +61,18 @@ chess_db_max_id( HandleST, Max ) :-
                               ; chess_db_handle(info,HandleST,Dbh) 
           )
      ),
-     rocks_get( Dbh, -1, Max ).
+     rocks_get( Dbh, -1, MaxAtm ),
+     atom_number( MaxAtm, Max ).
 
 chess_db_inc_id( Dbh/_, Gid ) :-
-     rocks_put( Dbh, -1, Gid ).
-
+     atom_number( GidAtom, Gid ),
+     rocks_put( Dbh, -1, GidAtom ).
 
 chess_db_base_ext( Base, DbF ) :-
      file_name_extension( Base, rocksdb, DbF ).
 
-chess_db_rocksdb_table_fields(game_info, int64, term).   % Gid -> InfosList -> [keyInfo-valInfo|...]
+chess_db_rocksdb_table_fields(game_info, int64, atom).   % Gid -> InfosList -> [keyInfo-valInfo|...]
+% chess_db_rocksdb_table_fields(game_info, int64, term).   % Gid -> InfosList -> [keyInfo-valInfo|...]
 % chess_db_rocksdb_table_fields(game_info, atom, int64).     % InfosList (=> atom(K:V;KVs)) -> Gid  // -1 => max_int -> 0
 % chess_db_rocksdb_table_fields(game_move, atom, term).      % Gid'+'ply -> [Hmv,Move]
 chess_db_rocksdb_table_fields(game_move, int64, term).      % Gid -> list(Mv)
