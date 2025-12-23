@@ -6,7 +6,7 @@ chess_db_connect_handle( Dir, Base, Dbh ) :-
           os_path( Par, _, Dir ),
           os_path( Par, game_info_rev, RvrStem ),
           os_ext( rocksdb, RvrStem, Rvr ),
-          rocks_open( Dir, Dbh, [] ),
+          rocks_open( Dir, Dbi, [] ),
           rocks_open( Rvr, Dbv, [] ),
           Dbh = Dbi/Dbv
           ;
