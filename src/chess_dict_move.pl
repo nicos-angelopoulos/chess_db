@@ -39,7 +39,7 @@ Two = board{0:0, 1:4, 2:1, 3:0, 4:0, 5:0, 6:0, 7:7, 8:10, 9:2, 10:1, 11:0, 12:0,
 chess_dict_move( Move, DictI, DictO ) :- 
     chess_dict_move( Move, DictI, DictI.0, DictO ).
 
-chess_dict_move( Move, DictI, Turn, DictO ) :- 
+chess_dict_move( Move, DictI, Turn, DictO ) :-
     debug( chess_db(move), 'Move: ~w', [Move] ),
     Durn = DictI.0,
     ( var(Turn) -> 
@@ -124,6 +124,7 @@ chess_dict_move_1( Move, DictI, Turn, DictO ) :-
     atom_codes( Move, [PieceC,BegC|Cs] ),
     PieceC < 97,
     !,
+    ( Move == 'Qf8e7' -> trace; true ),
     chess_dict_move_piece( PieceC, BegC, Cs, DictI, Move, Turn, true, DictO ).
 chess_dict_move_1( Move, _DictI, _Turn, _DictO ) :- 
     throw( unimplemented_move(Move) ).
@@ -164,7 +165,6 @@ chess_dict_move_castle_long( 1, DictI, DictO ) :-
 
 % piece, base case: letter + square; Rc5
 chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, Constr, DictO ) :-
-    % ( Move == 'Qg6' -> trace; true ),
     BegC > 96,
     0'0 =< NumC,
     NumC =< 0'9,
@@ -186,7 +186,7 @@ chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, Constr, DictO ) 
     ).
 % Nce4, N3e4
 chess_dict_move_piece( PieceC, DscC, [BegC,NumC], DictI, _Move, Turn, Constr, DictO ) :-
-    DscC =\= 0'x,  % avoic Rxd3
+    DscC =\= 0'x,  % avoid Rxd3
     BegC > 96,
     0'0 =< NumC,
     NumC =< 0'9,
@@ -213,6 +213,29 @@ chess_dict_move_piece( PieceC, DscC, [BegC,NumC], DictI, _Move, Turn, Constr, Di
             throw( non_unique_starts_2(Starts,ToSqr,PieceAtm,DictI) )
         )
     ).
+    /**
+% 'Qf8e7' -> from a game with 3 white queens on board: https://lichess.org/RBSi3ZQC
+chess_dict_move_piece( PieceC, FmCC, [FmRC,ToCC,ToRC], DictI, _Move, Turn, Constr, DictO ) :-
+    % fixme:       % create ranges for these, also we re-doing the tests in some cases
+    FmCC > 96,     % from column code: 0'a-0'h
+    ToCC > 96,     % to column code: 0'a-0'h 
+    0'0 =< ToRC,   % to row code: 0'1-0'8
+    ToRC =< 0'9,
+    0'0 =< FmRC,   % from row code: 0'1-0'8
+    FmRC =< 0'9,
+    !,
+    chess_piece_code_turn( PieceC, Turn, Piece ),
+*/
+
+% 'Qf8e7' -> from a game with 3 white queens on board: https://lichess.org/RBSi3ZQC
+chess_dict_move_piece( PieceC, FmCC, [FmRC,NxC|Rodes], DictI, Move, Turn, _ConstrIn, DictO ) :-
+    FmCC > 96,     % from column code: 0'a-0'h
+    0'0 =< FmRC,   % from row code: 0'1-0'8
+    FmRC =< 0'9,
+    !,
+    Constr = on_square(FmCC,FmRC),
+    chess_dict_move_piece( PieceC, NxC, Rodes, DictI, Move, Turn, Constr, DictO ).
+     
 % Ncxe4, N3xe4
 chess_dict_move_piece( PieceC, DscC, [0'x,BegC,NumC], DictI, Move, Turn, Constr, DictO ) :-
     !,
