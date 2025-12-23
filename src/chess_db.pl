@@ -199,6 +199,10 @@ chess_db_incr_stream_pgn_move( [], _Pin, TempO, Eof ) :-
      !,
      io_line( TempO, [] ),
      Eof = false.
+chess_db_incr_stream_pgn_move( [13], _Pin, TempO, Eof ) :-
+     !,
+     io_line( TempO, [] ),
+     Eof = false.
 chess_db_incr_stream_pgn_move( Line, Pin, TempO, Eof ) :-
      io_line( TempO, Line ),
      io_line( Pin, MoveL ),
