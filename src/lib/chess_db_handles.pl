@@ -55,10 +55,10 @@ chess_db_connect_sub( Dir, Create, Db, Handle ) :-
      chess_db_connect_to( DbF, Create, Base, Handle ).
 
 % fixme: see chess_db_connect_dir
-chess_db_connect_to( DbF, _Create, _Base, Handle ) :-
+chess_db_connect_to( DbF, _Create, Base, Handle ) :-
      ( exists_file(DbF) ; exists_directory(DbF) ),
      !,
-     chess_db_connect_handle( DbF, Handle ).
+     chess_db_connect_handle( DbF, Base, Handle ).
 chess_db_connect_to( DbF, Create, Base, Handle ) :-
      chess_db_connect_to_create( Create, DbF, Base, Handle ).
 
