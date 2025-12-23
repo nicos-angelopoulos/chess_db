@@ -124,7 +124,6 @@ chess_dict_move_1( Move, DictI, Turn, DictO ) :-
     atom_codes( Move, [PieceC,BegC|Cs] ),
     PieceC < 97,
     !,
-    ( Move == 'Qf8e7' -> trace; true ),
     chess_dict_move_piece( PieceC, BegC, Cs, DictI, Move, Turn, true, DictO ).
 chess_dict_move_1( Move, _DictI, _Turn, _DictO ) :- 
     throw( unimplemented_move(Move) ).
