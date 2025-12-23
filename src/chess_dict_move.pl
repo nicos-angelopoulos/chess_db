@@ -233,7 +233,8 @@ chess_dict_move_piece( PieceC, FmCC, [FmRC,NxC|Rodes], DictI, Move, Turn, _Const
     0'0 =< FmRC,   % from row code: 0'1-0'8
     FmRC =< 0'9,
     !,
-    Constr = on_square(FmCC,FmRC),
+    chess_dict_pos_coord_codes( FmSqPos, FmCC, FmRC ),
+    Constr = =:=(FmSqPos),
     chess_dict_move_piece( PieceC, NxC, Rodes, DictI, Move, Turn, Constr, DictO ).
      
 % Ncxe4, N3xe4
