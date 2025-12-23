@@ -179,6 +179,11 @@ chess_db_incr_stream_pgn_info( [0'[|Tail], Pin, TempO, Eof ) :-
      io_line( TempO, [0'[|Tail] ),
      io_line( Pin, InfoL ),
      chess_db_incr_stream_pgn_info( InfoL, Pin, TempO, Eof ).
+chess_db_incr_stream_pgn_info( [13], Pin, TempO, Eof ) :-
+     !,
+     io_line( TempO, [] ),
+     io_line( Pin, MoveL ),
+     chess_db_incr_stream_pgn_move( MoveL, Pin, TempO, Eof ).
 chess_db_incr_stream_pgn_info( [], Pin, TempO, Eof ) :-
      !,
      io_line( TempO, [] ),
