@@ -11,7 +11,7 @@ chess_db_connect_handle( Dir, Base, Dbh ) :-
           rocks_open( Rvr, Dbv, [key(ValT),value(KeyT)] ),
           Dbh = Dbi/Dbv
           ;
-          rocks_open( Dir, Dbh, [] )
+          rocks_open( Dir, Dbh, [key(KeyT),value(ValT)] )
      ).
 
 chess_db_create( Dir, Base, Db ) :-
@@ -55,7 +55,7 @@ chess_db_game_add_info( Dbh/Dbv, Info, Gid ) :-
      rocks_put( Dbh, Gid, InfoAtm ),
      rocks_put( Dbv, InfoAtm, Gid ).
 
-chess_db_max_id( HandleST, Max ) :-
+hess_db_max_id( HandleST, Max ) :-
      ( atomic(HandleST) -> Dbh = HandleST; 
           ( HandleST = Dbh/_ -> true
                               ; chess_db_handle(info,HandleST,Dbh) 
