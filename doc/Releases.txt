@@ -2,7 +2,7 @@
 --------------------
 
 1.1
-     25.12.23  ADDED:    chess_dict_pos_coord_codes/3 
+     25.12.23  ADDED:    chess_dict_pos_coord_codes/3
      25.12.20  DEPS:     now depends on pack_errors
                ERROR:    when the required handle is not on the handle structure
                OPTS:     check type
