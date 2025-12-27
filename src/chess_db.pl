@@ -117,7 +117,7 @@ chess_db( PgnIn, ArgDb, Args ) :-
      options( incr_progress(IProg), Opts ),
      options( max_games(MxG), Opts ),
      ( MxG =:= inf -> OfG is inf ; OfG is LaGid + MxG ),
-     debuc( chess_db(true), task(start), 'PGN load from: ~d', [farg(PgnIn)] ),
+     debuc( chess_db(true), task(start), 'PGN load from: ~d', [farg(PgnIn),pred(chess_db/2)] ),
      debuc( chess_db(true), option, incr(Incr), pred(chess_db/2) ),
      chess_db_incr( Incr, PgnIn, LaGid, OfG, IProg, Posi, Rosi, CdbHs, AbsDb, ArgDb, OptDb ).
 
