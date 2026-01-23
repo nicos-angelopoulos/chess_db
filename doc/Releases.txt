@@ -2,6 +2,8 @@
 --------------------
 
 1.1
+     26.01.23  OPT:      goal(), goal_iter() and goal_return
+               EXAMPLE:  rocks_ex.pl
      25.12.23  ADDED:    chess_dict_pos_coord_codes/3
      25.12.20  DEPS:     now depends on pack_errors
                ERROR:    when the required handle is not on the handle structure

@@ -4,6 +4,9 @@ chess_db_defaults( Defs ) :-
                                              create(false),
                                              incr(false),
                                              incr_progress(1000),
+                                             goal(chess_db_games_add),
+                                             goal_iter(_),
+                                             goal_return(_),
                                              max_games(inf),
                                              position(true),
                                              position_type(kvx),
@@ -11,6 +14,7 @@ chess_db_defaults( Defs ) :-
                                              ],
                               Types = [
                                         create-one_of([true,false,new,fresh]),
+
                                         incr-boolean,
                                         incr_progress-integer,
                                         position-boolean
@@ -21,17 +25,33 @@ chess_db_defaults( Defs ) :-
      chess_db( +PgnOrF, +Opts ).
      chess_db( +PgnOrF, +ChessDb, +Opts ).
 
-Add games from a PGN file or a PGN term, PgnOrF, to the chess database 
-pointed to by Db and/or Opts. If Db is given both as argument and option,
-the argument overrides. If argument Db and/or option OptDb is a variable,
-then the full location of the Db used is returned. 
-If =|Create = false|=, PgnOrF points to a file and both Db and OptDb are variables,
+Process games from a PGN list of terms or .pgn file. 
+
+By default games are added to current chess database pointed b ChessDb or Opts. 
+As of v0.2 user define "processors" can be defined via option goal(Goal).
+
+If both ChessDb and OptDb are given, ChessDb overrides.
+If argument ChessDb and/or option OptDb is a variable, then the full location of the Db used is returned. 
+If =|Create = false|=, PgnOrF points to a file/dir and both Db and OptDb are variables,
 then the stem of the PgnOrF is used as the name of Db. It is created in an existing directory
 pointed to by a current alias defined in user:file_search_path/2- or the current directory
 if no such alias exists.
-To distinguish between the two arity 2 versions, Opts in that case need be a list.
+To distinguish between the two arity 2 versions, Opts in that case needs to be a list.
 
 Games in the database get a incremental unique id starting at 1 for first game.
+
+As of v0.4 we can process PGNs in otherways, than adding to a database. 
+This is via defining Goal (goal() option). The goal will be called as
+==
+     ?- Goal( Pgn, Giter, Pos, Tosi, CdbHs, Niter ).
+
+     Pgn   = list of PGN terms
+     Giter = Giter (input)
+     Pos  = option position(Pos) (invariant)
+     Tos  = option position_type(Tos) (invariant)
+     CdbHs= db handles; will be unbound variable if =|Giter \== chess_db_games_add|=
+     Niter = next Giter (output)
+==
 
 Opts
   * create(Create=false)
@@ -42,6 +62,18 @@ Opts
 
   * dir(Dir)
      directory where database is located, (many allowed, see chess_db_connect/2)
+
+  * goal(Goal=chess_db_games_add)
+     Goal for processing read-in game terms. The default adds them to database.
+     As of v0.4 alternatives are possible. See comment below.
+
+  * goal_iter(Giter)
+    Goal iterator, can be left unbound when addiing games to DB- in which case itwill become the 
+    game id, instantiated by the predicate to the last integer game id in the database we adding to.
+    When user specific Goal is given, this can be used to pass information to it.
+
+  * goal_return(Gret)
+    returns the final value of Giter
 
   * incr(Incr=false)
      if =|true|= incrementally add a game at a time via a temporary file 
@@ -76,6 +108,7 @@ Db = '/tmp/fourNCL'.
 @version  0.1 2018/3/14
 @version  0.2 2018/8/17
 @version  0.3 2025/12/8,  options incr(), incr_progress(), max_games()
+@version  0.4 2026/1/23,  options goal(), goal_{iter,return}()
 @see options_append/3
 
 */
@@ -94,10 +127,23 @@ chess_db( PgnIn, DbOrOpts ) :-
 
 chess_db( PgnIn, ArgDb, Args ) :-
      options_append( chess_db, Args, Opts ),
-     ( memberchk(db(OptDb),Opts) -> true; true ),
-     % options( create(Create), Opts ),
      options( position(Posi), Opts ),
      options( position_type(Rosi), Opts ),
+     options( goal(Goal), Opts ),
+     options( goal_iter(Gitr), Opts ),
+     chess_db_set_up_handles( Goal, Gitr, PgnIn, AbsDb, ArgDb, OptDb, CdbHs, Opts ),
+     options( incr(Incr), Opts ),
+     options( incr_progress(IProg), Opts ),
+     options( max_games(MxG), Opts ),
+     ( MxG =:= inf -> OfG is inf ; ( number(Gitr) -> OfG is Gitr + MxG; MxG is inf) ),
+     debuc( chess_db(true), task(start), 'PGN load from: ~w', [farg(PgnIn),pred(chess_db/2)] ),
+     debuc( chess_db(true), option, incr(Incr), pred(chess_db/2) ),
+     chess_db_incr( Incr, PgnIn, Gitr, OfG, IProg, Posi, Rosi, CdbHs, AbsDb, ArgDb, OptDb, RtGid ),
+     options( goal_return(RtGid), Opts ).
+
+chess_db_set_up_handles( chess_db_games_add, Gitr, PgnIn, AbsDb, ArgDb, OptDb, CdbHs, Opts ) :-
+     !,
+     ( memberchk(db(OptDb),Opts) -> true; true ),
      ( ground(ArgDb) -> PrvDb = ArgDb; PrvDb = OptDb ),
      ( var(PrvDb) ->
             absolute_file_name(PgnIn,AbsPgnF), % if you ever add options to pgn/2 abs_file could be one of them. 
@@ -113,50 +159,49 @@ chess_db( PgnIn, ArgDb, Args ) :-
      ),
      chess_db_connect( Db, [db(AbsDb),handles(CdbHs)|Opts] ),
      chess_db_handle( info, CdbHs, InfoHandle ),
-     chess_db_max_id( InfoHandle, LaGid ),
-     options( incr(Incr), Opts ),
-     options( incr_progress(IProg), Opts ),
-     options( max_games(MxG), Opts ),
-     ( MxG =:= inf -> OfG is inf ; OfG is LaGid + MxG ),
-     debuc( chess_db(true), task(start), 'PGN load from: ~w', [farg(PgnIn),pred(chess_db/2)] ),
-     debuc( chess_db(true), option, incr(Incr), pred(chess_db/2) ),
-     chess_db_incr( Incr, PgnIn, LaGid, OfG, IProg, Posi, Rosi, CdbHs, AbsDb, ArgDb, OptDb ).
+     chess_db_max_id( InfoHandle, Gitr ).
+chess_db_set_up_handles( _Goal, _Gitr, AbsDb, ArgDb, OptDb, CdbHs, _Opts ) :-
+     AbsDb = null,
+     ArgDb = null,
+     OptDb = null,
+     CdbHs = null.
 
-chess_db_incr( false, PgnIn, LaGid, _MxG, _IProg, Posi, Rosi, CdbHs, AbsDb, ArgDb, OptDb ) :-
+chess_db_incr( false, PgnIn, LaGid, _MxG, _IProg, Posi, Rosi, CdbHs, AbsDb, ArgDb, OptDb, RtGid ) :-
      pgn( PgnIn, Pgn ),
-     chess_db_games_add( Pgn, LaGid, Posi, Rosi, CdbHs ),
+     chess_db_games_add( Pgn, LaGid, Posi, Rosi, CdbHs, RtGid ),
      ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
      % chess_db_handles_close( CdbHs ),
      ( var(ArgDb) -> ArgDb = AbsDb; true ),
      ( var(OptDb) -> OptDb = AbsDb; true ).
-chess_db_incr( true, PgnIn, LaGid, MxG, IProg, Posi, Rosi, CdbHs, AbsDb, ArgDb, OptDb ) :-
+chess_db_incr( true, PgnIn, LaGid, MxG, IProg, Posi, Rosi, CdbHs, AbsDb, ArgDb, OptDb, RtGid ) :-
      open( PgnIn, read, Pin ),
      tmp_file( chess_db_tmp, TmpF ),
-     chess_db_incr_stream( Pin, TmpF, LaGid, MxG, IProg, Posi, Rosi, CdbHs ), 
+     chess_db_incr_stream( Pin, TmpF, LaGid, MxG, IProg, Posi, Rosi, CdbHs, RtGid ), 
      close( Pin ),
      ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
      % chess_db_handles_close( CdbHs ),
      ( var(ArgDb) -> ArgDb = AbsDb; true ),
      ( var(OptDb) -> OptDb = AbsDb; true ).
 
-chess_db_incr_stream( Pin, TmpF, LaGid, MxG, IProg, Posi, Rosi, CdbHs ) :-
+chess_db_incr_stream( Pin, TmpF, LaGid, MxG, IProg, Posi, Rosi, CdbHs, RtGid ) :-
      open( TmpF, write, TempO ),
      chess_db_incr_stream_pgn( Pin, TempO, Eof ),
      close( TempO ),
      ( (Eof ; (MxG =< LaGid) ) -> Termin = true; Termin = false ),
-     chess_db_incr_stream_termin( Termin, Pin, TmpF, LaGid, MxG, IProg, Posi, Rosi, CdbHs ).
+     chess_db_incr_stream_termin( Termin, Pin, TmpF, LaGid, MxG, IProg, Posi, Rosi, CdbHs, RtGid ).
 
-chess_db_incr_stream_termin( true, _Pin, _TmpF, _LaGid, _MxG, _IProg, _Posi, _Rosi, _CdbHs ).
-chess_db_incr_stream_termin( false, Pin, TmpF, LaGid, MxG, IProg, Posi, Rosi, CdbHs ) :-
+chess_db_incr_stream_termin( true, _Pin, _TmpF, LaGid, _MxG, _IProg, _Posi, _Rosi, _CdbHs, RtGid ) :-
+     LaGid = RtGid.
+chess_db_incr_stream_termin( false, Pin, TmpF, LaGid, MxG, IProg, Posi, Rosi, CdbHs, RtGid ) :-
      pgn( TmpF, Game ),
-     chess_db_games_add( Game, LaGid, Posi, Rosi, CdbHs ),
-     MaGid is LaGid + 1,
+     chess_db_games_add( Game, LaGid, Posi, Rosi, CdbHs, NxGid ),
+     % MaGid is LaGid + 1,
      ( (LaGid mod IProg) =:= 0 ->
-               debuc( chess_db(true), task(stop), 'Added game no: ~d', [farg(MaGid)] )
+               debuc( chess_db(true), task(stop), 'Added game no: ~d', [farg(NxGid)] )
                ;
                true
      ),
-     chess_db_incr_stream( Pin, TmpF, MaGid, MxG, IProg, Posi, Rosi, CdbHs ).
+     chess_db_incr_stream( Pin, TmpF, NxGid, MxG, IProg, Posi, Rosi, CdbHs, RtGid ).
 
 chess_db_incr_stream_pgn( Pin, TempO, Eof ) :-
      io_line( Pin, Line ),
@@ -216,8 +261,9 @@ chess_db_alias_exists_dir( AliasDir ) :-
      exists_directory( AliasDir ),
      !.
 
-chess_db_games_add( [], _Gid, _Posi, _Rosi, _CdbHs ).
-chess_db_games_add( [G|Gs], Gid, Posi, Rosi, CdbHs ) :-
+chess_db_games_add( [], Gid, _Posi, _Rosi, _CdbHs, Xid ) :-
+     Gid = Xid.
+chess_db_games_add( [G|Gs], Gid, Posi, Rosi, CdbHs, Xid ) :-
      % fixme: ignore position for now
      G = pgn(Info,Moves,Res,Orig),
      chess_db_debug_info( Info, 'adding to db' ),
@@ -226,7 +272,7 @@ chess_db_games_add( [G|Gs], Gid, Posi, Rosi, CdbHs ) :-
      chess_db_handle( orig, CdbHs, OrigHandle ),
      ( Posi == true -> chess_db_handle( posi, CdbHs, PosiHandle ) ; true ),
      chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoveHandle, OrigHandle, Posi, Rosi, PosiHandle, Nid ),
-     chess_db_games_add( Gs, Nid, Posi, Rosi, CdbHs ).
+     chess_db_games_add( Gs, Nid, Posi, Rosi, CdbHs, Xid ).
 
 chess_db_debug_info( Info, Pfx ) :-
      memberchk( 'White'-White, Info ),
@@ -241,7 +287,6 @@ chess_db_game_add( InfoHandle, Info, _Moves, _Orig, Gid, _Res, _MoHa, _OrHa, _Po
      chess_db_game_info_exists( Info, InfoHandle, ExGid ),
      !, % fixme: add option for erroring
      debug( chess_db(info), 'Info match existing game: ~d', ExGid ).
-
 chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, Posi, Rosi, PoHa, Nid ) :-
      Nid is Gid + 1,
      chess_db_game_add_info( InfoHandle, Info, Nid ),
