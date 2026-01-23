@@ -2,6 +2,7 @@
 chess_db_defaults( Defs ) :- 
                               Defs = [
                                              create(false),
+                                             close(false),
                                              goal(chess_db_games_add),
                                              goal_iter(_),
                                              goal_return(_),
@@ -14,8 +15,8 @@ chess_db_defaults( Defs ) :-
                                              check_types(Types)
                                              ],
                               Types = [
+                                        close-boolean,
                                         create-one_of([true,false,new,fresh]),
-
                                         incr-boolean,
                                         incr_progress-integer,
                                         position-boolean
@@ -41,6 +42,8 @@ To distinguish between the two arity 2 versions, Opts in that case needs to be a
 
 Games in the database get a incremental unique id starting at 1 for first game.
 
+If ChessDB was not connected previously, it will after the call, and it will remain so except if close(true) is passed in options.
+
 As of v0.4 we can process PGNs in otherways, than adding to a database. 
 This is via defining Goal (goal() option). The goal will be called as
 ==
@@ -57,6 +60,9 @@ This is via defining Goal (goal() option). The goal will be called as
 Opts
   * create(Create=false)
      how to behave if ChessDb exists (see chess_db_connect/2)
+
+  * close(Close=false)
+     whether to close the connection to ChessDB after adding the games
 
   * db(OptDb)
      database location (see chess_db_connect/2)
@@ -144,6 +150,8 @@ chess_db( PgnIn, ArgDb, Args ) :-
      debuc( chess_db(true), task(start), 'PGN load from: ~w', [farg(PgnIn),pred(chess_db/2)] ),
      debuc( chess_db(true), option, incr(Incr), pred(chess_db/2) ),
      chess_db_incr( Incr, PgnIn, Gitr, OfG, IProg, Posi, Rosi, CdbHs, AbsDb, ArgDb, OptDb, RtGid ),
+     options( close(Close), Opts ),
+     chess_db_close( Close, AbsDb, CdbHs ),
      options( goal_return(RtGid), Opts ).
 
 chess_db_set_up_handles( chess_db_games_add, Gitr, PgnIn, AbsDb, ArgDb, OptDb, CdbHs, Opts ) :-
@@ -162,7 +170,8 @@ chess_db_set_up_handles( chess_db_games_add, Gitr, PgnIn, AbsDb, ArgDb, OptDb, C
             ; 
             Db = PrvDb
      ),
-     chess_db_connect( Db, [db(AbsDb),handles(CdbHs)|Opts] ),
+     chess_db_connect( Db, [db(AbsDb)|Opts] ),
+     options( handles(CdbHs), Opts ),
      chess_db_handle( info, CdbHs, InfoHandle ),
      chess_db_max_id( InfoHandle, Gitr ).
 chess_db_set_up_handles( _Goal, _Gitr, AbsDb, ArgDb, OptDb, CdbHs, _Opts ) :-
@@ -171,10 +180,14 @@ chess_db_set_up_handles( _Goal, _Gitr, AbsDb, ArgDb, OptDb, CdbHs, _Opts ) :-
      OptDb = null,
      CdbHs = null.
 
+chess_db_close(false, _AbsDb, _CdbHs).
+chess_db_close( true, AbsDb, _CdbHs ) :-
+     chess_db_disconnect( AbsDb ).
+
 chess_db_incr( false, PgnIn, LaGid, _MxG, _IProg, Posi, Rosi, CdbHs, AbsDb, ArgDb, OptDb, RtGid ) :-
      pgn( PgnIn, Pgn ),
      chess_db_games_add( Pgn, LaGid, Posi, Rosi, CdbHs, RtGid ),
-     ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
+     % ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
      % chess_db_handles_close( CdbHs ),
      ( var(ArgDb) -> ArgDb = AbsDb; true ),
      ( var(OptDb) -> OptDb = AbsDb; true ).
@@ -183,7 +196,7 @@ chess_db_incr( true, PgnIn, LaGid, MxG, IProg, Posi, Rosi, CdbHs, AbsDb, ArgDb, 
      tmp_file( chess_db_tmp, TmpF ),
      chess_db_incr_stream( Pin, TmpF, LaGid, MxG, IProg, Posi, Rosi, CdbHs, RtGid ), 
      close( Pin ),
-     ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
+     % ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
      % chess_db_handles_close( CdbHs ),
      ( var(ArgDb) -> ArgDb = AbsDb; true ),
      ( var(OptDb) -> OptDb = AbsDb; true ).

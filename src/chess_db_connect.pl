@@ -146,7 +146,7 @@ chess_db_connect_abs_dir( Abs, _Create, _Pos, CdbHs, [] ) :-
 chess_db_connect_abs_dir( Abs, Create, Pos, CdbHs, Abs ) :-
     chess_db_handles( Create, Pos, Abs, CdbHs, _AbsDir ),
     !,
-    assertz( chess_db_handles(Abs,CdbHs) ).
+    assertz( chess_db:chess_db_handles(Abs,CdbHs) ).
     
 chess_db_sel_connect_dirs( [], _Prof, OptsPrv, Opts ) :-
     Opts = OptsPrv.
