@@ -313,7 +313,10 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, Posi, Ro
      chess_db_limos_game_moves( MoHa, Nid, Limos ),
      ( Posi == true ->
           chess_db_res_index( Res, Rex ),
-          chess_db_limos_game_posi( Limos, Nid, Rex, Rosi, PoHa )
+          chess_db_game_info_elo( 'WhiteElo', Info, WhiteELO ),
+          chess_db_game_info_elo( 'BlackElo', Info, BlackELO ),
+          ELO is WhiteELO + BlackELO,
+          chess_db_limos_game_posi( Limos, Nid, ELO, Rex, Rosi, PoHa )
           ;
           true
      ),
@@ -323,6 +326,13 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, Posi, Ro
      chess_db_inc_id( InfoHandle, Nid ),
      chess_db_table_update( game_orig(Nid,OrigAtm), OrHa).
 
+chess_db_game_info_elo( Key, Info, Elo ) :-
+     ( memberchk(Key-EloPrv,Info) ->
+               (number(EloPrv) -> Elo = EloPrv; (catch(atom_number(EloPrv,Elo),_,fail) -> true; Elo is 0))
+               ;
+               Elo is 0
+     ).
+          
 /** chess_db_limos_game_posi( +Limos, +Gid, +Rex, +Db ).
 
      Add a number of positions from Limos structures from game Gid, on to position table with db handle PoHa.
@@ -347,21 +357,21 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, Posi, Ro
 @tbd some code to ensure that e4+ and e4 are the same ?
      
 */
-chess_db_limos_game_posi( [], _Gid, _Rex, _Rosi, _PosDb ).
-chess_db_limos_game_posi( [limo(_Ply,_Hmv,Mv,Inpo)|T], Gid, Rex, Rosi, PosDb ) :-
+chess_db_limos_game_posi( [], _Gid, _ELO, _Rex, _Rosi, _PosDb ).
+chess_db_limos_game_posi( [limo(_Ply,_Hmv,Mv,Inpo)|T], Gid, ELO, Rex, Rosi, PosDb ) :-
      % write( mv(Mv) ), nl,
      % ( Mv == 'c4' -> trace; true ),
      ( Mv == [] ->
           true
           ; 
           ( chess_db_holds(game_posi(Rosi),PosDb,[Inpo,Mv],Curr) ->
-                    chess_db_posi_value_update( Rosi, Curr, Rex, Mv, Next )
+                    chess_db_posi_value_update( Rosi, Curr, Gid, ELO, Rex, Mv, Next )
                     ;
-                    chess_db_posi_value_create( Rosi, Rex, Mv, Next )
+                    chess_db_posi_value_create( Rosi, Gid, ELO, Rex, Mv, Next )
           ),
           chess_db_table_update( game_posi(Rosi), PosDb, [Inpo,Mv], Next )
      ),
-     chess_db_limos_game_posi( T, Gid, Rex, Rosi, PosDb ).
+     chess_db_limos_game_posi( T, Gid, ELO, Rex, Rosi, PosDb ).
 
 /*
 chess_db_posi_value_update( Rosi, Curr, Mv, Next )
@@ -391,8 +401,10 @@ chess_db_posi_value_update( Rosi, Curr, Mv, Next )
      chess_db_limos_game_posi( T, Gid, Rex, PosDb ).
      */
 
-chess_db_posi_value_update( kvx, Curr, Rex, Mv, Next ) :-  % kvx: Key-Val where value is a text
-     atomic_list_concat( Conts, ';', Curr ),
+chess_db_posi_value_update( kvx, Curr, Gid, ELO, Rex, Mv, Next ) :-  % kvx: Key-Val where value is a text
+     atomic_list_concat( Parts, ';', Curr ),
+     once( append(Conts,[BestsAtm],Parts) ),
+     chess_db_posi_value_kvx_update_best( BestsAtm, Gid, ELO, BestsNx ),
      % this doesn't fail if there is a problem
      findall( MvX-res(WX,DX,BX,UX), (member(Cont,Conts),atomic_list_concat([MvX,WX,DX,BX,UX],':',Cont)), MDprs ),
      ( select(Mv-res(Ws,Ds,Bs,Us),MDprs,RMprs) ->
@@ -403,11 +415,65 @@ chess_db_posi_value_update( kvx, Curr, Rex, Mv, Next ) :-  % kvx: Key-Val where 
      ),
      NXprs = [Mv-NxRes|RMprs],
      findall( ACont, (member(MvY-res(WY,DY,BY,UY),NXprs),atomic_list_concat([MvY,WY,DY,BY,UY],':',ACont)), NxConts ),
-     atomic_list_concat( NxConts, ';', Next ).
+     append( NxConts, [BestsNx], NxParts ),
+     atomic_list_concat( NxParts, ';', Next ).
 
-chess_db_posi_value_create( kvx, Rex, Mv, Next ) :-
+chess_db_posi_value_kvx_update_best( Bests, Gid, ELO, Nexts ) :-
+     atomic_list_concat( [NoCurrAtm,LstELOAtm,LstGid|Parts], ':', Bests ), 
+     % fixme: allow Lim as input/parameter
+     Lim is 10,
+     atom_number( NoCurrAtm, NoCurr ),
+     atom_number( LstELOAtm, LstELO ),
+     compare( Op, LstELO, ELO ),
+     chess_db_posi_value_kvx_update_best_op( Op, NoCurr, Lim, LstELO, LstGid, Gid, ELO, Parts, Nurr, Narts ),
+     atomic_list_concat( [Nurr|Narts], ':', Nexts ).
+
+chess_db_posi_value_kvx_update_best_op( <, NoCurr, Lim, LstELO, LstGid, Gid, ELO, Parts, Nurr, Narts ) :-
+     ( NoCurr < Lim -> 
+          Nurr is NoCurr + 1, 
+          chess_db_posi_value_kvx_update_best_in( Parts, Gid, ELO, Marts ),
+          Narts = [LstELO,LstGid|Marts]
+          ;
+          % fixme if NoCurr > Lim is an error
+          Nurr is NoCurr,
+          chess_db_posi_value_kvx_update_best_in( Parts, Gid, ELO, Narts )
+     ).
+chess_db_posi_value_kvx_update_best_op( =, NoCurr, Lim, LstELO, LstGid, Gid, ELO, Parts, Nurr, Narts ) :-
+     ( NoCurr < Lim -> 
+          Nurr is NoCurr + 1, 
+          Narts = [ELO,Gid,LstELO,LstGid|Parts]
+          ;
+          Nurr is NoCurr,
+          Narts = [LstELO,LstGid|Parts]
+     ).
+% identical to above
+chess_db_posi_value_kvx_update_best_op( >, NoCurr, Lim, LstELO, LstGid, Gid, ELO, Parts, Nurr, Narts ) :-
+     ( NoCurr < Lim -> 
+          Nurr is NoCurr + 1, 
+          Narts = [ELO,Gid,LstELO,LstGid|Parts]
+          ;
+          Nurr is NoCurr,
+          Narts = [LstELO,LstGid|Parts]
+     ).
+
+chess_db_posi_value_kvx_update_best_in( [], Gid, ELO, Best ) :-
+     Best = [ELO,Gid].
+chess_db_posi_value_kvx_update_best_in( [LstELOAtm,LstGid|Parts], Gid, ELO, [AnELO,AnGid|Tarts] ) :-
+     atom_number( LstELOAtm, LstELO ),
+     ( LstELO < ELO -> 
+          AnELO is LstELO, AnGid = LstGid,
+          Carts = Parts, Zarts = Tarts
+          ;
+          AnELO is ELO, AnGid = Gid,
+          Carts = [], Tarts = [LstELO,LstGid|Parts]  % ignoring Zarts
+     ),
+     chess_db_posi_value_kvx_update_best_in( Carts, Gid, ELO, Zarts ).
+
+chess_db_posi_value_create( kvx, Gid, ELO, Rex, Mv, Next ) :-
      chess_db_inc_res_index( Rex, res('0','0','0','0'), res(WN,DN,BN,UN) ),
-     atomic_list_concat( [Mv,WN,DN,BN,UN], ':', Next ).
+     atomic_list_concat( [Mv,WN,DN,BN,UN], ':', NextMvs ),
+     atomic_list_concat( [1,ELO,Gid], ':', NextEgi ),
+     atomic_list_concat( [NextMvs,NextEgi], ';', Next ).
 
 chess_db_inc_res_index( 1, res(Ws,Ds,Bs,Us), Res ) :-
      atom_number( Ws, WsN ),
