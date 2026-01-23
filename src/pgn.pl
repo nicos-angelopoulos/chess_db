@@ -23,7 +23,7 @@ Pgn = [pgn(['Event'-'4NCL Division 1a', 'Site'-'Telford, ENG', 'Date'-'2017.11.1
 ==
 
 fixme: 
-    1. if we have result from both Info and end of moves, make sure they are the same <br>
+    1. if we have result from both Info and end of moves, make sure they are the same
     2. if the info missing and the result from end of moves exists, then add it to info
 
 
