@@ -2,11 +2,12 @@
 chess_db_defaults( Defs ) :- 
                               Defs = [
                                              create(false),
-                                             incr(false),
-                                             incr_progress(1000),
                                              goal(chess_db_games_add),
                                              goal_iter(_),
                                              goal_return(_),
+                                             handles(_),
+                                             incr(false),
+                                             incr_progress(1000),
                                              max_games(inf),
                                              position(true),
                                              position_type(kvx),
@@ -75,6 +76,9 @@ Opts
   * goal_return(Gret)
     returns the final value of Giter
 
+  * handles(CdbHs)
+     handles for the databases(s) opened (as per chess_db_connect/2).
+
   * incr(Incr=false)
      if =|true|= incrementally add a game at a time via a temporary file 
      (default is to read whole PGN into memory and then spit out the terms to the database)
@@ -132,6 +136,7 @@ chess_db( PgnIn, ArgDb, Args ) :-
      options( goal(Goal), Opts ),
      options( goal_iter(Gitr), Opts ),
      chess_db_set_up_handles( Goal, Gitr, PgnIn, AbsDb, ArgDb, OptDb, CdbHs, Opts ),
+     options( handles(CdbHs), Opts ),
      options( incr(Incr), Opts ),
      options( incr_progress(IProg), Opts ),
      options( max_games(MxG), Opts ),
