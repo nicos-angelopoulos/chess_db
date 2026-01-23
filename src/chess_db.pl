@@ -402,7 +402,7 @@ chess_db_posi_value_update( kvx, Curr, Rex, Mv, Next ) :-  % kvx: Key-Val where 
           chess_db_inc_res_index( Rex, res('0','0','0','0'), NxRes )
      ),
      NXprs = [Mv-NxRes|RMprs],
-     findall( ACont, (member(MvY-res(WY,DY,BY),NXprs),atomic_list_concat([MvY,WY,DY,BY],':',ACont)), NxConts ),
+     findall( ACont, (member(MvY-res(WY,DY,BY,UY),NXprs),atomic_list_concat([MvY,WY,DY,BY,UY],':',ACont)), NxConts ),
      atomic_list_concat( NxConts, ';', Next ).
 
 chess_db_posi_value_create( kvx, Rex, Mv, Next ) :-
