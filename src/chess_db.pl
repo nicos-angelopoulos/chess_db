@@ -160,11 +160,11 @@ chess_db( PgnIn, ArgDb, Args ) :-
      options( incr(Incr), Opts ),
      options( progress(IProg), Opts ),
      options( position_depth_limit(Mly), Opts ),
-     ( Mly =:= inf -> Ply is inf
+     ( Mly =:= inf -> Dly is inf
           ; ( integer(Mly) -> 
-                    Ply is Mly * 2
+                    Dly is Mly * 2
                     ;
-                    Ply is integer( ((Mly - 1) * 2) )
+                    Dly is integer( ((Mly - 1) * 2) )
             )
      ),
      debuc( chess_db(true), 'Ply limit for positions table: ~w', [Ply] ),
