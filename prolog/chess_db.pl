@@ -61,19 +61,23 @@ chess_db_alias( Alias, Path ) :-
 :- lib(debug_call).
 :- lib(pack_errors).
 
+:- debuc(chess_db(true)).
+
 :- ( current_prolog_flag(chess_db_backend,Bace) ->
           true
           ;
-          write('To surpress this message set flag "chess_db_backend,{prosqlite,rocksdb,both}"'), nl,
+          Ln1 = 'To surpress this message set flag "chess_db_backend,{prosqlite,rocksdb,both}"',
+          debuc( chess_db(true), Ln1, true ),
           ( pack_property(rocksdb,_Prop) -> 
-                                            write('RocksDB is installed using it as the chess_db backend'), nl,
-                                            Bace = rocksdb
-                                            ; 
-                                            % fixme: check for prosqlite
-                                            write('RocksDB is not installed using proSQLite as the chess_db backend'), nl,
-                                            Bace = prosqlite
+                                    Ln2 = 'RocksDB is installed- using it as the chess_db backend',
+                                    Bace = rocksdb
+                                    ; 
+                                    % fixme: check for prosqlite
+                                    Ln2 = 'RocksDB is not installed- using proSQLite as the chess_db backend',
+                                    Bace = prosqlite
           )
     ),
+    debuc( chess_db(true), Ln2, true ),
     atom_concat( 'src/lib/chess_db_backend_', Bace, Src ),
     ensure_loaded( pack(chess_db/Src) ).
 
@@ -103,8 +107,6 @@ chess_db_alias( Alias, Path ) :-
 :- lib(chess_annotate_freq/3).
 :- lib(chess_dict_pos_algebraic/2).
 :- lib(chess_db_position/3).
-
-:- debuc(chess_db(true)).
 :- lib(end(chess_db)).
 
 /**  <module> PGN and chess game databases.
@@ -112,10 +114,10 @@ chess_db_alias( Alias, Path ) :-
 This library produces chess games databases from PGN files and provides some<br>
 predicates for manipulating these databases.
 
-Once connected to a number of chess_db databases, information about the games <br>
+Once connected to a number of chess_db databases, information about the games
 can be interrogated. (See chess_db_opening/2 for an example.)
 
-Ideally we want to hook this pack to either a web-based interface, or (b) have an engive interface to exploit GUI playing programs, for playing the games as we select them.<br>
+Ideally we want to hook this pack to either a web-based interface, or (b) have an engive interface to exploit GUI playing programs, for playing the games as we select them.
 Currently selected games can be saved to a PGN file and be displayed with any PGN displaying program.
 
 ---+++ Installation: 
@@ -282,6 +284,8 @@ Please note that this is more generic than chess_db_opening/2 as it also finds t
 Listens to:
   * chess_db(info)
      trigger light reporting across the library
+  * chess_db(stats)
+     reports stats of progress points as readable terms via pack(debug_call) debugoal =|stats|=.
   * chess_db(move)
   * chess_db(moves)
   * chess_db(original)

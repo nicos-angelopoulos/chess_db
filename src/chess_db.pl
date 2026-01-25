@@ -151,7 +151,12 @@ chess_db( PgnIn, ArgDb, Args ) :-
      ( MxG =:= inf -> OfG is inf ; ( number(Gitr) -> OfG is Gitr + MxG; MxG is inf) ),
      debuc( chess_db(true), task(start), 'PGN load from: ~w', [farg(PgnIn),pred(chess_db/2)] ),
      debuc( chess_db(true), option, incr(Incr), pred(chess_db/2) ),
+     debug( chess_db(stats), 'Stats channel is on.', [] ),
      chess_db_incr( Incr, PgnIn, Goal, Gitr, OfG, IProg, Posi, Rosi, CdbHs, AbsDb, ArgDb, OptDb, RtGid ),
+     DbcOpts = [check_point(finished_at_id(RtGid)),comment(false)],
+     debuc( chess_db(stats), stat, runtime, DbcOpts ),
+     debuc( chess_db(stats), stat, cputime, DbcOpts ),
+     debuc( chess_db(stats), stat, system_time, DbcOpts ),
      options( close(Close), Opts ),
      chess_db_close( Close, AbsDb, CdbHs ),
      options( goal_return(RtGid), Opts ).
@@ -198,6 +203,10 @@ chess_db_incr( false, PgnIn, Goal, LaGid, _MxG, IProg, Posi, Rosi, CdbHs, AbsDb,
 chess_db_incr( true, PgnIn, Goal, LaGid, MxG, IProg, Posi, Rosi, CdbHs, AbsDb, ArgDb, OptDb, RtGid ) :-
      open( PgnIn, read, Pin ),
      tmp_file( chess_db_tmp, TmpF ),
+     DbcOpts = [check_point(start_at_id(LaGid)),comment(false)],
+     debuc( chess_db(stats), stat, runtime, DbcOpts ),
+     debuc( chess_db(stats), stat, cputime, DbcOpts ),
+     debuc( chess_db(stats), stat, system_time, DbcOpts ),
      chess_db_incr_stream( Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, CdbHs, RtGid ), 
      close( Pin ),
      % ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
@@ -328,6 +337,10 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, IProg, P
      debug( chess_db(original), '~a', OrigAtm ),
      chess_db_inc_id( InfoHandle, Nid ),
      ( (Nid mod IProg) =:= 0 ->
+               DbcOpts = [check_point(added_id(Nid)),comment(false)],
+               debuc( chess_db(stats), stat, runtime, DbcOpts ),
+               debuc( chess_db(stats), stat, cputime, DbcOpts ),
+               debuc( chess_db(stats), stat, system_time, DbcOpts ),
                debuc( chess_db(true), task(stop), 'Added game no: ~d', [farg(Nid)] )
                ;
                true
