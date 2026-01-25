@@ -75,9 +75,9 @@ chess_db_alias( Alias, Path ) :-
                                     % fixme: check for prosqlite
                                     Ln2 = 'RocksDB is not installed- using proSQLite as the chess_db backend',
                                     Bace = prosqlite
-          )
+          ),
+          debuc( chess_db(true), Ln2, true )
     ),
-    debuc( chess_db(true), Ln2, true ),
     atom_concat( 'src/lib/chess_db_backend_', Bace, Src ),
     ensure_loaded( pack(chess_db/Src) ).
 
