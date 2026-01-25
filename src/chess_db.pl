@@ -1,6 +1,7 @@
 
 chess_db_defaults( Defs ) :- 
                               Defs = [
+                                             bests_limit(10),
                                              create(false),
                                              close(false),
                                              goal(chess_db_games_add),
@@ -60,6 +61,9 @@ This is via defining Goal (goal() option). The goal will be called as
 ==
 
 Opts
+  * bests_limit(Bim=10)
+    limit of how many best game identifiers to keep for each position
+
   * create(Create=false)
      how to behave if ChessDb exists (see chess_db_connect/2)
 
@@ -70,11 +74,11 @@ Opts
      database location (see chess_db_connect/2)
 
   * dir(Dir)
-     directory where database is located, (many allowed, see chess_db_connect/2)
+    directory where database is located, (many allowed, see chess_db_connect/2)
 
   * goal(Goal=chess_db_games_add)
-     Goal for processing read-in game terms. The default adds them to database.
-     As of v0.4 alternatives are possible. See comment below.
+    Goal for processing read-in game terms. The default adds them to database.
+    As of v0.4 alternatives are possible. See comment below.
 
   * goal_iter(Giter)
     Goal iterator, can be left unbound when addiing games to DB- in which case itwill become the 
@@ -85,24 +89,24 @@ Opts
     returns the final value of Giter
 
   * handles(CdbHs)
-     handles for the databases(s) opened (as per chess_db_connect/2).
+    handles for the databases(s) opened (as per chess_db_connect/2).
 
   * incr(Incr=false)
-     if =|true|= incrementally add a game at a time via a temporary file 
-     (default is to read whole PGN into memory and then spit out the terms to the database)
+    if =|true|= incrementally add a game at a time via a temporary file 
+    (default is to read whole PGN into memory and then spit out the terms to the database)
 
   * progress(IProg=1000)
-     report (via debug(chess_db(true))) at every IProg games have been processed
+    report (via debug(chess_db(true))) at every IProg games have been processed
 
   * max_games(MxG=inf)
     only process first MxG number of games- only enforced when =|Incr=true|=
 
   * position(Pos=true)
-     if true, use position table
+    if true, use position table
 
   * position_type(Pos=kvx)
-     type of the position table representation
-     * kvx kv value where v is text
+    type of the position table representation
+    * kvx kv value where v is text
 
 Options can also be picked up from ~/.pl/chess_db.pl (see options_append/3).
 
@@ -120,7 +124,7 @@ Db = '/tmp/fourNCL'.
 @version  0.1 2018/3/14
 @version  0.2 2018/8/17
 @version  0.3 2025/12/8,  options incr(), progress(), max_games()
-@version  0.4 2026/1/23,  options goal(), goal_{iter,return}()
+@version  0.4 2026/1/23,  options goal(), goal_{iter,return}(), bests_limit()
 @see options_append/3
 
 */
@@ -147,12 +151,13 @@ chess_db( PgnIn, ArgDb, Args ) :-
      options( handles(CdbHs), Opts ),
      options( incr(Incr), Opts ),
      options( progress(IProg), Opts ),
+     options( bests_limit(Bim), Opts ),
      options( max_games(MxG), Opts ),
      ( MxG =:= inf -> OfG is inf ; ( number(Gitr) -> OfG is Gitr + MxG; MxG is inf) ),
      debuc( chess_db(true), task(start), 'PGN load from: ~w', [farg(PgnIn),pred(chess_db/2)] ),
      debuc( chess_db(true), option, incr(Incr), pred(chess_db/2) ),
      debug( chess_db(stats), 'Stats channel is on.', [] ),
-     chess_db_incr( Incr, PgnIn, Goal, Gitr, OfG, IProg, Posi, Rosi, CdbHs, AbsDb, ArgDb, OptDb, RtGid ),
+     chess_db_incr( Incr, PgnIn, Goal, Gitr, OfG, IProg, Posi, Rosi, Bim, CdbHs, AbsDb, ArgDb, OptDb, RtGid ),
      DbcOpts = [check_point(finished_at_id(RtGid)),comment(false)],
      debuc( chess_db(stats), stat, cputime, DbcOpts ),
      debuc( chess_db(stats), stat, process_cputime, DbcOpts ),
@@ -193,16 +198,16 @@ chess_db_close(false, _AbsDb, _CdbHs).
 chess_db_close( true, AbsDb, _CdbHs ) :-
      chess_db_disconnect( AbsDb ).
 
-chess_db_incr( false, PgnIn, Goal, LaGid, _MxG, IProg, Posi, Rosi, CdbHs, AbsDb, ArgDb, OptDb, RtGid ) :-
+chess_db_incr( false, PgnIn, Goal, LaGid, _MxG, IProg, Posi, Rosi, Bim, CdbHs, AbsDb, ArgDb, OptDb, RtGid ) :-
      pgn( PgnIn, Pgn ),
      ( Goal == chess_db_games_add ->
-          chess_db_games_add( Pgn, LaGid, IProg, Posi, Rosi, CdbHs, RtGid ),
+          chess_db_games_add( Pgn, LaGid, IProg, Posi, Rosi, Bim, CdbHs, RtGid ),
           ( var(ArgDb) -> ArgDb = AbsDb; true ),
           ( var(OptDb) -> OptDb = AbsDb; true )
           ;
           call( Goal, Pgn, LaGid, IProg, Posi, Rosi, CdbHs, RtGid )
      ).
-chess_db_incr( true, PgnIn, Goal, LaGid, MxG, IProg, Posi, Rosi, CdbHs, AbsDb, ArgDb, OptDb, RtGid ) :-
+chess_db_incr( true, PgnIn, Goal, LaGid, MxG, IProg, Posi, Rosi, Bim, CdbHs, AbsDb, ArgDb, OptDb, RtGid ) :-
      open( PgnIn, read, Pin ),
      tmp_file( chess_db_tmp, TmpF ),
      DbcOpts = [check_point(start_at_id(LaGid)),comment(false)],
@@ -211,31 +216,31 @@ chess_db_incr( true, PgnIn, Goal, LaGid, MxG, IProg, Posi, Rosi, CdbHs, AbsDb, A
      debuc( chess_db(stats), stat, real_time, DbcOpts ),
      debuc( chess_db(stats), stat, runtime, DbcOpts ),
      debuc( chess_db(stats), stat, system_time, DbcOpts ),
-     chess_db_incr_stream( Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, CdbHs, RtGid ), 
+     chess_db_incr_stream( Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Bim, CdbHs, RtGid ), 
      close( Pin ),
      % ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
      % chess_db_handles_close( CdbHs ),
      ( var(ArgDb) -> ArgDb = AbsDb; true ),
      ( var(OptDb) -> OptDb = AbsDb; true ).
 
-chess_db_incr_stream( Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, CdbHs, RtGid ) :-
+chess_db_incr_stream( Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Bim, CdbHs, RtGid ) :-
      open( TmpF, write, TempO ),
      chess_db_incr_stream_pgn( Pin, TempO, Eof ),
      close( TempO ),
      ( (Eof ; (number(LaGid),MxG =< LaGid) ) -> Termin = true; Termin = false ),
-     chess_db_incr_stream_termin( Termin, Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, CdbHs, RtGid ).
+     chess_db_incr_stream_termin( Termin, Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Bim, CdbHs, RtGid ).
 
-chess_db_incr_stream_termin( true, _Pin, _TmpF, _Goal, LaGid, _MxG, _IProg, _Posi, _Rosi, _CdbHs, RtGid ) :-
+chess_db_incr_stream_termin( true, _Pin, _TmpF, _Goal, LaGid, _MxG, _IProg, _Posi, _Rosi, _Bim, _CdbHs, RtGid ) :-
      LaGid = RtGid.
-chess_db_incr_stream_termin( false, Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, CdbHs, RtGid ) :-
+chess_db_incr_stream_termin( false, Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Bim, CdbHs, RtGid ) :-
      pgn( TmpF, Game ),
      ( Goal == chess_db_games_add ->
-               chess_db_games_add( Game, LaGid, IProg, Posi, Rosi, CdbHs, NxGid )
+               chess_db_games_add( Game, LaGid, IProg, Posi, Rosi, Bim, CdbHs, NxGid )
                ;
                call( Goal, Game, LaGid, IProg, Posi, Rosi, CdbHs, NxGid )
      ),
      % MaGid is LaGid + 1,
-     chess_db_incr_stream( Pin, TmpF, Goal, NxGid, MxG, IProg, Posi, Rosi, CdbHs, RtGid ).
+     chess_db_incr_stream( Pin, TmpF, Goal, NxGid, MxG, IProg, Posi, Rosi, Bim, CdbHs, RtGid ).
 
 chess_db_incr_stream_pgn( Pin, TempO, Eof ) :-
      io_line( Pin, Line ),
@@ -295,9 +300,9 @@ chess_db_alias_exists_dir( AliasDir ) :-
      exists_directory( AliasDir ),
      !.
 
-chess_db_games_add( [], Gid, _IProg, _Posi, _Rosi, _CdbHs, Xid ) :-
+chess_db_games_add( [], Gid, _IProg, _Posi, _Rosi, _Bim, _CdbHs, Xid ) :-
      Gid = Xid.
-chess_db_games_add( [G|Gs], Gid, IProg, Posi, Rosi, CdbHs, Xid ) :-
+chess_db_games_add( [G|Gs], Gid, IProg, Posi, Rosi, Bim, CdbHs, Xid ) :-
      % fixme: ignore position for now
      G = pgn(Info,Moves,Res,Orig),
      chess_db_debug_info( Info, 'adding to db' ),
@@ -305,8 +310,8 @@ chess_db_games_add( [G|Gs], Gid, IProg, Posi, Rosi, CdbHs, Xid ) :-
      chess_db_handle( move, CdbHs, MoveHandle ),
      chess_db_handle( orig, CdbHs, OrigHandle ),
      ( Posi == true -> chess_db_handle( posi, CdbHs, PosiHandle ) ; true ),
-     chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoveHandle, OrigHandle, IProg, Posi, Rosi, PosiHandle, Nid ),
-     chess_db_games_add( Gs, Nid, IProg, Posi, Rosi, CdbHs, Xid ).
+     chess_db_game_add( InfoHandle, Info, Moves, Orig, Bim, Gid, Res, MoveHandle, OrigHandle, IProg, Posi, Rosi, PosiHandle, Nid ),
+     chess_db_games_add( Gs, Nid, IProg, Posi, Rosi, Bim, CdbHs, Xid ).
 
 chess_db_debug_info( Info, Pfx ) :-
      memberchk( 'White'-White, Info ),
@@ -317,11 +322,11 @@ chess_db_debug_info( Info, Pfx ) :-
 chess_db_debug_info( Info, Pfx ) :-
      debug( chess_db, '~w: ~w', [Pfx,Info] ).
 
-chess_db_game_add( InfoHandle, Info, _Moves, _Orig, Gid, _Res, _MoHa, _OrHa, _IProg, _Posi, _Rosi, _PoHa, Gid ) :-
+chess_db_game_add( InfoHandle, Info, _Moves, _Orig, _Bim, Gid, _Res, _MoHa, _OrHa, _IProg, _Posi, _Rosi, _PoHa, Gid ) :-
      chess_db_game_info_exists( Info, InfoHandle, ExGid ),
      !, % fixme: add option for erroring
      debug( chess_db(info), 'Info match existing game: ~d', ExGid ).
-chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, IProg, Posi, Rosi, PoHa, Nid ) :-
+chess_db_game_add( InfoHandle, Info, Moves, Orig, Bim, Gid, Res, MoHa, OrHa, IProg, Posi, Rosi, PoHa, Nid ) :-
      Nid is Gid + 1,
      chess_db_game_add_info( InfoHandle, Info, Nid ),
      chess_dict_start_board( Start ),
@@ -332,7 +337,7 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Gid, Res, MoHa, OrHa, IProg, P
           chess_db_game_info_elo( 'WhiteElo', Info, WhiteELO ),
           chess_db_game_info_elo( 'BlackElo', Info, BlackELO ),
           ELO is WhiteELO + BlackELO,
-          chess_db_limos_game_posi( Limos, Nid, ELO, Rex, Rosi, PoHa )
+          chess_db_limos_game_posi( Limos, Bim, Nid, ELO, Rex, Rosi, PoHa )
           ;
           true
      ),
@@ -360,7 +365,7 @@ chess_db_game_info_elo( Key, Info, Elo ) :-
                Elo is 0
      ).
           
-/** chess_db_limos_game_posi( +Limos, +Gid, +Rex, +Db ).
+/** chess_db_limos_game_posi( +Limos, +Bim, +Gid, +Rex, +Db ).
 
      Add a number of positions from Limos structures from game Gid, on to position table with db handle PoHa.
 
@@ -384,21 +389,21 @@ chess_db_game_info_elo( Key, Info, Elo ) :-
 @tbd some code to ensure that e4+ and e4 are the same ?
      
 */
-chess_db_limos_game_posi( [], _Gid, _ELO, _Rex, _Rosi, _PosDb ).
-chess_db_limos_game_posi( [limo(_Ply,_Hmv,Mv,Inpo)|T], Gid, ELO, Rex, Rosi, PosDb ) :-
+chess_db_limos_game_posi( [], _Bim, _Gid, _ELO, _Rex, _Rosi, _PosDb ).
+chess_db_limos_game_posi( [limo(_Ply,_Hmv,Mv,Inpo)|T], Bim, Gid, ELO, Rex, Rosi, PosDb ) :-
      % write( mv(Mv) ), nl,
      % ( Mv == 'c4' -> trace; true ),
      ( Mv == [] ->
           true
           ; 
           ( chess_db_holds(game_posi(Rosi),PosDb,[Inpo,Mv],Curr) ->
-                    chess_db_posi_value_update( Rosi, Curr, Gid, ELO, Rex, Mv, Next )
+                    chess_db_posi_value_update( Rosi, Curr, Bim, Gid, ELO, Rex, Mv, Next )
                     ;
-                    chess_db_posi_value_create( Rosi, Gid, ELO, Rex, Mv, Next )
+                    chess_db_posi_value_create( Rosi, Bim, Gid, ELO, Rex, Mv, Next )
           ),
           chess_db_table_update( game_posi(Rosi), PosDb, [Inpo,Mv], Next )
      ),
-     chess_db_limos_game_posi( T, Gid, ELO, Rex, Rosi, PosDb ).
+     chess_db_limos_game_posi( T, Bim, Gid, ELO, Rex, Rosi, PosDb ).
 
 /*
 chess_db_posi_value_update( Rosi, Curr, Mv, Next )
@@ -428,10 +433,10 @@ chess_db_posi_value_update( Rosi, Curr, Mv, Next )
      chess_db_limos_game_posi( T, Gid, Rex, PosDb ).
      */
 
-chess_db_posi_value_update( kvx, Curr, Gid, ELO, Rex, Mv, Next ) :-  % kvx: Key-Val where value is a text
+chess_db_posi_value_update( kvx, Curr, Bim, Gid, ELO, Rex, Mv, Next ) :-  % kvx: Key-Val where value is a text
      atomic_list_concat( Parts, ';', Curr ),
      once( append(Conts,[BestsAtm],Parts) ),
-     chess_db_posi_value_kvx_update_best( BestsAtm, Gid, ELO, BestsNx ),
+     chess_db_posi_value_kvx_update_best( BestsAtm, Bim, Gid, ELO, BestsNx ),
      % this doesn't fail if there is a problem
      findall( MvX-res(WX,DX,BX,UX), (member(Cont,Conts),atomic_list_concat([MvX,WX,DX,BX,UX],':',Cont)), MDprs ),
      ( select(Mv-res(Ws,Ds,Bs,Us),MDprs,RMprs) ->
@@ -445,18 +450,18 @@ chess_db_posi_value_update( kvx, Curr, Gid, ELO, Rex, Mv, Next ) :-  % kvx: Key-
      append( NxConts, [BestsNx], NxParts ),
      atomic_list_concat( NxParts, ';', Next ).
 
-chess_db_posi_value_kvx_update_best( Bests, Gid, ELO, Nexts ) :-
+chess_db_posi_value_kvx_update_best( Bests, Bim, Gid, ELO, Nexts ) :-
      atomic_list_concat( [NoCurrAtm,LstELOAtm,LstGid|Parts], ':', Bests ), 
      % fixme: allow Lim as input/parameter
-     Lim is 10,
+     % Lim is 10,
      atom_number( NoCurrAtm, NoCurr ),
      atom_number( LstELOAtm, LstELO ),
      compare( Op, LstELO, ELO ),
-     chess_db_posi_value_kvx_update_best_op( Op, NoCurr, Lim, LstELO, LstGid, Gid, ELO, Parts, Nurr, Narts ),
+     chess_db_posi_value_kvx_update_best_op( Op, NoCurr, Bim, LstELO, LstGid, Gid, ELO, Parts, Nurr, Narts ),
      atomic_list_concat( [Nurr|Narts], ':', Nexts ).
 
-chess_db_posi_value_kvx_update_best_op( <, NoCurr, Lim, LstELO, LstGid, Gid, ELO, Parts, Nurr, Narts ) :-
-     ( NoCurr < Lim -> 
+chess_db_posi_value_kvx_update_best_op( <, NoCurr, Bim, LstELO, LstGid, Gid, ELO, Parts, Nurr, Narts ) :-
+     ( NoCurr < Bim -> 
           Nurr is NoCurr + 1, 
           chess_db_posi_value_kvx_update_best_in( Parts, Gid, ELO, Marts ),
           Narts = [LstELO,LstGid|Marts]
@@ -465,8 +470,8 @@ chess_db_posi_value_kvx_update_best_op( <, NoCurr, Lim, LstELO, LstGid, Gid, ELO
           Nurr is NoCurr,
           chess_db_posi_value_kvx_update_best_in( Parts, Gid, ELO, Narts )
      ).
-chess_db_posi_value_kvx_update_best_op( =, NoCurr, Lim, LstELO, LstGid, Gid, ELO, Parts, Nurr, Narts ) :-
-     ( NoCurr < Lim -> 
+chess_db_posi_value_kvx_update_best_op( =, NoCurr, Bim, LstELO, LstGid, Gid, ELO, Parts, Nurr, Narts ) :-
+     ( NoCurr < Bim -> 
           Nurr is NoCurr + 1, 
           Narts = [ELO,Gid,LstELO,LstGid|Parts]
           ;
@@ -474,8 +479,8 @@ chess_db_posi_value_kvx_update_best_op( =, NoCurr, Lim, LstELO, LstGid, Gid, ELO
           Narts = [LstELO,LstGid|Parts]
      ).
 % identical to above
-chess_db_posi_value_kvx_update_best_op( >, NoCurr, Lim, LstELO, LstGid, Gid, ELO, Parts, Nurr, Narts ) :-
-     ( NoCurr < Lim -> 
+chess_db_posi_value_kvx_update_best_op( >, NoCurr, Bim, LstELO, LstGid, Gid, ELO, Parts, Nurr, Narts ) :-
+     ( NoCurr < Bim -> 
           Nurr is NoCurr + 1, 
           Narts = [ELO,Gid,LstELO,LstGid|Parts]
           ;
@@ -496,7 +501,7 @@ chess_db_posi_value_kvx_update_best_in( [LstELOAtm,LstGid|Parts], Gid, ELO, [AnE
      ),
      chess_db_posi_value_kvx_update_best_in( Carts, Gid, ELO, Zarts ).
 
-chess_db_posi_value_create( kvx, Gid, ELO, Rex, Mv, Next ) :-
+chess_db_posi_value_create( kvx, _Bim, Gid, ELO, Rex, Mv, Next ) :-
      chess_db_inc_res_index( Rex, res('0','0','0','0'), res(WN,DN,BN,UN) ),
      atomic_list_concat( [Mv,WN,DN,BN,UN], ':', NextMvs ),
      atomic_list_concat( [1,ELO,Gid], ':', NextEgi ),
