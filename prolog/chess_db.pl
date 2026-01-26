@@ -325,6 +325,19 @@ moving it to _b3_ whould be an illegal move. Thus, in this context _Rb3_ refers 
 ---+++ Databases
 
 By default, each chess_db database directory contains 4 SQLite DBs each holding a single table.
+Currently there are 2 db backends supported: rocksDB (via pack(rocksdb)) and sqlite (via pack(prosqlite)).
+In both database instances we store each table in separate database. 
+
+RocksDB tables. Each table/database is stored within its own directory.
+  * game_info.rocksdb
+
+  * game_move.rocksdb
+
+  * game_orig.rocksdb
+
+  * game_posi.rocksdb
+
+Prosqlite tables.
 In the following, a + sign prefixes a key field:
 
   * game_info.sqlite
@@ -340,12 +353,13 @@ In the following, a + sign prefixes a key field:
   * game_orig.sqlite
      table is game_orig(+Gid,Orig); where Orig is the verbatim of the section in the PGN for that game
 
-  * game_posi.sqlite
+  * game_posi.rocksdb
      table is game_posi(+Posi,GPPairs), where GPPairs is a ; seperated Gid-Ply-Move pairs stored as text (eg '1-2-e4;2-4-e3'), Posi
      is a long integer stored as a string
 
   * game_posi.sqlite 
     table is game_posi(Posi,Conts); where Posi is a unique position and Conts is the continuations string (Gid-Ply-Mov, eg: 1-3-d5).
+
 
 Positions are encoded as long integers.
 

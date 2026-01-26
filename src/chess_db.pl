@@ -116,7 +116,23 @@ Opts
     type of the position table representation
     * kvx kv value where v is text
 
+  * table(Tbl[,DbType])
+    if present only update/generate these tables (multiple allowed).
+    By default all 4 tables are updated/created. If DbType is not given the default is assumed 
+    (which is rocksdb if pack(rocksdb) is installed and sqlite otherwise- requires pack(prosqlite)).
+
 Options can also be picked up from ~/.pl/chess_db.pl (see options_append/3).
+
+By default the predicate updates generates 4 tables
+  * info
+  * move
+  * orig
+  * posi
+
+See pack doc chess_db for details.
+
+You can chose which tables to generate/update using table/1,2 option. If one is given, then 
+all tables should be given explicitly. 
 
 ==
 ?- pgn( pgn('18.03-candidates'), Pgn ), 
