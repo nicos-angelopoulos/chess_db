@@ -45,7 +45,7 @@ chess_db_game_info_exists( KVs, _Dbh/Dbv, ExGid ) :-
      rocks_get( Dbv, InfoAtm, ExGid ).
 
 chess_db_limos_game_moves( Dbh, Nid, Limos ) :-
-     findall( NxtMv-Hmv, member(limo(_Ply,Hmv,NxtMv,_Inpo),Limos), Mvs ),
+     findall( NxtMv-Hmv, (member(limo(_Ply,Hmv,NxtMv,_Inpo),Limos), NxtMv \== []), Mvs ),
      % atomic_list_concat( Mvs, ';', MvsAtm ),
      rocks_put( Dbh, Nid, Mvs ).
 

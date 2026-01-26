@@ -35,8 +35,8 @@ chess_db_max_id( HandleST, Max ) :-
     ( atomic(HandleST) -> Handle = HandleST; chess_db_handle(info,HandleST,Handle) ),
     ( (db_max(Handle,game_info,1,Max),Max\=='',Max\=='$null$') -> true; Max is 0).
 
-chess_db_limos_game_moves( Dbh, Nid, Limos ) :-
-     findall( game_move(Nid,Ply,Hmv,NxtMv), member(limo(Ply,Hmv,NxtMv,_Inpo),Limos), Moals ),
+chess_db_limos_game_moves( Limos, Dbh, Nid ) :-
+     findall( game_move(Nid,Ply,Hmv,NxtMv), (member(limo(Ply,Hmv,NxtMv,_Inpo),Limos),NxtMv \== []), Moals ),
      db_assert( Dbh, Moals, _ ).
 
 chess_db_base_ext( Base, SqliteF ) :-

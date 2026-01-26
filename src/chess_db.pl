@@ -479,14 +479,19 @@ chess_db_posi_value_update( kvx, Curr, Bim, Gid, ELO, Rex, Mv, Next ) :-  % kvx:
      atomic_list_concat( NxParts, ';', Next ).
 
 chess_db_posi_value_kvx_update_best( Bests, Bim, Gid, ELO, Nexts ) :-
-     atomic_list_concat( [NoCurrAtm,LstELOAtm,LstGid|Parts], ':', Bests ), 
+     atomic_list_concat( [NoCurrAtm,LstELOAtm,LstGid|Parts], ':', Bests ),
      % fixme: allow Lim as input/parameter
      % Lim is 10,
-     atom_number( NoCurrAtm, NoCurr ),
-     atom_number( LstELOAtm, LstELO ),
-     compare( Op, LstELO, ELO ),
-     chess_db_posi_value_kvx_update_best_op( Op, NoCurr, Bim, LstELO, LstGid, Gid, ELO, Parts, Nurr, Narts ),
-     atomic_list_concat( [Nurr|Narts], ':', Nexts ).
+     atom_number( GidAtm, Gid ),
+     ( (nth1(N1,[LstGid|Parts],GidAtm),odd(N1)) -> 
+               Nexts = Bests
+               ;
+               atom_number( NoCurrAtm, NoCurr ),
+               atom_number( LstELOAtm, LstELO ),
+               compare( Op, LstELO, ELO ),
+               chess_db_posi_value_kvx_update_best_op( Op, NoCurr, Bim, LstELO, LstGid, Gid, ELO, Parts, Nurr, Narts ),
+               atomic_list_concat( [Nurr|Narts], ':', Nexts )
+     ).
 
 chess_db_posi_value_kvx_update_best_op( <, NoCurr, Bim, LstELO, LstGid, Gid, ELO, Parts, Nurr, Narts ) :-
      ( NoCurr < Bim -> 
