@@ -167,7 +167,7 @@ chess_db( PgnIn, ArgDb, Args ) :-
                     Dly is integer( ((Mly - 1) * 2) )
             )
      ),
-     debuc( chess_db(true), 'Ply limit for positions table: ~w', [Ply] ),
+     debuc( chess_db(true), 'Ply limit for positions table: ~w', [Dly] ),
      options( bests_limit(Bim), Opts ),
      options( max_games(MxG), Opts ),
      ( MxG =:= inf -> OfG is inf ; ( number(Gitr) -> OfG is Gitr + MxG; MxG is inf) ),
@@ -215,7 +215,7 @@ chess_db_close(false, _AbsDb, _CdbHs).
 chess_db_close( true, AbsDb, _CdbHs ) :-
      chess_db_disconnect( AbsDb ).
 
-chess_db_incr( false, PgnIn, Goal, LaGid, _MxG, IProg, Posi, Rosi, Bim, CdbHs, AbsDb, ArgDb, OptDb, RtGid ) :-
+chess_db_incr( false, PgnIn, Goal, LaGid, _MxG, IProg, Posi, Rosi, Dly, Bim, CdbHs, AbsDb, ArgDb, OptDb, RtGid ) :-
      pgn( PgnIn, Pgn ),
      ( Goal == chess_db_games_add ->
           chess_db_games_add( Pgn, LaGid, IProg, Posi, Rosi, Dly, Bim, CdbHs, RtGid ),
@@ -245,7 +245,7 @@ chess_db_incr_stream( Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Dly, Bim, 
      chess_db_incr_stream_pgn( Pin, TempO, Eof ),
      close( TempO ),
      ( (Eof ; (number(LaGid),MxG =< LaGid) ) -> Termin = true; Termin = false ),
-     chess_db_incr_stream_termin( Termin, Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Bim, CdbHs, RtGid ).
+     chess_db_incr_stream_termin( Termin, Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Dly, Bim, CdbHs, RtGid ).
 
 chess_db_incr_stream_termin( true, _Pin, _TmpF, _Goal, LaGid, _MxG, _IProg, _Posi, _Rosi, _Dly, _Bim, _CdbHs, RtGid ) :-
      LaGid = RtGid.
