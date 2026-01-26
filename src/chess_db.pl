@@ -217,6 +217,12 @@ chess_db_close( true, AbsDb, _CdbHs ) :-
 
 chess_db_incr( false, PgnIn, Goal, LaGid, _MxG, IProg, Posi, Rosi, Dly, Bim, CdbHs, AbsDb, ArgDb, OptDb, RtGid ) :-
      pgn( PgnIn, Pgn ),
+     DbcOpts = [check_point(start_at_id(LaGid)),comment(false)],
+     debuc( chess_db(stats), stat, cputime, DbcOpts ),
+     debuc( chess_db(stats), stat, process_cputime, DbcOpts ),
+     debuc( chess_db(stats), stat, real_time, DbcOpts ),
+     debuc( chess_db(stats), stat, runtime, DbcOpts ),
+     debuc( chess_db(stats), stat, system_time, DbcOpts ),
      ( Goal == chess_db_games_add ->
           chess_db_games_add( Pgn, LaGid, IProg, Posi, Rosi, Dly, Bim, CdbHs, RtGid ),
           ( var(ArgDb) -> ArgDb = AbsDb; true ),
