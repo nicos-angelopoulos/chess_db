@@ -2,6 +2,7 @@
 --------------------
 
 1.1
+     26.01.27  OPT:      check_game_exists()
      26.01.26  CHANGE:   moves table no longer stores the last empty ([]) move
      26.01.25  DEBUG:    added chess_db(stats) channel for stats progress reporting on readable terms
                OPT:      bests_limit() + position_depth_limit()
