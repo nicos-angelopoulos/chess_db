@@ -107,10 +107,10 @@ Opts
     if true, use position table
      
   * position_depth_limit(Pdl=inf)
-    number of first moves (-1) for which positions are kept for each game. 
+    number of first moves for which positions are kept for each game. 
     Decimals of the form .5 are allowed, 10.5 means keep postions until 10th white move (no black 10th).
-    Slightly counter intuitively, =|Pdl=:=10|= will save positions for moves 1-10 inclusive of black move 10
-    (ie one more position than when =|pdf=:=10.5|=).
+    Slightly counterintuitively, =|Pdl=:=10|= will save positions for moves 1-10 inclusive of black move 10
+    (ie one more position than when =|Pdl=:=10.5|=).
 
   * position_type(Pos=kvx)
     type of the position table representation
