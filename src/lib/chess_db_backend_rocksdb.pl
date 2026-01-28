@@ -36,8 +36,8 @@ chess_db_holds( game_posi(_Roxi), Db, Args, Val ) :-
 chess_db_table_update( game_orig(Gid,Otm), Dbh ) :-
      rocks_put( Dbh, Gid, Otm ).
 
-chess_db_table_update( game_posi(_Roxi), Db, [InpoNum,_Mv], Next ) :-
-     atom_number( Inpo, InpoNum ),
+chess_db_table_update( game_posi(_Roxi), Db, [Inpo,_Mv], Next ) :-
+     % atom_number( Inpo, InpoNum ),
      rocks_put( Db, Inpo, Next ).
 
 chess_db_game_info_exists( KVs, _Dbh/Dbv, ExGid ) :-
