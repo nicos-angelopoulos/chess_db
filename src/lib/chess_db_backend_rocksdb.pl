@@ -28,8 +28,9 @@ chess_db_create( Dir, Base, Db ) :-
      ).
 
 chess_db_holds( game_posi(_Roxi), Db, Args, Val ) :-
-     ( Args = [KeyNum|_] -> true; Args = KeyNum ),
-     atom_number( Key, KeyNum ),
+     ( Args = [Key|_] -> true; Args = Key ),
+     % ( Args = [KeyNum|_] -> true; Args = KeyNum ),
+     % atom_number( Key, KeyNum ),
      rocks_get( Db, Key, Val ).
 
 chess_db_table_update( game_orig(Gid,Otm), Dbh ) :-
