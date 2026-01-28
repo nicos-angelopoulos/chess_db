@@ -346,7 +346,7 @@ chess_db_alias_exists_dir( AliasDir ) :-
      exists_directory( AliasDir ),
      !.
 
-chess_db_games_add( [], Gid, _IProg, _Posi, _Rosi, Chk, _Dly, _Bim, _CdbHs, Xid ) :-
+chess_db_games_add( [], Gid, _IProg, _Posi, _Rosi, _Chk, _Dly, _Bim, _CdbHs, Xid ) :-
      Gid = Xid.
 chess_db_games_add( [G|Gs], Gid, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, Xid ) :-
      % fixme: ignore position for now
