@@ -202,7 +202,7 @@ chess_db( PgnIn, ArgDb, Args ) :-
      debuc( chess_db(stats), stat, process_cputime, DbcOpts ),
      debuc( chess_db(stats), stat, real_time, DbcOpts ),
      debuc( chess_db(stats), stat, runtime, DbcOpts ),
-     debuc( chess_db(stats), stat, system_time, DbcOpts ),
+     % debuc( chess_db(stats), stat, system_time, DbcOpts ),
      options( close(Close), Opts ),
      chess_db_close( Close, AbsDb, CdbHs ),
      options( goal_return(RtGid), Opts ).
@@ -245,7 +245,6 @@ chess_db_incr( false, PgnIn, Goal, LaGid, _MxG, IProg, Posi, Rosi, Chk, Dly, Bim
      debuc( chess_db(stats), stat, process_cputime, DbcOpts ),
      debuc( chess_db(stats), stat, real_time, DbcOpts ),
      debuc( chess_db(stats), stat, runtime, DbcOpts ),
-     debuc( chess_db(stats), stat, system_time, DbcOpts ),
      ( Goal == chess_db_games_add ->
           chess_db_games_add( Pgn, LaGid, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, RtGid ),
           ( var(ArgDb) -> ArgDb = AbsDb; true ),
@@ -261,7 +260,6 @@ chess_db_incr( true, PgnIn, Goal, LaGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, 
      debuc( chess_db(stats), stat, process_cputime, DbcOpts ),
      debuc( chess_db(stats), stat, real_time, DbcOpts ),
      debuc( chess_db(stats), stat, runtime, DbcOpts ),
-     debuc( chess_db(stats), stat, system_time, DbcOpts ),
      chess_db_incr_stream( Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, RtGid ), 
      close( Pin ),
      % ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
@@ -397,7 +395,6 @@ chess_db_game_add( _Chk, InfoHandle, Info, Moves, Orig, Dly, Bim, Gid, Res, MoHa
                debuc( chess_db(stats), stat, process_cputime, DbcOpts ),
                debuc( chess_db(stats), stat, real_time, DbcOpts ),
                debuc( chess_db(stats), stat, runtime, DbcOpts ),
-               debuc( chess_db(stats), stat, system_time, DbcOpts ),
                debuc( chess_db(true), task(stop), 'Added game no: ~d', [farg(Nid)] )
                ;
                true
