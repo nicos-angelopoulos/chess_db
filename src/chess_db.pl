@@ -33,7 +33,7 @@ chess_db_defaults( Defs ) :-
 
 Process games from a PGN list of terms or .pgn file. 
 
-By default games are added to current chess database pointed b ChessDb or Opts. 
+By default games are added to current chess database pointed to by ChessDb or Opts. 
 As of v0.2 user define "processors" can be defined via option goal(Goal).
 
 If both ChessDb and OptDb are given, ChessDb overrides.
