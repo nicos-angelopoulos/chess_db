@@ -198,10 +198,10 @@ was also adopted by lichess in 2024 according to a blog on their web-site.
 
 Encode the occupied squares + 4 bit for 16 piece encoding 
   * 0 an en-passant-able pawn; (we don't need empty square as we mark pieces)
-  * 1-12 pieces; as in dictionary
-  * 13 w rook avail for castle
-  * 14 b rook avail for castle
-  * 15 black king when is black to  move;
+  * 1-12 pieces; as in dictionary  (A,B,C)
+  * 13 w rook avail for castle     (D)
+  * 14 b rook avail for castle     (E)
+  * 15 black king when is black to  move;  (F)
 
 + 8 bits for half move clock + 8 bits for ply + variant data.
 
@@ -221,16 +221,66 @@ Bnpo = '110000111100001111000011110000111100001111000011110000111100001111010001
 
 @author nicos angelopoulos
 @version  0:2 25.12.07,   new integer/binary representation
+@version  0:3 26.1.28,    changed the binary to hex digits- and implemented the 
 @see https://lichess.org/@/revoof/blog/adapting-nnue-pytorchs-binary-position-format-for-lichess/cpeeAMeY
 
 */
 
 chess_dict_inpo( Dict, Inpo ) :-
+     chess_inpo_occupancy_pieces( 0, Dict, Occ, Pcx ),
+     append( Occ, Pcx, Hex ),
+     atom_codes( Inpo, Hex ).
+
+chess_inpo_occupancy_pieces( 64, _Dict, [], [] ) :- !.
+chess_inpo_occupancy_pieces( I, Dict, [Hex1,Hex2|Texs], Pcx ) :-
+     chess_inpo_occupancy_column_half( 1, 0, I, Dict, 0, Hex1, Pcx, PcxA ),
+     chess_inpo_occupancy_column_half( 1, 4, I, Dict, 0, Hex2, PcxA, PcxB ),
+     J is I + 8,
+     chess_inpo_occupancy_pieces( J, Dict, Texs, PcxB ).
+
+chess_inpo_occupancy_column_half( 5, _A, _I, _Dict, Dec, Hex, Pcx, Pct ) :- 
+     !,
+     chess_dec_hex( Dec, Hex ),
+     Pcx = Pct.
+chess_inpo_occupancy_column_half( J, A, I, Dict, Dec, Hex, Pcx, Pct ) :-
+     K is I + J + A,
+     Dk = Dict.K,
+     ( Dk =:= 0 ->
+          Dec1 is Dec,
+          Pcx = Tcx
+          ;
+          Dec1 is Dec + ( 2 ^ (4-J) ),
+          chess_dict_inpo_v2_piece( Dk, Dict, K, Px ),
+          % chess_dict_inpo_v2_piece( Dk, Dict, K, PcInt ),
+          % chess_dec_hex( PcInt, Px ),
+          Pcx = [Px|Tcx]
+     ),
+     L is J + 1,
+     chess_inpo_occupancy_column_half( L, A, I, Dict, Dec1, Hex, Tcx, Pct ).
+
+chess_dec_hex(0, 0'0).    % en passant pawn
+chess_dec_hex(1, 0'1).    % white pawn
+chess_dec_hex(2, 0'2).    % white knight
+chess_dec_hex(3, 0'3).    % white bishop
+chess_dec_hex(4, 0'4).    % white rook
+chess_dec_hex(5, 0'5).    % white queen
+chess_dec_hex(6, 0'6).    % white king
+chess_dec_hex(7, 0'7).    % black pawn
+chess_dec_hex(8, 0'8).    % black knight 
+chess_dec_hex(9, 0'9).    % black bishop
+chess_dec_hex(10, 0'A).   % black rook
+chess_dec_hex(11, 0'B).   % black queen
+chess_dec_hex(12, 0'C).   % black king
+chess_dec_hex(13, 0'D).   % white castling rook
+chess_dec_hex(14, 0'E).   % black castling rook
+chess_dec_hex(15, 0'F).   % black moving king 
+
+chess_dict_inpo_wrong( Dict, Inpo ) :-
      chess_dict_inpo_binary( Dict, Bin ),
      binary( Inpo, Bin ).
 
 /* Add this to public. */
-chess_dict_inpo_binary( Dict, Bin ) :-
+chess_dict_inpo_binary_wrong( Dict, Bin ) :-
      ground( Dict ),
      !,
      findall( Bool, (between(0,7,I),between(1,8,J),K is (I * 8) + J, (Dict.K > 0 -> Bool is 1 ; Bool is 0)), Bools ),
@@ -269,57 +319,65 @@ Booleans: Castling, Turn and last was a take
   * cbq:1
   */
 chess_dict_inpo_v2_piece( 1, Dict, K, Pc ) :-   % white pawn
-     ( Dict.eps =:= K -> Pc is 0; Pc is 1 ).
+     ( Dict.eps =:= K -> Pc is 0'0; Pc is 0'1 ).
 chess_dict_inpo_v2_piece( 2, _Dict, _K, Pc ) :-   % white knight
-     Pc is 2.
+     Pc is 0'2.
 chess_dict_inpo_v2_piece( 3, _Dict, _K, Pc ) :-   % white bishop
-     Pc is 3.
+     Pc is 0'3.
 chess_dict_inpo_v2_piece( 4, Dict, K, Pc ) :-   % white rook
      ( K =:= 1 ->
           ( Dict.cwq =:= 1 ->
-               Pc is 13
+               % Pc is 13
+               Pc is 0'D
                ;
-               Pc is 4
+               Pc is 0'4
           )
           ;
           ( K =:= 57 ->
                ( Dict.cwk =:= 1 ->
-                    Pc is 13
+                    % Pc is 13
+                    Pc is 0'D
                     ;
                     Pc is 4
                )
           )
      ).
 chess_dict_inpo_v2_piece( 5, _Dict, _K, Pc ) :-   % white queen
-     Pc is 5.
+     Pc is 0'5.
 chess_dict_inpo_v2_piece( 6, _Dict, _K, Pc ) :-   % white king
-     Pc is 6.
+     Pc is 0'6.
 chess_dict_inpo_v2_piece( 7, Dict, K, Pc ) :-   % black pawn
-     ( Dict.eps =:= K -> Pc is 0; Pc is 1 ).
+     ( Dict.eps =:= K -> Pc is 0'0; Pc is 0'7 ).
 chess_dict_inpo_v2_piece( 8, _Dict, _K, Pc ) :-   % black knight
-     Pc is 8.
+     Pc is 0'8.
 chess_dict_inpo_v2_piece( 9, _Dict, _K, Pc ) :-   % black bishop
-     Pc is 9.
+     Pc is 0'9.
 chess_dict_inpo_v2_piece(10, Dict, K, Pc ) :-   % black rook
      ( K =:= 8 ->
           ( Dict.cbq =:= 1 ->
-               Pc is 14
+               % Pc is 14
+               Pc is 0'E
                ;
-               Pc is 10
+               % Pc is 10
+               Pc is 0'A
           )
           ;
           ( K =:= 64 ->
                ( Dict.cbk =:= 1 ->
-                    Pc is 14
+                    % Pc is 14
+                    Pc is 0'E
                     ;
-                    Pc is 10
+                    % Pc is 10
+                    Pc is 0'A
                )
           )
      ).
 chess_dict_inpo_v2_piece( 11, _Dict, _K, Pc ) :-  % black queen
-     Pc is 11.
+     % Pc is 11.
+     Pc is 0'B.
 chess_dict_inpo_v2_piece( 12, Dict, _K, Pc ) :-   % black king, 15 indicates black to move- else white move is assumed
-     (Dict.0 =:= 1 -> Pc is 15 ; Pc is 6).
+     % (Dict.0 =:= 1 -> Pc is 15 ; Pc is 6). <- bug 26.01.28
+     (Dict.0 =:= 1 -> Pc is 0'F ; Pc is 0'C).
 
 int_padded_bin( Int, N, Bin ) :-
      binary( Int, ShortBin ), 
