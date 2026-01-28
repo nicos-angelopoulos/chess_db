@@ -192,7 +192,7 @@ chess_db( PgnIn, ArgDb, Args ) :-
      debuc( chess_db(true), 'Ply limit for positions table: ~w', [Dly] ),
      options( bests_limit(Bim), Opts ),
      options( max_games(MxG), Opts ),
-     ( MxG =:= inf -> OfG is inf ; ( number(Gitr) -> OfG is Gitr + MxG; MxG is inf) ),
+     ( (MxG =:= inf;MxG == inf) -> OfG is inf ; ( number(Gitr) -> OfG is Gitr + MxG; MxG is inf) ),
      debuc( chess_db(true), task(start), 'PGN load from: ~w', [farg(PgnIn),pred(chess_db/2)] ),
      debuc( chess_db(true), option, incr(Incr), pred(chess_db/2) ),
      debug( chess_db(stats), 'Stats channel is on.', [] ),
