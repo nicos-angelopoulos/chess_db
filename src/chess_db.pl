@@ -356,7 +356,7 @@ chess_db_games_add( [G|Gs], Gid, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, Xid ) 
      chess_db_handle( move, CdbHs, MoveHandle ),
      chess_db_handle( orig, CdbHs, OrigHandle ),
      ( Posi == true -> chess_db_handle( posi, CdbHs, PosiHandle ) ; true ),
-     chess_db_game_add( InfoHandle, Info, Moves, Orig, Chk, Dly, Bim, Gid, Res, MoveHandle, OrigHandle, IProg, Posi, Rosi, PosiHandle, Nid ),
+     chess_db_game_add( Chk, InfoHandle, Info, Moves, Orig, Dly, Bim, Gid, Res, MoveHandle, OrigHandle, IProg, Posi, Rosi, PosiHandle, Nid ),
      chess_db_games_add( Gs, Nid, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, Xid ).
 
 chess_db_debug_info( Info, Pfx ) :-
@@ -368,11 +368,11 @@ chess_db_debug_info( Info, Pfx ) :-
 chess_db_debug_info( Info, Pfx ) :-
      debug( chess_db, '~w: ~w', [Pfx,Info] ).
 
-chess_db_game_add( InfoHandle, Info, _Moves, _Orig, _Chk, _Dly, _Bim, Gid, _Res, _MoHa, _OrHa, _IProg, _Posi, _Rosi, _PoHa, Gid ) :-
+chess_db_game_add( true, InfoHandle, Info, _Moves, _Orig, _Dly, _Bim, Gid, _Res, _MoHa, _OrHa, _IProg, _Posi, _Rosi, _PoHa, Gid ) :-
      chess_db_game_info_exists( Info, InfoHandle, ExGid ),
      !, % fixme: add option for erroring
      debug( chess_db(info), 'Info match existing game: ~d', ExGid ).
-chess_db_game_add( InfoHandle, Info, Moves, Orig, Chk, Dly, Bim, Gid, Res, MoHa, OrHa, IProg, Posi, Rosi, PoHa, Nid ) :-
+chess_db_game_add( _Chk, InfoHandle, Info, Moves, Orig, Dly, Bim, Gid, Res, MoHa, OrHa, IProg, Posi, Rosi, PoHa, Nid ) :-
      Nid is Gid + 1,
      chess_db_game_add_info( InfoHandle, Info, Nid ),
      chess_dict_start_board( Start ),
@@ -383,7 +383,7 @@ chess_db_game_add( InfoHandle, Info, Moves, Orig, Chk, Dly, Bim, Gid, Res, MoHa,
           chess_db_game_info_elo( 'WhiteElo', Info, WhiteELO ),
           chess_db_game_info_elo( 'BlackElo', Info, BlackELO ),
           ELO is WhiteELO + BlackELO,
-          chess_db_limos_game_posi( Limos, Chk, Dly, Bim, Nid, ELO, Rex, Rosi, PoHa )
+          chess_db_limos_game_posi( Limos, Dly, Bim, Nid, ELO, Rex, Rosi, PoHa )
           ;
           true
      ),
@@ -439,14 +439,14 @@ chess_db_game_info_elo( Key, Info, Elo ) :-
 @tbd some code to ensure that e4+ and e4 are the same ?
      
 */
-chess_db_limos_game_posi( [], _Chk, _Dly, _Bim, _Gid, _ELO, _Rex, _Rosi, _PosDb ).
-chess_db_limos_game_posi( [limo(Ply,_Hmv,Mv,Inpo)|T], Chk, Dly, Bim, Gid, ELO, Rex, Rosi, PosDb ) :-
+chess_db_limos_game_posi( [], _Dly, _Bim, _Gid, _ELO, _Rex, _Rosi, _PosDb ).
+chess_db_limos_game_posi( [limo(Ply,_Hmv,Mv,Inpo)|T], Dly, Bim, Gid, ELO, Rex, Rosi, PosDb ) :-
      % write( mv(Mv) ), nl,
      % ( Mv == 'c4' -> trace; true ),
      ( Mv == [] ->
           true
           ; 
-          ( (Chk==true,chess_db_holds(game_posi(Rosi),PosDb,[Inpo,Mv],Curr)) ->
+          ( chess_db_holds(game_posi(Rosi),PosDb,[Inpo,Mv],Curr) ->
                     chess_db_posi_value_update( Rosi, Curr, Bim, Gid, ELO, Rex, Mv, Next )
                     ;
                     chess_db_posi_value_create( Rosi, Bim, Gid, ELO, Rex, Mv, Next )
@@ -454,7 +454,7 @@ chess_db_limos_game_posi( [limo(Ply,_Hmv,Mv,Inpo)|T], Chk, Dly, Bim, Gid, ELO, R
           chess_db_table_update( game_posi(Rosi), PosDb, [Inpo,Mv], Next )
      ),
      ( Dly =< Ply -> Rest = []; Rest = T ),
-     chess_db_limos_game_posi( Rest, Chk, Dly, Bim, Gid, ELO, Rex, Rosi, PosDb ).
+     chess_db_limos_game_posi( Rest, Dly, Bim, Gid, ELO, Rex, Rosi, PosDb ).
 
 /*
 chess_db_posi_value_update( Rosi, Curr, Mv, Next )
