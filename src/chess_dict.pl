@@ -333,12 +333,12 @@ chess_dict_inpo_v2_piece( 4, Dict, K, Pc ) :-   % white rook
                Pc is 0'4
           )
           ;
-          ( K =:= 57 ->
-               ( Dict.cwk =:= 1 ->
+          % fixed: 26.01.28
+          ( (K =:= 57, Dict.cwk =:= 1) ->
                     % Pc is 13
                     Pc is 0'D
                     ;
-                    Pc is 4
+                    Pc is 0'4
                )
           )
      ).
@@ -362,8 +362,8 @@ chess_dict_inpo_v2_piece(10, Dict, K, Pc ) :-   % black rook
                Pc is 0'A
           )
           ;
-          ( K =:= 64 ->
-               ( Dict.cbk =:= 1 ->
+          % fixed: 26.01.28
+          ( (K =:= 64, Dict.cbk =:= 1) ->
                     % Pc is 14
                     Pc is 0'E
                     ;
