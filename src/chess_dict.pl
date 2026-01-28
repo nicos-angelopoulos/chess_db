@@ -339,7 +339,6 @@ chess_dict_inpo_v2_piece( 4, Dict, K, Pc ) :-   % white rook
                     Pc is 0'D
                     ;
                     Pc is 0'4
-               )
           )
      ).
 chess_dict_inpo_v2_piece( 5, _Dict, _K, Pc ) :-   % white queen
@@ -369,7 +368,6 @@ chess_dict_inpo_v2_piece(10, Dict, K, Pc ) :-   % black rook
                     ;
                     % Pc is 10
                     Pc is 0'A
-               )
           )
      ).
 chess_dict_inpo_v2_piece( 11, _Dict, _K, Pc ) :-  % black queen
