@@ -121,6 +121,7 @@ pgn_game_length( [pgn(_Info,Moves,_Res,_Org)|Ps], Giter, Niter ) :-
                LstMv is 0
                ;
                throw( unexpected_term_for_moves(Moves) )
+          )
      ),
      kvs_k_update_v( Giter, LstMv, pgn_game_v_val_1, pgn_game_v_plus_1, _V, _NewV, Liter ),
      pgn_game_length( Ps, Liter, Niter ).
