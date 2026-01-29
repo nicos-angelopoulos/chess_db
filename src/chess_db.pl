@@ -363,7 +363,7 @@ chess_db_debug_info( Info, Chnl, Pfx ) :-
      atomic_list_concat( [White,vs,Black], ' ', Mess ),
      !,
      debuc( chess_db(Chnl), '~w: ~w', [Pfx,Mess] ).
-chess_db_debug_info( Info, Chnl Pfx ) :-
+chess_db_debug_info( Info, Chnl, Pfx ) :-
      debuc( chess_db(Chnl), '~w: ~w', [Pfx,Info] ).
 
 chess_db_game_add( true, InfoHandle, Info, _Moves, _Orig, _Dly, _Bim, Gid, _Res, _MoHa, _OrHa, _IProg, _Posi, _Rosi, _PoHa, Gid ) :-
