@@ -304,7 +304,7 @@ pgn_originals( FileR, Origs ) :-
 
 pgn_original_games( end_of_file, _In, [] ) :- !.
 pgn_original_games( Line, In, [Orig|Origs] ) :-
-    atom_codes( LineAtm, Line ),
+    % atom_codes( LineAtm, Line ),
     % debuc( chess_db(iline), 'next game starts at line: ~w', LineAtm ),
     pgn_original_game( Line, In, Next, Orig ),
     !,
