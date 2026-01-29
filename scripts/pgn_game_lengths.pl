@@ -16,6 +16,7 @@ pgn_game_lengths_defaults( Defs ) :-
                                              debug(true),
                                              output(file),
                                              incr(true),
+                                             stack_limit(false),
                                              postfix(glens),
                                              sep('_')
                                        ].
@@ -24,7 +25,7 @@ pgn_game_lengths_help( Self ) :-
      debuc( Self, 'help goes here', [] ).
 
 pgn_game_lengths_usage( Self ) :-
-     debuc( Self, 'upsh ~w debug=true', [Self] ).
+     debuc( Self, 'upsh ~w debug=true cdb=elite_pgn output=file incr=true', [Self] ).
 
 /** pgn_game_lengths(+OptsAndFiles).
 
@@ -46,6 +47,8 @@ Opts
   * incr(Incr=true)
     as in os_chess/2 option. The default here is true, as this script 
     needs the chess_db/2 machinery more.
+  * stack_limit(Mem=false)
+    or give an integer, to set the stack memory in GB
   * output(Out=file)
     could also use =|terminal|=
   * postfix(Psx=glens)
@@ -89,7 +92,16 @@ pgn_game_lengths( Args ) :-
 
 pgn_game_lengths_opts(false, _Self, _Omt, _Atms, _Opts).
 pgn_game_lengths_opts( true, Self, Omt, Oses, Opts ) :-
+     options( stack(Slm), Opts ),
+     pgn_game_stack_limit( Slm, Self ),
      maplist( pgn_game_lengths_os(Omt,Self,Opts), Oses ).
+
+pgn_game_stack_limit( false, Self ) :-
+     debuc( Self, 'No change to stack limit.', true ).
+pgn_game_stack_limit( Gbs, Self ) :-
+     Lim is Gbs * 10 ^ 9,
+     debuc( Self, 'Setting stack limit to: ~w', [] ),
+     set_prolog_flag( stack_limit, Gbs ).
 
 % fixme: add R plot; from own preds
 % pgn_game_lengths_os( terminal, Self, _Opts, Os ) :-
