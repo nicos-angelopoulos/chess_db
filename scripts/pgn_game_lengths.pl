@@ -100,12 +100,12 @@ pgn_game_stack_limit( false, Self ) :-
      debuc( Self, 'No change to stack limit.', true ).
 pgn_game_stack_limit( Gbs, Self ) :-
      Lim is Gbs * 10 ^ 9,
-     debuc( Self, 'Setting stack limit to: ~w', [] ),
-     set_prolog_flag( stack_limit, Gbs ).
+     debuc( Self, 'Setting stack limit to: ~w', [Lim] ),
+     set_prolog_flag( stack_limit, Lim ).
 
 % fixme: add R plot; from own preds
 % pgn_game_lengths_os( terminal, Self, _Opts, Os ) :-
-pgn_game_lengths_os( terminal, Self, _Opts, Os ) :-
+pgn_game_lengths_os( terminal, Self, Opts, Os ) :-
      debuc( Self, 'Doing: ~p (terminal output)', Os ),
      CdbOpts = [goal(pgn_games_length),goal_iter([]),goal_return(Rtn)|Opts],
      debuc( Self, 'Calling chess_db/2 options: ~w', [CdbOpts] ),
