@@ -288,8 +288,9 @@ Listens to:
      reports stats of progress points as readable terms via pack(debug_call) debugoal =|stats|=.
   * chess_db(game)
      reports which game is asserted
-  * chess_db(move)
-  * chess_db(moves)
+  * chess_db(pgn(info)) print names of players for read-in game
+  * chess_db(pgn(moves)) report the pgn moves read-in
+  * chess_db(pgn(move))  report aspects of the move currently working on
   * chess_db(original)
   * chess_db(true) 
      (on-by-default channel, turn off for silent operation)

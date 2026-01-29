@@ -93,7 +93,7 @@ pgn_dcg( [] ) --> {true}.
     
 pgn_dcg_game( pgn(Info,Moves,Res) ) -->
     pgn_dcg_info( InfoPrv ),
-    { debug_call( chess_db, chess_db:chess_db_info_kvs(InfoPrv) ) },
+    { debug_call( chess_db(pgn(info)), chess_db:chess_db_info_kvs(InfoPrv) ) },
     pgn_dcg_moves( Moves, MovesInfo ),
     {append( InfoPrv, MovesInfo, Info )},
     pgn_dcg_result( Res ),
@@ -123,7 +123,7 @@ pgn_dcg_moves( Moves, Info ) -->
     { CmStrings \== [] },
     { atomic_list_concat(CmStrings,'',Cm) },
     pgn_dcg_moves( Moves, TInfo ),
-    {debug( chess_db(moves), 'Read moves: ~w', [Moves] )},
+    {debug( chess_db(pgn(moves)), 'Read moves: ~w', [Moves] )},
     {Info = ['Game_Note'-Cm|TInfo]}.
 
 pgn_dcg_moves( Empty, AddToInfo ) --> 
@@ -143,22 +143,22 @@ pgn_dcg_moves( [], AddToInfo ) -->
 
 pgn_dcg_moves_has( [move(Num,MvW,MvB,CmW,CmB)|T] ) -->
     integer( Num ),
-    { debug( chess_db(move), 'Move: ~d', [Num] ) },
+    { debuc( chess_db(pgn(move)), 'Move: ~d', [Num] ) },
     ".", pgn_dcg_move_end,
     !,
     pgn_dcg_ply( MvW, CmW ),
-    { debug( chess_db(move), 'Ply W: ~w, comment: ~w', [MvW,CmW] ) },
+    % { debuc( chess_db(pgn(move)), 'Ply W: ~w, comment: ~w', [MvW,CmW] ) },
     pgn_dcg_variation, % is alternative always afer variation ?
     pgn_dcg_variation_white( Num ),
-    { debug( chess_db(move), 'Variation done: ~d', [Num] ) },
+    % { debuc( chess_db(pgn(move)), 'Variation done: ~d', [Num] ) },
     {MvW \= []},  % fixme: error
     pgn_dcg_ply( MvB, CmB ),
-    { debug( chess_db(move), 'Ply B: ~w, comment: ~w', [MvB,CmB] ) },
+    % { debuc( chess_db(pgn(move)), 'Ply B: ~w, comment: ~w', [MvB,CmB] ) },
     pgn_dcg_variation,
     % {append(MvW,MvB,Mvs)},
     % {append(CmW,CmB,Cms)},
     !,
-    { debug( chess_db(move), 'Move read: ~w', [move(Num,MvW,MvB,CmW,CmB)] ) },
+    % { debuc( chess_db(pgn(move)), 'Next move read: ~w', [move(Num,MvW,MvB,CmW,CmB)] ) },
     % { (Num =:= 58, MvB = 'Qb4#') -> trace; true }, % here: use something like this, if your PGN fails to parse
     pgn_dcg_moves_has( T ).
 pgn_dcg_moves_has( [] ) --> {true}.
@@ -249,7 +249,7 @@ pgn_dcg_cntrl_m --> {true}.
 pgn_dcg_variation --> 
     [0'(], 
     !,
-    { debug(chess_db(move),'Parenthesis opening: ~d', 1) },
+    % { debuc(chess_db(pgn(move)),'Parenthesis opening: ~d', 1) },
     pgn_dcg_variation_till_right(1),
     pgn_dcg_move_end,
     pgn_dcg_variation. % as there might multiple variations
@@ -260,14 +260,14 @@ pgn_dcg_variation_till_right( I ) -->
     [0')],
     !,
     {H is I - 1},
-    { debug(chess_db(move),'Parenthesis closing: ~d', I) },
+    % { debuc(chess_db(move),'Parenthesis closing: ~d', I) },
     % pgn_dcg_move_end,
     pgn_dcg_variation_till_right( H ).
 pgn_dcg_variation_till_right(I) --> 
     [0'(],
     !,
     {J is I + 1},
-    { debug(chess_db(move),'Parenthesis opening: ~d', J) },
+    % { debuc(chess_db(move),'Parenthesis opening: ~d', J) },
     pgn_dcg_variation_till_right( J ).
 pgn_dcg_variation_till_right( I ) --> 
     [_],
@@ -305,7 +305,7 @@ pgn_originals( FileR, Origs ) :-
 pgn_original_games( end_of_file, _In, [] ) :- !.
 pgn_original_games( Line, In, [Orig|Origs] ) :-
     atom_codes( LineAtm, Line ),
-    debug( chess_db(iline), 'next game starts at line: ~w', LineAtm ),
+    % debuc( chess_db(iline), 'next game starts at line: ~w', LineAtm ),
     pgn_original_game( Line, In, Next, Orig ),
     !,
     pgn_original_games( Next, In, Origs ).
