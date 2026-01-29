@@ -113,11 +113,16 @@ pgn_games_length( PgnL, Giter, _Prg, _Pos, _Tos, _CdbHs, Niter ) :-
 pgn_game_length( [], Giter, Niter ) :-
      Giter = Niter.
 pgn_game_length( [pgn(_Info,Moves,_Res,_Org)|Ps], Giter, Niter ) :-
-     ( once( append(_,[move(LstMv,_,_,_,_)], Moves ) ) ->  % there is 1 game without moves in elite.lichess.18.01
-          kvs_k_update_v( Giter, LstMv, pgn_game_v_val_1, pgn_game_v_plus_1, _V, _NewV, Liter ),
+     ( once( append(_,[move(LstMv,_,_,_,_)], Moves ) ) ->  
+          % there is 1 game without moves in elite.lichess.18.01
+          true
           ;
-          Giter = Liter 
+          ( Moves==[] ->
+               LstMv is 0
+               ;
+               throw( unexpected_term_for_moves(Moves) )
      ),
+     kvs_k_update_v( Giter, LstMv, pgn_game_v_val_1, pgn_game_v_plus_1, _V, _NewV, Liter ),
      pgn_game_length( Ps, Liter, Niter ).
 
 pgn_game_v_plus_1( K, V, NewV, K-NewV ) :-
