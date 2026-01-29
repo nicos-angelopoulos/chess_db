@@ -92,7 +92,7 @@ pgn_game_lengths( Args ) :-
 
 pgn_game_lengths_opts(false, _Self, _Omt, _Atms, _Opts).
 pgn_game_lengths_opts( true, Self, Omt, Oses, Opts ) :-
-     options( stack(Slm), Opts ),
+     options( stack_limit(Slm), Opts ),
      pgn_game_stack_limit( Slm, Self ),
      maplist( pgn_game_lengths_os(Omt,Self,Opts), Oses ).
 
