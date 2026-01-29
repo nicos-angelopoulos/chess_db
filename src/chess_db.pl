@@ -349,7 +349,7 @@ chess_db_games_add( [], Gid, _IProg, _Posi, _Rosi, _Chk, _Dly, _Bim, _CdbHs, Xid
 chess_db_games_add( [G|Gs], Gid, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, Xid ) :-
      % fixme: ignore position for now
      G = pgn(Info,Moves,Res,Orig),
-     chess_db_debug_info( Info, 'adding to db' ),
+     chess_db_debug_info( Info, game, 'adding to db' ),
      chess_db_handle( info, CdbHs, InfoHandle ),
      chess_db_handle( move, CdbHs, MoveHandle ),
      chess_db_handle( orig, CdbHs, OrigHandle ),
@@ -357,19 +357,19 @@ chess_db_games_add( [G|Gs], Gid, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, Xid ) 
      chess_db_game_add( Chk, InfoHandle, Info, Moves, Orig, Dly, Bim, Gid, Res, MoveHandle, OrigHandle, IProg, Posi, Rosi, PosiHandle, Nid ),
      chess_db_games_add( Gs, Nid, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, Xid ).
 
-chess_db_debug_info( Info, Pfx ) :-
+chess_db_debug_info( Info, Chnl, Pfx ) :-
      memberchk( 'White'-White, Info ),
      memberchk( 'Black'-Black, Info ),
      atomic_list_concat( [White,vs,Black], ' ', Mess ),
      !,
-     debug( chess_db, '~w: ~w', [Pfx,Mess] ).
-chess_db_debug_info( Info, Pfx ) :-
-     debug( chess_db, '~w: ~w', [Pfx,Info] ).
+     debuc( chess_db(Chnl), '~w: ~w', [Pfx,Mess] ).
+chess_db_debug_info( Info, Chnl Pfx ) :-
+     debuc( chess_db(Chnl), '~w: ~w', [Pfx,Info] ).
 
 chess_db_game_add( true, InfoHandle, Info, _Moves, _Orig, _Dly, _Bim, Gid, _Res, _MoHa, _OrHa, _IProg, _Posi, _Rosi, _PoHa, Gid ) :-
      chess_db_game_info_exists( Info, InfoHandle, ExGid ),
      !, % fixme: add option for erroring
-     debug( chess_db(info), 'Info match existing game: ~d', ExGid ).
+     debuc( chess_db(info), 'Info match existing game: ~d', ExGid ).
 chess_db_game_add( _Chk, InfoHandle, Info, Moves, Orig, Dly, Bim, Gid, Res, MoHa, OrHa, IProg, Posi, Rosi, PoHa, Nid ) :-
      Nid is Gid + 1,
      chess_db_game_add_info( InfoHandle, Info, Nid ),
@@ -387,7 +387,7 @@ chess_db_game_add( _Chk, InfoHandle, Info, Moves, Orig, Dly, Bim, Gid, Res, MoHa
      ),
      maplist( atom_codes, OrigAtms, Orig ),
      atomic_list_concat( OrigAtms, '\n', OrigAtm ),
-     debug( chess_db(original), '~a', OrigAtm ),
+     debuc( chess_db(original), '~a', OrigAtm ),
      chess_db_inc_id( InfoHandle, Nid ),
      ( (Nid mod IProg) =:= 0 ->
                DbcOpts = [check_point(added_id(Nid)),comment(false)],

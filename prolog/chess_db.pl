@@ -286,6 +286,8 @@ Listens to:
      trigger light reporting across the library
   * chess_db(stats)
      reports stats of progress points as readable terms via pack(debug_call) debugoal =|stats|=.
+  * chess_db(game)
+     reports which game is asserted
   * chess_db(move)
   * chess_db(moves)
   * chess_db(original)
