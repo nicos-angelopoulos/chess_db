@@ -15,8 +15,7 @@ pgn_game_lengths_defaults( Defs ) :-
                               Defs  =  [
                                              debug(true),
                                              output(file),
-                                             % incr(false),
-                                             % output(terminal),
+                                             incr(true),
                                              postfix(glens),
                                              sep('_')
                                        ].
@@ -46,7 +45,7 @@ Opts
     help messsage and exit
   * incr(Incr=true)
     as in os_chess/2 option. The default here is true, as this script 
-    needs the chess_db/2 machinery more, in that case.
+    needs the chess_db/2 machinery more.
   * output(Out=file)
     could also use =|terminal|=
   * postfix(Psx=glens)
@@ -55,6 +54,8 @@ Opts
     separator for postfix (see os_postfix/3)
   * usage(Usg=false)
     usage message and exit
+
+Opts are passed to chess_db/2.
 
 Examples
 ==
@@ -94,14 +95,14 @@ pgn_game_lengths_opts( true, Self, Omt, Oses, Opts ) :-
 % pgn_game_lengths_os( terminal, Self, _Opts, Os ) :-
 pgn_game_lengths_os( terminal, Self, _Opts, Os ) :-
      debuc( Self, 'Doing: ~p (terminal output)', Os ),
-     CdbOpts = [incr(false),goal(pgn_games_length),goal_iter([]),goal_return(Rtn)],
+     CdbOpts = [goal(pgn_games_length),goal_iter([]),goal_return(Rtn)|Opts],
      debuc( Self, 'Calling chess_db/2 options: ~w', [CdbOpts] ),
      chess_db( Os, CdbOpts ),
      write( returned_value:Rtn ), nl.
 pgn_game_lengths_os( file, Self, Opts, Os ) :-
      os_postfix( _, Os, Posted, Opts ),
      debuc( Self, 'Doing: ~p, output on: ~p', [Os,Posted] ),
-     CdbOpts = [incr(false),goal(pgn_games_length),goal_iter([]),goal_return(Rtn)],
+     CdbOpts = [goal(pgn_games_length),goal_iter([]),goal_return(Rtn)|Opts],
      debuc( Self, 'Calling chess_db/2 options: ~w', [CdbOpts] ),
      chess_db( Os, CdbOpts ),
      portray_clauses( [games_moves_freq(Rtn)], [mode(write),file(Posted)] ),
