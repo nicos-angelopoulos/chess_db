@@ -55,6 +55,8 @@ Opts
     postfix for output file, if used
   * sep(Sep='_')
     separator for postfix (see os_postfix/3)
+  * stack_limit(Slm=false)
+    or set to a number (stack limit will be set to Slm Gbs)
   * usage(Usg=false)
     usage message and exit
 
