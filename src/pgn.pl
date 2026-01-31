@@ -355,8 +355,5 @@ pgn_add_originals( Pgns, Orgs, _Pgn ) :-
     throw( failrure_to_match_pgns_and_originals_of_lengths(LenPgns,LenOrgs) ).
 
 pgn_add_originals_1( [], [], [] ).
-pgn_add_originals_1( [Pgn|Pgns], [Orig|Origs], [Ogn|Ogns] ) :-
-    Pgn =.. [Name|Args],
-    append( Args, [Orig], Orgs ),
-    Ogn =.. [Name|Orgs],
+pgn_add_originals_1( [pgn(Info,Move,Res)|Pgns], [Orig|Origs], [pgn(Info,Move,Res,Orig)|Ogns] ) :-
     pgn_add_originals_1( Pgns, Origs, Ogns ).
