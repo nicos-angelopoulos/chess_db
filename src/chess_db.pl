@@ -239,12 +239,15 @@ chess_db_close( true, AbsDb, _CdbHs ) :-
 
 % fixme: Posi+Rosi, should be one arg about which tables+types; Chk/Dly/Bim should be one arg
 chess_db_incr( false, PgnIn, Goal, LaGid, _MxG, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, AbsDb, ArgDb, OptDb, RtGid ) :-
+     debuc( chess_db(true), task(start), 'PGN read-in: ~p', [farg(PgnIn)] ),
      pgn( PgnIn, Pgn ),
+     debuc( chess_db(true), task(stop), 'PGN read-in', [] ),
      DbcOpts = [check_point(start_at_id(LaGid)),comment(false)],
      debuc( chess_db(stats), stat, cputime, DbcOpts ),
      debuc( chess_db(stats), stat, process_cputime, DbcOpts ),
      debuc( chess_db(stats), stat, real_time, DbcOpts ),
      debuc( chess_db(stats), stat, runtime, DbcOpts ),
+     debuc( chess_db(true), task(start), 'Starting with game at no: ~w', [farg(LaGid)] )
      ( Goal == chess_db_games_add ->
           chess_db_games_add( Pgn, LaGid, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, RtGid ),
           ( var(ArgDb) -> ArgDb = AbsDb; true ),
@@ -260,6 +263,7 @@ chess_db_incr( true, PgnIn, Goal, LaGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, 
      debuc( chess_db(stats), stat, process_cputime, DbcOpts ),
      debuc( chess_db(stats), stat, real_time, DbcOpts ),
      debuc( chess_db(stats), stat, runtime, DbcOpts ),
+     debuc( chess_db(true), task(stop), 'Starting with game at no: ~w', [farg(LaGid)] )
      chess_db_incr_stream( Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, RtGid ), 
      close( Pin ),
      % ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
@@ -355,6 +359,7 @@ chess_db_games_add( [G|Gs], Gid, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, Xid ) 
      chess_db_handle( orig, CdbHs, OrigHandle ),
      ( Posi == true -> chess_db_handle( posi, CdbHs, PosiHandle ) ; true ),
      chess_db_game_add( Chk, InfoHandle, Info, Moves, Orig, Dly, Bim, Gid, Res, MoveHandle, OrigHandle, IProg, Posi, Rosi, PosiHandle, Nid ),
+     !,
      chess_db_games_add( Gs, Nid, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, Xid ).
 
 chess_db_debug_info( Info, Chnl, Pfx ) :-
@@ -399,7 +404,7 @@ chess_db_game_add( _Chk, InfoHandle, Info, Moves, Orig, Dly, Bim, Gid, Res, MoHa
                ;
                true
      ),
-     chess_db_table_update( game_orig(Nid,OrigAtm), OrHa).
+     chess_db_table_update_orig( OrHa, Nid, OrigAtm ).
 
 chess_db_game_info_elo( Key, Info, Elo ) :-
      ( memberchk(Key-EloPrv,Info) ->
@@ -448,7 +453,8 @@ chess_db_limos_game_posi( [limo(Ply,_Hmv,Mv,Inpo)|T], Dly, Bim, Gid, ELO, Rex, R
                     ;
                     chess_db_posi_value_create( Rosi, Bim, Gid, ELO, Rex, Mv, Next )
           ),
-          chess_db_table_update( game_posi(Rosi), PosDb, [Inpo,Mv], Next )
+          % chess_db_table_update( game_posi(Rosi), PosDb, [Inpo,Mv], Next )
+          chess_db_table_update_posi( PosDb, Inpo, Next )
      ),
      ( Dly =< Ply -> Rest = []; Rest = T ),
      chess_db_limos_game_posi( Rest, Dly, Bim, Gid, ELO, Rex, Rosi, PosDb ).

@@ -18,10 +18,10 @@ chess_db_holds( game_posi(kvx), Db, Args, Val ) :-
      ( Args = [Key|_] -> true; Args = Key ),
      db_holds( Db, game_posi(Key,Val) ).
 
-chess_db_table_update( game_orig(Gid,Otm), Dbh ) :-
+chess_db_table_update_orig( Dbh, Gid, Otm ) :-
      db_assert( Dbh, game_orig(Gid,Otm), _ ).
 
-chess_db_table_update( game_posi(kvx), Db, [Inpo,_Mv], Next ) :-
+chess_db_table_update_posi( Db, Inpo, Next ) :-
      db_retractall( Db, game_posi(Inpo,_), _ ),
      db_assert( Db, game_posi(Inpo,Next), _ ).
 

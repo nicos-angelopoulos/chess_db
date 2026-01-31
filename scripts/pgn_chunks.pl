@@ -16,7 +16,7 @@
 pgn_chunks_defaults( Defs ) :-
                               Defs = [
                                         debug(true),
-                                        games(100_000),
+                                        games(10_000),
                                         order(sort),
                                         stack_limit(false),
                                         options_types([games-integer,order-oneof([atoms,pgns,sort])])
@@ -27,7 +27,7 @@ pgn_chunks_help( Self ) :-
      debuc( Self, M1, [] ).
 
 pgn_chunks_usage( Self ) :-
-     debuc( Self, 'upsh ~w debug=true games=100_000 [pgn=PgnF1] PgnF2', [Self] ).
+     debuc( Self, 'upsh ~w debug=true games=50_000 [pgn=PgnF1] PgnF2', [Self] ).
 
 /** pgn_chunks(+OptsAndPgns).
 
@@ -41,7 +41,7 @@ Input PGNs can be given as pgn(PGNo) options or as atomic options.
 Opts
   * debug(Dbg=true)
     informational, progress messages
-  * games(NoGames=100_000)
+  * games(NoGames=50_000)
     number of games in each chunk
   * help(Help=false)
     help messsage and exit
@@ -83,6 +83,23 @@ Command line via pack(upsh).
 -rw-r--r-- 1 nicos nicos 4488 Jan 31 13:09 ../data/pgn/18.03-candidates_cnk6.pgn
 ==
 
+==
+> u pgn_chunks.pl lichess_elite_2023-01.pgn stack_limit=12
+> u pgn_chunks.pl lichess_elite_2023-02.pgn stack_limit=8
+% Setting stack limit to: 8000000000
+% Option selected: games(100000).
+% Starting enumeration of list: inputs
+% 1.lichess_elite_2023-02.pgn
+% Ended enumeration of list: inputs
+% Doing: lichess_elite_2023-02.pgn
+% Length of sections: 535014
+% Parts: 3
+% Writing on: 'lichess_elite_2023-02_cnk1.pgn'
+% Writing on: 'lichess_elite_2023-02_cnk2.pgn'
+% Writing on: 'lichess_elite_2023-02_cnk3.pgn'
+% Finished: pgn_chunks
+==
+
 @author nicos angelopoulos
 @version  0.1 2026/01/30
 @see SWI-Prolog packs at: https://eu.swi-prolog.org/pack/list
@@ -98,6 +115,8 @@ pgn_chunks( Args ) :-
 
 pgn_chunks_opts(false, _Self, _FAs, _Opts).
 pgn_chunks_opts( true, Self, FAs, Opts ) :-
+     options( stack_limit(Slm), Opts ),
+     pgn_chunks_stack_limit( Slm, Self ),
      options( games(Games), Opts ),
      debuc( Self, option, games(Games) ),
      findall( FP, member(pgn(FP),Opts), FPs ),
@@ -155,3 +174,10 @@ pgn_chunks_pgns( sort, FAs, FPs, Fs ) :-
 pgn_chunks_pgns( pgns, FAs, FPs, Fs ) :-
      append( FAs, FPs, FLs ),
      sort( FLs, Fs ).
+
+pgn_chunks_stack_limit( false, Self ) :-
+     debuc( Self, 'No change to stack limit.', true ).
+pgn_chunks_stack_limit( Gbs, Self ) :-
+     Lim is Gbs * 10 ^ 9,
+     debuc( Self, 'Setting stack limit to: ~w', [Lim] ),
+     set_prolog_flag( stack_limit, Lim ).
