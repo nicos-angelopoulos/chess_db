@@ -347,12 +347,12 @@ pgn_original_till_next_ahead( Line, In, Ahead, Next, [Line|Lines] ) :-
     % pgn_original_till_next( Next, In, Ends, T ).
 
 pgn_add_originals( Pgns, Origs, Pgn ) :-
+    pgn_add_originals_1( Pgns, Origs, Pgn ),
+    !.
+pgn_add_originals( Pgns, Origs, Pgn ) :-
     length( Pgns, LenPgns ),
     length( Origs, LenOrigs ),
-    ( LenPgns =:= LenOrigs -> true; 
-                throw(pgns_originals_length_mismatch(LenPgns,LenOrigs) )
-    ),
-    pgn_add_originals_1( Pgns, Origs, Pgn ).
+    throw( failrure_to_match_pgns_and_originals_of_lengths(LenPgns,LenOrgs) ).
 
 pgn_add_originals_1( [], [], [] ).
 pgn_add_originals_1( [Pgn|Pgns], [Orig|Origs], [Ogn|Ogns] ) :-
