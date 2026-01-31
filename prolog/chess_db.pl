@@ -453,4 +453,4 @@ documentation
 true.
 ==
 */
-chess_db_version(1:0:2, date(2025,12,8)).   % switched implementation of chess_dict_inpo/2
+chess_db_version(1:0:3, date(2026,1,31)).
