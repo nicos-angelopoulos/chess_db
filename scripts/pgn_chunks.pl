@@ -11,7 +11,7 @@
 :- lib(stoics_lib:io_sections/3).
 :- lib(stoics_lib:n_digits_min/3).
 
-:- set_prolog_flag(stack_limit, 16_589_934_592).
+% :- set_prolog_flag(stack_limit, 16_589_934_592).
 
 pgn_chunks_defaults( Defs ) :-
                               Defs = [
