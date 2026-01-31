@@ -2,7 +2,8 @@
 --------------------
 
 1.1
-     26.01.28  CHANGE:   position atom ecoding is now as an atom of Hex digits
+     26.01.31  SCRIPT:   pgn_chunks.pl
+     26.01.28  CHANGE:   position atom encoding is now as an atom of Hex digits
                FIXED:    two bugs in translating dict to position (black pawn and king)
      26.01.27  OPT:      check_game_exists()
      26.01.26  CHANGE:   moves table no longer stores the last empty ([]) move

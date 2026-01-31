@@ -47,8 +47,6 @@ Opts
   * incr(Incr=true)
     as in os_chess/2 option. The default here is true, as this script 
     needs the chess_db/2 machinery more.
-  * stack_limit(Mem=false)
-    or give an integer, to set the stack memory in GB
   * output(Out=file)
     could also use =|terminal|=
   * postfix(Psx=glens)
@@ -77,6 +75,14 @@ Examples
 % Wrote on file: '/home/nicos/pl/packs/src/chess_db/data/pgn/18.03-candidates_glens.pgn'
 % Finished: pgn_game_lengths
 
+> upsh pgn_game_lengths.pl lichess_elite_2023-01.pgn incr=false
+ERROR: Stack limit (3.9Gb) exceeded
+ERROR:   Stack sizes: local: 5Kb, global: 2.8Gb, trail: 0.3Gb
+ERROR:   Stack depth: 268,715, last-call: 100%, Choice points: 12
+...
+ERROR: ?- set_prolog_flag(stack_limit, 8_294_967_296). to double the limit.
+
+> u pgn_game_lengths.pl lichess_elite_2023-01.pgn incr=false stack_limit=16
 ==
 
 @author nicos angelopoulos
