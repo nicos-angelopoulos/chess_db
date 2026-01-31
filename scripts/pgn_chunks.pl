@@ -49,7 +49,7 @@ Opts
     or one of =|atoms,pgns|= for giving priority
   * pgn(PgnF)
     PGN file to chunkify (multiple are allowed)
-  * stack_limit(false)
+  * stack_limit(Slm=false)
     set the stack_limit prolog flag (set integer which will be translated to Gigabytes)
   * usage(Usg=false)
     usage message and exit
@@ -67,7 +67,20 @@ Command line via pack(upsh).
 > upsh pgn_chunks usage=true
 
 > upsh pgn_chunks ../data/pgns/18.03-candidates.pgn games=10
+% Writing on: '../data/pgn/18.03-candidates_cnk1.pgn'
+% Writing on: '../data/pgn/18.03-candidates_cnk2.pgn'
+% Writing on: '../data/pgn/18.03-candidates_cnk3.pgn'
+% Writing on: '../data/pgn/18.03-candidates_cnk4.pgn'
+% Writing on: '../data/pgn/18.03-candidates_cnk5.pgn'
+% Writing on: '../data/pgn/18.03-candidates_cnk6.pgn'
 
+> ls -l ../data/pgns/*cnk*
+-rw-r--r-- 1 nicos nicos 7349 Jan 31 13:09 ../data/pgn/18.03-candidates_cnk1.pgn
+-rw-r--r-- 1 nicos nicos 7446 Jan 31 13:09 ../data/pgn/18.03-candidates_cnk2.pgn
+-rw-r--r-- 1 nicos nicos 8396 Jan 31 13:09 ../data/pgn/18.03-candidates_cnk3.pgn
+-rw-r--r-- 1 nicos nicos 7170 Jan 31 13:09 ../data/pgn/18.03-candidates_cnk4.pgn
+-rw-r--r-- 1 nicos nicos 8525 Jan 31 13:09 ../data/pgn/18.03-candidates_cnk5.pgn
+-rw-r--r-- 1 nicos nicos 4488 Jan 31 13:09 ../data/pgn/18.03-candidates_cnk6.pgn
 ==
 
 @author nicos angelopoulos
