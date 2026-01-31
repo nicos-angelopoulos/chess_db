@@ -74,7 +74,7 @@ Command line via pack(upsh).
 % Writing on: '../data/pgn/18.03-candidates_cnk5.pgn'
 % Writing on: '../data/pgn/18.03-candidates_cnk6.pgn'
 
-> ls -l ../data/pgns/*cnk*
+> ls -l ../data/pgns/18*cnk*
 -rw-r--r-- 1 nicos nicos 7349 Jan 31 13:09 ../data/pgn/18.03-candidates_cnk1.pgn
 -rw-r--r-- 1 nicos nicos 7446 Jan 31 13:09 ../data/pgn/18.03-candidates_cnk2.pgn
 -rw-r--r-- 1 nicos nicos 8396 Jan 31 13:09 ../data/pgn/18.03-candidates_cnk3.pgn
