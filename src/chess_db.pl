@@ -209,7 +209,7 @@ chess_db( PgnIn, ArgDb, Args ) :-
      chess_db_close( Close, AbsDb, CdbHs ),
      options( goal_return(RtGid), Opts ).
 
-chess_db_set_up_handles( chess_db_games_add, Gitr, PgnIn, AbsDb, ArgDb, OptDb, ActDb, CdbHs, Opts ) :-
+chess_db_set_up_handles( chess_db_games_add, Gitr, PgnIn, AbsDb, ArgDb, OptDb, Db, CdbHs, Opts ) :-
      !,
      ( memberchk(db(OptDb),Opts) -> true; true ),
      ( ground(ArgDb) -> PrvDb = ArgDb; PrvDb = OptDb ),
