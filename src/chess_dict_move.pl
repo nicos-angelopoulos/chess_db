@@ -533,7 +533,7 @@ chess_dict_move_possible( 6, _Dict, ToPos, FromPos, Diff ) :-
     !.
 
 % pawn takes
-chess_dict_move_pawn( FromC, [0'x,BegC,NumC], DictI, _Move, AtErr, Turn, _ConstrI, DictO ) :-
+chess_dict_move_pawn( FromC, [0'x,BegC,NumC], DictI, _Move, Turn, AtErr, _ConstrI, DictO ) :-
     0'a =< FromC, FromC =< 0'h,
     !,
     chess_codes_pos( BegC, NumC, EndPos ),
