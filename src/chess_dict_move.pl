@@ -2,13 +2,15 @@
 :- lib(chess_dict_pos_coord/3).
 :- lib(chess_dict_piece/3).
 
-/** chess_dict_move( +Move, +DictI, ?Turn, -DictO ).
-    chess_dict_move( +Move, +DictI, -DictO ).
+/** chess_dict_move( +Move, +DictI, +AtErr, ?Turn, -DictO ).
+    chess_dict_move( +Move, +DictI, +AtErr, -DictO ).
 
 Enact Move and Turn in dictionary board DictI into new chess position DictO.
 
 When Turn is given as a variable then it is instantiated to the move turn (DictI.0) in the dictionary), if it is non var/1, then it is 
-checked against turn in DictI- throwing a ball if they do not match.
+checked against turn in DictI- failing or throwing a ball if they do not match, depending on the value of AtErr.
+
+AtErr should be either =|fail|= or =|error|=.
 
 ==
 ?- chess_dict_start_board(Start), chess_dict_move(e4,Start,0,Mid), chess_dict_move('Nc6',Mid,1,End).
@@ -36,20 +38,20 @@ Two = board{0:0, 1:4, 2:1, 3:0, 4:0, 5:0, 6:0, 7:7, 8:10, 9:2, 10:1, 11:0, 12:0,
 @version  0:1 2020/03/27
 
 */
-chess_dict_move( Move, DictI, DictO ) :- 
-    chess_dict_move( Move, DictI, DictI.0, DictO ).
+chess_dict_move( Move, DictI, AtErr, DictO ) :- 
+    chess_dict_move( Move, DictI, AtErr, DictI.0, DictO ).
 
-chess_dict_move( Move, DictI, Turn, DictO ) :-
+chess_dict_move( Move, DictI, AtErr, Turn,  DictO ) :-
     debug( chess_db(move), 'Move: ~w', [Move] ),
     Durn = DictI.0,
     ( var(Turn) -> 
         Turn = Durn
         ;
-        ( Durn =:= Turn -> true; throw(turn_mismatch(Durn,Turn)) )
+        ( Durn =:= Turn -> true; (AtErr == fail -> false; throw(turn_mismatch(Durn,Turn))) )
     ),
     !,
     put_dict( eps, DictI, 0, DictJ ),
-    (chess_dict_move_1(Move,DictJ,Turn,DictM) -> true; throw(failed_on_move(Move,Turn,DictJ)) ),
+    (chess_dict_move_1(Move,DictJ,Turn,AtErr,DictM) -> true; (AtErr == fail -> false; throw(failed_on_move(Move,Turn,DictJ))) ),
     chess_dict_fmv_inc( DictM, DictO ).
     /*
     ( Turn =:= 1 -> 
@@ -60,12 +62,12 @@ chess_dict_move( Move, DictI, Turn, DictO ) :-
     ).
     */
 
-chess_dict_move_1( MoveCheck, DictI, Turn, DictO ) :- 
+chess_dict_move_1( MoveCheck, DictI, Turn, AtErr, DictO ) :- 
     ( atom_concat( Move, '+', MoveCheck ) ;
       atom_concat( Move, '#', MoveCheck ) ),
     !,
-    chess_dict_move_1( Move, DictI, Turn, DictO ).
-chess_dict_move_1( 'O-O', DictI, Turn, DictP ) :- 
+    chess_dict_move_1( Move, DictI, Turn, AtErr, DictO ).
+chess_dict_move_1( 'O-O', DictI, Turn, _AtErr, DictP ) :- 
     !,
     chess_dict_move_castle_short( Turn, DictI, DictJ ),
     ( Turn =:= 0 ->
@@ -78,8 +80,7 @@ chess_dict_move_1( 'O-O', DictI, Turn, DictP ) :-
         put_dict( cbq, DictK, 0, DictO )
     ),
     chess_dict_hmv_inc( DictO, DictP ).
-
-chess_dict_move_1( 'O-O-O', DictI, Turn, DictP ) :- 
+chess_dict_move_1( 'O-O-O', DictI, Turn, _AtErr, DictP ) :- 
     !,
     chess_dict_move_castle_long( Turn, DictI, DictJ ),
     ( Turn =:= 0 ->
@@ -93,7 +94,7 @@ chess_dict_move_1( 'O-O-O', DictI, Turn, DictP ) :-
     ),
     chess_dict_hmv_inc( DictO, DictP ).
 % pawn.promotion
-chess_dict_move_1( Move, DictI, Turn, DictO ) :- 
+chess_dict_move_1( Move, DictI, Turn, _AtErr, DictO ) :- 
     atomic_list_concat( [Left,Right], '=', Move ),
     !,
     chess_algebraic_turn_piece( Right, Turn, NewPiece ),
@@ -113,20 +114,20 @@ chess_dict_move_1( Move, DictI, Turn, DictO ) :-
         put_dict( hmv, DictK, 0, DictO )
     ).
 % pawn.normal
-chess_dict_move_1( Move, DictI, Turn, DictO ) :- 
+chess_dict_move_1( Move, DictI, Turn, AtErr, DictO ) :- 
     % polymorphic DictO -> if same as Dict1 use destructive assignment
     atom_codes( Move, [BegC|Cs] ),
     BegC > 96,
     !,
-    chess_dict_move_pawn( BegC, Cs, DictI, Move, Turn, true, DictO ).
+    chess_dict_move_pawn( BegC, Cs, DictI, Move, Turn, AtErr, true, DictO ).
 % piece
-chess_dict_move_1( Move, DictI, Turn, DictO ) :- 
+chess_dict_move_1( Move, DictI, Turn, AtErr, DictO ) :- 
     atom_codes( Move, [PieceC,BegC|Cs] ),
     PieceC < 97,
     !,
-    chess_dict_move_piece( PieceC, BegC, Cs, DictI, Move, Turn, true, DictO ).
-chess_dict_move_1( Move, _DictI, _Turn, _DictO ) :- 
-    throw( unimplemented_move(Move) ).
+    chess_dict_move_piece( PieceC, BegC, Cs, DictI, Move, Turn, AtErr, true, DictO ).
+chess_dict_move_1( Move, _DictI, _Turn, AtErr,  _DictO ) :- 
+    ( AtErr == fail -> fail; throw(unimplemented_move(Move)) ).
 
 % short Castle white
 chess_dict_move_castle_short( 0, DictI, DictO ) :-
@@ -163,7 +164,7 @@ chess_dict_move_castle_long( 1, DictI, DictO ) :-
     chess_dict_move_piece_from_to( DictM,  8-10, 32-10, true, DictO ).
 
 % piece, base case: letter + square; Rc5
-chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, Constr, DictO ) :-
+chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, AtErr, Constr, DictO ) :-
     BegC > 96,
     0'0 =< NumC,
     NumC =< 0'9,
@@ -181,10 +182,10 @@ chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, Constr, DictO ) 
         % chess_dict_flip_turn_from( DictM, Turn, DictO )
         chess_dict_hmv_inc( DictN, DictO )
         ;
-        throw( non_unique_starts_1(Starts,Move) )
+        ( AtErr == fail -> fail; throw( non_unique_starts_1(Starts,Move)) )
     ).
 % Nce4, N3e4
-chess_dict_move_piece( PieceC, DscC, [BegC,NumC], DictI, _Move, Turn, Constr, DictO ) :-
+chess_dict_move_piece( PieceC, DscC, [BegC,NumC], DictI, _Move, Turn, AtErr, Constr, DictO ) :-
     DscC =\= 0'x,  % avoid Rxd3
     BegC > 96,
     0'0 =< NumC,
@@ -209,7 +210,7 @@ chess_dict_move_piece( PieceC, DscC, [BegC,NumC], DictI, _Move, Turn, Constr, Di
             ;
             atom_codes( ToSqr, [BegC,NumC] ),
             atom_codes( PieceAtm, [PieceC] ),
-            throw( non_unique_starts_2(Starts,ToSqr,PieceAtm,DictI) )
+            ( AtErr == fail -> fail; throw(non_unique_starts_2(Starts,ToSqr,PieceAtm,DictI)) )
         )
     ).
     /**
@@ -227,27 +228,27 @@ chess_dict_move_piece( PieceC, FmCC, [FmRC,ToCC,ToRC], DictI, _Move, Turn, Const
 */
 
 % 'Qf8e7' -> from a game with 3 white queens on board: https://lichess.org/RBSi3ZQC
-chess_dict_move_piece( PieceC, FmCC, [FmRC,NxC|Rodes], DictI, Move, Turn, _ConstrIn, DictO ) :-
+chess_dict_move_piece( PieceC, FmCC, [FmRC,NxC|Rodes], DictI, Move, Turn, AtErr, _ConstrIn, DictO ) :-
     FmCC > 96,     % from column code: 0'a-0'h
     0'0 =< FmRC,   % from row code: 0'1-0'8
     FmRC =< 0'9,
     !,
     chess_dict_pos_coord_codes( FmSqPos, FmCC, FmRC ),
     Constr = =:=(FmSqPos),
-    chess_dict_move_piece( PieceC, NxC, Rodes, DictI, Move, Turn, Constr, DictO ).
+    chess_dict_move_piece( PieceC, NxC, Rodes, DictI, Move, Turn, AtErr, Constr, DictO ).
      
 % Ncxe4, N3xe4
-chess_dict_move_piece( PieceC, DscC, [0'x,BegC,NumC], DictI, Move, Turn, Constr, DictO ) :-
+chess_dict_move_piece( PieceC, DscC, [0'x,BegC,NumC], DictI, Move, Turn, AtErr, Constr, DictO ) :-
     !,
-    chess_dict_move_piece( PieceC, DscC, [BegC,NumC], DictI, Move, Turn, Constr, DictM ),
+    chess_dict_move_piece( PieceC, DscC, [BegC,NumC], DictI, Move, Turn, AtErr, Constr, DictM ),
     put_dict( hmv, DictM, 0, DictO ).
 % piece takes: Rxd3
-chess_dict_move_piece( PieceC, 0'x, [BegC,NumC], DictI, Move, Turn, Constr, DictO ) :-
+chess_dict_move_piece( PieceC, 0'x, [BegC,NumC], DictI, Move, Turn, AtErr, Constr, DictO ) :-
     !,
-    chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, Constr, DictM ),
+    chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, AtErr, Constr, DictM ),
     put_dict( hmv, DictM, 0, DictO ).
 %? 
-chess_dict_move_piece( PieceC, FromC, [BegC,NumC], DictI, Move, Turn, _ConstrIn, DictO ) :-
+chess_dict_move_piece( PieceC, FromC, [BegC,NumC], DictI, Move, Turn, AtErr, _ConstrIn, DictO ) :-
     % fixme: check ConstrIn is = true
     BegC > 96,
     0'0 =< NumC,
@@ -261,7 +262,7 @@ chess_dict_move_piece( PieceC, FromC, [BegC,NumC], DictI, Move, Turn, _ConstrIn,
         atom_codes( FromCol, [FromC] ),
         Constr = on_col(FromCol)
     ),
-    chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, Constr, DictO ).
+    chess_dict_move_piece( PieceC, BegC, [NumC], DictI, Move, Turn, AtErr, Constr, DictO ).
 
 chess_piece_code_turn( Code, Turn, Piece ) :-
     chess_piece_code_turn( Code, PiecePrv ),
@@ -328,6 +329,7 @@ chess_dict_move_pin( Board, End, Start ) :-
      ( KingPoss = [KingPos] ->
           true
           ;
+          % fixme allow for failure ? alternative
           throw( too_many_kings(Board,KingPoss) )
      ),
      % NEW approach
@@ -531,19 +533,19 @@ chess_dict_move_possible( 6, _Dict, ToPos, FromPos, Diff ) :-
     !.
 
 % pawn takes
-chess_dict_move_pawn( FromC, [0'x,BegC,NumC], DictI, _Move, Turn, _ConstrI, DictO ) :-
+chess_dict_move_pawn( FromC, [0'x,BegC,NumC], DictI, _Move, AtErr, Turn, _ConstrI, DictO ) :-
     0'a =< FromC, FromC =< 0'h,
     !,
     chess_codes_pos( BegC, NumC, EndPos ),
     % chess_piece_pawn_turn( Turn, Pawn ),
-    chess_dict_move_pawn_takes( Turn, FromC, EndPos, DictI, DictJ ),
+    chess_dict_move_pawn_takes( Turn, AtErr, FromC, EndPos, DictI, DictJ ),
     % chess_dict_hmv_inc( DictJ, 1, DictK ),
     % chess_dict_fmv_inc( DictJ, DictL ),
     put_dict( hmv, DictJ, 0, DictM ),
     put_dict( eps, DictM, 0, DictO ).
     % chess_dict_flip_turn_from( DictN, Turn, DictO ).
 % pawn push
-chess_dict_move_pawn( BegC, [NumC], DictI, Move, Turn, Constr, DictO ) :-
+chess_dict_move_pawn( BegC, [NumC], DictI, Move, Turn, AtErr, Constr, DictO ) :-
     0'0 =< NumC,
     NumC =< 0'9,
     !,
@@ -570,12 +572,12 @@ chess_dict_move_pawn( BegC, [NumC], DictI, Move, Turn, Constr, DictO ) :-
             % chess_dict_hmv_inc( DictJ, 0, DictK )
             % chess_dict_flip_turn_from( DictL, Turn, DictO )
             ;
-            throw( cannot_find_pawn_to_move_to(Move) )
+            ( AtErr == fail -> fail; throw(cannot_find_pawn_to_move_to(Move)) )
         )
     ).
     % put_dict( lwt, DictO, 0, DictP ).
 
-chess_dict_move_pawn_takes( 0, FromC, EndPos, DictI, DictP ) :-
+chess_dict_move_pawn_takes( 0, AtErr, FromC, EndPos, DictI, DictP ) :-
     Pawn = 1,
     ColMax is (FromC - 0'a) * 8,
     ( EndPos > ColMax -> SrcPos is EndPos - 9; SrcPos is EndPos + 7 ),
@@ -585,14 +587,14 @@ chess_dict_move_pawn_takes( 0, FromC, EndPos, DictI, DictP ) :-
         ; % throw(no_en_passe_yet(EndPos,SrcPos,0)) 
         RemPos is EndPos - 1,
         ( DictI.RemPos =\= 7 -> 
-            throw( messed_up_en_passant(DictI.RemPos,EndPos,SrcPos) )
+            ( AtErr == fail -> fail; throw( messed_up_en_passant_1(DictI.RemPos,EndPos,SrcPos) ) )
             ;
             chess_dict_move_piece_from_to( DictI, SrcPos-Pawn, EndPos-Pawn, RemPos, DictO )
             % throw(no_en_passe_yet(EndPos,SrcPos,0)) 
         )
     ),
     put_dict( lwt, DictO, 1, DictP ).
-chess_dict_move_pawn_takes( 1, FromC, EndPos, DictI, DictO ) :-
+chess_dict_move_pawn_takes( 1, AtErr, FromC, EndPos, DictI, DictO ) :-
     Pawn = 7,
     ColMax is (FromC - 0'a) * 8,
     ( EndPos > ColMax -> SrcPos is EndPos - 7; SrcPos is EndPos + 9),
@@ -602,7 +604,7 @@ chess_dict_move_pawn_takes( 1, FromC, EndPos, DictI, DictO ) :-
         ; 
         RemPos is EndPos + 1,
         ( DictI.RemPos =\= 1 -> 
-            throw( messed_up_en_passant(DictI.RemPos,EndPos,SrcPos) )
+            ( AtErr == fail -> fail; throw(messed_up_en_passant(DictI.RemPos,EndPos,SrcPos)) )
             ;
             chess_dict_move_piece_from_to( DictI, SrcPos-Pawn, EndPos-Pawn, RemPos, DictO )
         )

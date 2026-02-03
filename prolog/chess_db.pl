@@ -22,7 +22,7 @@
                         chess_dict_start_board/1 ,              % -Brd
                         chess_dict_inpo/2,                      % ?Brd, ?Inpo
                         chess_pgn_limos/2,                      % +PgnTerm, -Limos
-                        chess_dict_move/3,chess_dict_move/4,    % +Move, +DictI, [+Turn,] -DictO
+                        chess_dict_move/4,chess_dict_move/5,    % +Move, +DictI, +AtErr, [+Turn,] -DictO
                         chess_dict_piece/3,                     % +DictPiece, +Colour, +Piece
                         chess_annotate_freq/3,                  % +Pgn, +CheDbLoc, +Args
                         chess_fen_square/2,                     % ?Fen, ?Sqr
@@ -171,7 +171,7 @@ The pack includes code to:
   * interact
      with the resulting databases: chess_db_game_info/3, chess_db_opening_pgn/2
   * dictionary 
-     representation of chess games: chess_dict_start_board/1, chess_dict_move/3
+     representation of chess games: chess_dict_start_board/1, chess_dict_move/4
   * integer 
     representation of game positions: chess_dict_inpo/2
   * logic
@@ -382,7 +382,7 @@ whose move it is, ply move and half moves since last take.
 See: 
   * chess_dict/0 (doc predicate),
   * chess_dict_start_board/1 gets the starting board
-  * chess_dict_move/3 enact a move on a board
+  * chess_dict_move/4 enact a move on a board
   * chess_dict_piece/3 tabulates numeric id of piece to colour and piece name (atoms)
 
 ---+++ Inpos

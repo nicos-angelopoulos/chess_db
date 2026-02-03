@@ -29,14 +29,14 @@ chess_pgn_moves_limos( [move(_, WhMv, BlMv,_,_)|T], Ply, Board, Limos ) :-
     chess_dict_inpo( Board, WhInpo ),
     Bly is Ply + 1,
     % ( WhMv == 'R8d7' -> trace; true ),
-    chess_dict_move( WhMv, Board, Woard ),
+    chess_dict_move( WhMv, Board, fail, Woard ),
     Wimo = limo(Ply,Woard.hmv,WhMv,WhInpo),
     ( BlMv == [] ->
         Fly is Bly, Noard = Woard,
         Limos = [Wimo|Timos]
         ;
         chess_dict_inpo( Woard, BlInpo ),
-        chess_dict_move( BlMv, Woard, Noard ),
+        chess_dict_move( BlMv, Woard, fail, Noard ),
         Bimo = limo(Bly,Noard.hmv,BlMv,BlInpo),
         Limos = [Wimo,Bimo|Timos],
         Fly is Bly + 1

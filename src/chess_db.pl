@@ -379,36 +379,40 @@ chess_db_game_add( true, InfoHandle, Info, _Moves, _Orig, _Dly, _Bim, _ArgDb, Gi
      !, % fixme: add option for erroring
      debuc( chess_db(info), 'Info match existing game: ~d', ExGid ).
 chess_db_game_add( _Chk, InfoHandle, Info, Moves, Orig, Dly, Bim, ArgDb, Gid, Res, MoHa, OrHa, IProg, Posi, Rosi, PoHa, Nid ) :-
-     Nid is Gid + 1,
-     chess_db_game_add_info( InfoHandle, Info, Nid ),
      chess_dict_start_board( Start ),
-     chess_pgn_moves_limos( Moves, 1, Start, Limos ),
-     chess_db_limos_game_moves( MoHa, Nid, Limos ),
-     ( Posi == true ->
-          chess_db_res_index( Res, Rex ),
-          chess_db_game_info_elo( 'WhiteElo', Info, WhiteELO ),
-          chess_db_game_info_elo( 'BlackElo', Info, BlackELO ),
-          ELO is WhiteELO + BlackELO,
-          chess_db_limos_game_posi( Limos, Dly, Bim, Nid, ELO, Rex, Rosi, PoHa )
-          ;
-          true
-     ),
-     maplist( atom_codes, OrigAtms, Orig ),
-     atomic_list_concat( OrigAtms, '\n', OrigAtm ),
-     debuc( chess_db(original), '~a', OrigAtm ),
-     chess_db_inc_id( InfoHandle, Nid ),
-     ( (Nid mod IProg) =:= 0 ->
-               DbcOpts = [check_point(added_id(Nid)),comment(false)],
-               debuc( chess_db(stats), stat, cputime, DbcOpts ),
-               debuc( chess_db(stats), stat, process_cputime, DbcOpts ),
-               debuc( chess_db(stats), stat, real_time, DbcOpts ),
-               debuc( chess_db(stats), stat, runtime, DbcOpts ),
-               debuc( chess_db(stats), duh, ArgDb, [sub(true)|DbcOpts] ),
-               debuc( chess_db(true), task(stop), 'Added game no: ~d', [farg(Nid)] )
+     ( chess_pgn_moves_limos(Moves, 1, Start, Limos) ->
+          Nid is Gid + 1,
+          chess_db_game_add_info( InfoHandle, Info, Nid ),
+          chess_db_limos_game_moves( MoHa, Nid, Limos ),
+          ( Posi == true ->
+               chess_db_res_index( Res, Rex ),
+               chess_db_game_info_elo( 'WhiteElo', Info, WhiteELO ),
+               chess_db_game_info_elo( 'BlackElo', Info, BlackELO ),
+               ELO is WhiteELO + BlackELO,
+               chess_db_limos_game_posi( Limos, Dly, Bim, Nid, ELO, Rex, Rosi, PoHa )
                ;
                true
-     ),
-     chess_db_table_update_orig( OrHa, Nid, OrigAtm ).
+          ),
+          maplist( atom_codes, OrigAtms, Orig ),
+          atomic_list_concat( OrigAtms, '\n', OrigAtm ),
+          debuc( chess_db(original), '~a', OrigAtm ),
+          chess_db_inc_id( InfoHandle, Nid ),
+          ( (Nid mod IProg) =:= 0 ->
+                    DbcOpts = [check_point(added_id(Nid)),comment(false)],
+                    debuc( chess_db(stats), stat, cputime, DbcOpts ),
+                    debuc( chess_db(stats), stat, process_cputime, DbcOpts ),
+                    debuc( chess_db(stats), stat, real_time, DbcOpts ),
+                    debuc( chess_db(stats), stat, runtime, DbcOpts ),
+                    debuc( chess_db(stats), duh, ArgDb, [sub(true)|DbcOpts] ),
+                    debuc( chess_db(true), task(stop), 'Added game no: ~d', [farg(Nid)] )
+                    ;
+                    true
+          ),
+          chess_db_table_update_orig( OrHa, Nid, OrigAtm )
+          ;
+          debuc( chess_db(true), task(stop), 'Failed to find moves for game no: ~d', [farg(Gid)] ),
+          Nid = Gid
+     ).
 
 chess_db_game_info_elo( Key, Info, Elo ) :-
      ( memberchk(Key-EloPrv,Info) ->
