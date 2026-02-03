@@ -176,7 +176,7 @@ chess_db( PgnIn, ArgDb, Args ) :-
      options( position_type(Rosi), Opts ),
      options( goal(Goal), Opts ),
      options( goal_iter(Gitr), Opts ),
-     chess_db_set_up_handles( Goal, Gitr, PgnIn, AbsDb, ArgDb, OptDb, CdbHs, Opts ),
+     chess_db_set_up_handles( Goal, Gitr, PgnIn, AbsDb, ArgDb, OptDb, ActDb, CdbHs, Opts ),
      options( handles(CdbHs), Opts ),
      options( incr(Incr), Opts ),
      options( progress(IProg), Opts ),
@@ -196,19 +196,20 @@ chess_db( PgnIn, ArgDb, Args ) :-
      debuc( chess_db(true), task(start), 'PGN load from: ~w', [farg(PgnIn),pred(chess_db/2)] ),
      debuc( chess_db(true), option, incr(Incr), pred(chess_db/2) ),
      debug( chess_db(stats), 'Stats channel is on.', [] ),
-     chess_db_incr( Incr, PgnIn, Goal, Gitr, OfG, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, AbsDb, ArgDb, OptDb, RtGid ),
+     % fixme: maybe we only need ActDb without Abs and more certainly OptDb
+     chess_db_incr( Incr, PgnIn, Goal, Gitr, OfG, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, AbsDb, ActDb, OptDb, RtGid ),
      DbcOpts = [check_point(finished_at_id(RtGid)),comment(false)],
      debuc( chess_db(stats), stat, cputime, DbcOpts ),
      debuc( chess_db(stats), stat, process_cputime, DbcOpts ),
      debuc( chess_db(stats), stat, real_time, DbcOpts ),
      debuc( chess_db(stats), stat, runtime, DbcOpts ),
-     debuc( chess_db(stats), duh, ArgDb, [sub(true)|DbcOpts] ),
+     debuc( chess_db(stats), duh, ActDb, [sub(true)|DbcOpts] ),
      % debuc( chess_db(stats), stat, system_time, DbcOpts ),
      options( close(Close), Opts ),
      chess_db_close( Close, AbsDb, CdbHs ),
      options( goal_return(RtGid), Opts ).
 
-chess_db_set_up_handles( chess_db_games_add, Gitr, PgnIn, AbsDb, ArgDb, OptDb, CdbHs, Opts ) :-
+chess_db_set_up_handles( chess_db_games_add, Gitr, PgnIn, AbsDb, ArgDb, OptDb, ActDb, CdbHs, Opts ) :-
      !,
      ( memberchk(db(OptDb),Opts) -> true; true ),
      ( ground(ArgDb) -> PrvDb = ArgDb; PrvDb = OptDb ),
@@ -228,10 +229,11 @@ chess_db_set_up_handles( chess_db_games_add, Gitr, PgnIn, AbsDb, ArgDb, OptDb, C
      options( handles(CdbHs), Opts ),
      chess_db_handle( info, CdbHs, InfoHandle ),
      chess_db_max_id( InfoHandle, Gitr ).
-chess_db_set_up_handles( _Goal, _Gitr, _PgnIn, AbsDb, ArgDb, OptDb, CdbHs, _Opts ) :-
+chess_db_set_up_handles( _Goal, _Gitr, _PgnIn, AbsDb, ArgDb, OptDb, ActDb, CdbHs, _Opts ) :-
      AbsDb = null,
      ArgDb = null,
      OptDb = null,
+     ActDb = null,
      CdbHs = null.
 
 chess_db_close(false, _AbsDb, _CdbHs).
@@ -239,7 +241,7 @@ chess_db_close( true, AbsDb, _CdbHs ) :-
      chess_db_disconnect( AbsDb ).
 
 % fixme: Posi+Rosi, should be one arg about which tables+types; Chk/Dly/Bim should be one arg
-chess_db_incr( false, PgnIn, Goal, LaGid, _MxG, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, AbsDb, ArgDb, OptDb, RtGid ) :-
+chess_db_incr( false, PgnIn, Goal, LaGid, _MxG, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, AbsDb, ActDb, OptDb, RtGid ) :-
      debuc( chess_db(true), task(start), 'PGN read-in: ~p', [farg(PgnIn)] ),
      pgn( PgnIn, Pgn ),
      debuc( chess_db(true), task(stop), 'PGN read-in', [] ),
@@ -248,16 +250,16 @@ chess_db_incr( false, PgnIn, Goal, LaGid, _MxG, IProg, Posi, Rosi, Chk, Dly, Bim
      debuc( chess_db(stats), stat, process_cputime, DbcOpts ),
      debuc( chess_db(stats), stat, real_time, DbcOpts ),
      debuc( chess_db(stats), stat, runtime, DbcOpts ),
-     debuc( chess_db(stats), duh, ArgDb, [sub(true)|DbcOpts] ),
+     debuc( chess_db(stats), duh, ActDb, [sub(true)|DbcOpts] ),
      debuc( chess_db(true), task(start), 'Starting with game at no: ~w', [farg(LaGid)] ),
      ( Goal == chess_db_games_add ->
-          chess_db_games_add( Pgn, LaGid, IProg, Posi, Rosi, Chk, Dly, Bim, ArgDb, CdbHs, RtGid ),
-          ( var(ArgDb) -> ArgDb = AbsDb; true ),
+          chess_db_games_add( Pgn, LaGid, IProg, Posi, Rosi, Chk, Dly, Bim, ActDb, CdbHs, RtGid ),
+          ( var(ActDb) -> ActDb = AbsDb; true ),
           ( var(OptDb) -> OptDb = AbsDb; true )
           ;
           call( Goal, Pgn, LaGid, IProg, Posi, Rosi, CdbHs, RtGid )
      ).
-chess_db_incr( true, PgnIn, Goal, LaGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, AbsDb, ArgDb, OptDb, RtGid ) :-
+chess_db_incr( true, PgnIn, Goal, LaGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, CdbHs, AbsDb, ActDb, OptDb, RtGid ) :-
      open( PgnIn, read, Pin ),
      tmp_file( chess_db_tmp, TmpF ),
      DbcOpts = [check_point(start_at_id(LaGid)),comment(false)],
@@ -265,33 +267,33 @@ chess_db_incr( true, PgnIn, Goal, LaGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, 
      debuc( chess_db(stats), stat, process_cputime, DbcOpts ),
      debuc( chess_db(stats), stat, real_time, DbcOpts ),
      debuc( chess_db(stats), stat, runtime, DbcOpts ),
-     debuc( chess_db(stats), duh, ArgDb, [sub(true)|DbcOpts] ),
+     debuc( chess_db(stats), duh, ActDb, [sub(true)|DbcOpts] ),
      debuc( chess_db(true), task(start), 'Starting with game at no: ~w', [farg(LaGid)] ),
-     chess_db_incr_stream( Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, ArgDb, CdbHs, RtGid ), 
+     chess_db_incr_stream( Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, ActDb, CdbHs, RtGid ), 
      close( Pin ),
      % ( atomic(AbsDb) -> chess_db_disconnect(AbsDb); true ),
      % chess_db_handles_close( CdbHs ),
-     ( var(ArgDb) -> ArgDb = AbsDb; true ),
+     ( var(ActDb) -> ActDb = AbsDb; true ),
      ( var(OptDb) -> OptDb = AbsDb; true ).
 
-chess_db_incr_stream( Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, ArgDb, CdbHs, RtGid ) :-
+chess_db_incr_stream( Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, ActDb, CdbHs, RtGid ) :-
      open( TmpF, write, TempO ),
      chess_db_incr_stream_pgn( Pin, TempO, Eof ),
      close( TempO ),
      ( (Eof ; (number(LaGid),MxG =< LaGid) ) -> Termin = true; Termin = false ),
-     chess_db_incr_stream_termin( Termin, Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, ArgDb, CdbHs, RtGid ).
+     chess_db_incr_stream_termin( Termin, Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, ActDb, CdbHs, RtGid ).
 
-chess_db_incr_stream_termin( true, _Pin, _TmpF, _Goal, LaGid, _MxG, _IProg, _Posi, _Rosi, _Chk, _Dly, _Bim, _ArgDb, _CdbHs, RtGid ) :-
+chess_db_incr_stream_termin( true, _Pin, _TmpF, _Goal, LaGid, _MxG, _IProg, _Posi, _Rosi, _Chk, _Dly, _Bim, _ActDb, _CdbHs, RtGid ) :-
      LaGid = RtGid.
-chess_db_incr_stream_termin( false, Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, ArgDb, CdbHs, RtGid ) :-
+chess_db_incr_stream_termin( false, Pin, TmpF, Goal, LaGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, ActDb, CdbHs, RtGid ) :-
      pgn( TmpF, Game ),
      ( Goal == chess_db_games_add ->
-               chess_db_games_add( Game, LaGid, IProg, Posi, Rosi, Chk, Dly, Bim, ArgDb, CdbHs, NxGid )
+               chess_db_games_add( Game, LaGid, IProg, Posi, Rosi, Chk, Dly, Bim, ActDb, CdbHs, NxGid )
                ;
                call( Goal, Game, LaGid, IProg, Posi, Rosi, CdbHs, NxGid )
      ),
      % MaGid is LaGid + 1,
-     chess_db_incr_stream( Pin, TmpF, Goal, NxGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, ArgDb, CdbHs, RtGid ).
+     chess_db_incr_stream( Pin, TmpF, Goal, NxGid, MxG, IProg, Posi, Rosi, Chk, Dly, Bim, ActDb, CdbHs, RtGid ).
 
 chess_db_incr_stream_pgn( Pin, TempO, Eof ) :-
      io_line( Pin, Line ),
@@ -351,9 +353,9 @@ chess_db_alias_exists_dir( AliasDir ) :-
      exists_directory( AliasDir ),
      !.
 
-chess_db_games_add( [], Gid, _IProg, _Posi, _Rosi, _Chk, _Dly, _Bim, _ArgDb, _CdbHs, Xid ) :-
+chess_db_games_add( [], Gid, _IProg, _Posi, _Rosi, _Chk, _Dly, _Bim, _ActDb, _CdbHs, Xid ) :-
      Gid = Xid.
-chess_db_games_add( [G|Gs], Gid, IProg, Posi, Rosi, Chk, Dly, Bim, ArgDb, CdbHs, Xid ) :-
+chess_db_games_add( [G|Gs], Gid, IProg, Posi, Rosi, Chk, Dly, Bim, ActDb, CdbHs, Xid ) :-
      % fixme: ignore position for now
      G = pgn(Info,Moves,Res,Orig),
      chess_db_debug_info( Info, game, 'adding to db' ),
@@ -361,9 +363,9 @@ chess_db_games_add( [G|Gs], Gid, IProg, Posi, Rosi, Chk, Dly, Bim, ArgDb, CdbHs,
      chess_db_handle( move, CdbHs, MoveHandle ),
      chess_db_handle( orig, CdbHs, OrigHandle ),
      ( Posi == true -> chess_db_handle( posi, CdbHs, PosiHandle ) ; true ),
-     chess_db_game_add( Chk, InfoHandle, Info, Moves, Orig, Dly, Bim, ArgDb, Gid, Res, MoveHandle, OrigHandle, IProg, Posi, Rosi, PosiHandle, Nid ),
+     chess_db_game_add( Chk, InfoHandle, Info, Moves, Orig, Dly, Bim, ActDb, Gid, Res, MoveHandle, OrigHandle, IProg, Posi, Rosi, PosiHandle, Nid ),
      !,
-     chess_db_games_add( Gs, Nid, IProg, Posi, Rosi, Chk, Dly, Bim, ArgDb, CdbHs, Xid ).
+     chess_db_games_add( Gs, Nid, IProg, Posi, Rosi, Chk, Dly, Bim, ActDb, CdbHs, Xid ).
 
 chess_db_debug_info( Info, Chnl, Pfx ) :-
      memberchk( 'White'-White, Info ),
@@ -374,11 +376,11 @@ chess_db_debug_info( Info, Chnl, Pfx ) :-
 chess_db_debug_info( Info, Chnl, Pfx ) :-
      debuc( chess_db(Chnl), '~w: ~w', [Pfx,Info] ).
 
-chess_db_game_add( true, InfoHandle, Info, _Moves, _Orig, _Dly, _Bim, _ArgDb, Gid, _Res, _MoHa, _OrHa, _IProg, _Posi, _Rosi, _PoHa, Gid ) :-
+chess_db_game_add( true, InfoHandle, Info, _Moves, _Orig, _Dly, _Bim, _ActDb, Gid, _Res, _MoHa, _OrHa, _IProg, _Posi, _Rosi, _PoHa, Gid ) :-
      chess_db_game_info_exists( Info, InfoHandle, ExGid ),
      !, % fixme: add option for erroring
      debuc( chess_db(info), 'Info match existing game: ~d', ExGid ).
-chess_db_game_add( _Chk, InfoHandle, Info, Moves, Orig, Dly, Bim, ArgDb, Gid, Res, MoHa, OrHa, IProg, Posi, Rosi, PoHa, Nid ) :-
+chess_db_game_add( _Chk, InfoHandle, Info, Moves, Orig, Dly, Bim, ActDb, Gid, Res, MoHa, OrHa, IProg, Posi, Rosi, PoHa, Nid ) :-
      chess_dict_start_board( Start ),
      ( chess_pgn_moves_limos(Moves, 1, Start, Limos) ->
           Nid is Gid + 1,
@@ -403,7 +405,7 @@ chess_db_game_add( _Chk, InfoHandle, Info, Moves, Orig, Dly, Bim, ArgDb, Gid, Re
                     debuc( chess_db(stats), stat, process_cputime, DbcOpts ),
                     debuc( chess_db(stats), stat, real_time, DbcOpts ),
                     debuc( chess_db(stats), stat, runtime, DbcOpts ),
-                    debuc( chess_db(stats), duh, ArgDb, [sub(true)|DbcOpts] ),
+                    debuc( chess_db(stats), duh, ActDb, [sub(true)|DbcOpts] ),
                     debuc( chess_db(true), task(stop), 'Added game no: ~d', [farg(Nid)] )
                     ;
                     true
