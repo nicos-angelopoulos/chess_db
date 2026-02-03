@@ -2,6 +2,7 @@
 --------------------
 
 1.1
+     26.02.03  CHANGE:  allow for failure instead of throw in chess_dict/move/4,5 controlled by new arg
      26.01.31  SCRIPT:   pgn_chunks.pl
                SPEEDUP:  fold out the two cases of chess_db_table_update/2 to two table specific calls
                CUT:      add a cut after each single PGN has been added to dbs
