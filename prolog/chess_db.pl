@@ -418,7 +418,7 @@ access db games and info
 dictionaries
   * chess_dict/0
   * chess_dict_start_board/1
-  * chess_dict_move/3
+  * chess_dict_move/4
   * chess_dict_piece/3
 
 info interactions
