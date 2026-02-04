@@ -453,4 +453,4 @@ documentation
 true.
 ==
 */
-chess_db_version(1:0:3, date(2026,1,31)).
+chess_db_version(1:0:4, date(2026,2,4)).
