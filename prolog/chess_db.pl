@@ -450,8 +450,9 @@ documentation
      The current version. Version is a Mj:Mn:Fx term, and date is a date(Y,M,D) term.
 
 ==
-?- chess_db_version(1:0:0, date(2021,6,18)).
-true.
+?- chess_db_version(V, D).
+V = 1:2:0,
+D = date(2026, 2, 8).
 ==
 */
 chess_db_version(1:2:0, date(2026,2,8)).
