@@ -436,6 +436,7 @@ documentation
 @version  0.2 2018/3/20
 @version  0.3 2018/9/14
 @version  1.0 2021/6/18
+@version  1.2 2026/2/8,   rocksdb, + position id as hex
 @see  http://stoics.org.uk/~nicos/sware/chess_db
 @see  https://github.com/nicos-angelopoulos/chess_db
 @see  [pack('chess_db/examples/short.pl')]
@@ -453,4 +454,4 @@ documentation
 true.
 ==
 */
-chess_db_version(1:0:4, date(2026,2,4)).
+chess_db_version(1:2:0, date(2026,2,8)).
