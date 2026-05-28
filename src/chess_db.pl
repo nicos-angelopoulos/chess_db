@@ -458,7 +458,8 @@ chess_db_limos_game_posi( [limo(Ply,_Hmv,Mv,Inpo)|T], Dly, Bim, Gid, ELO, Rex, R
      ( Mv == [] ->
           true
           ; 
-          ( chess_db_holds(game_posi(Rosi),PosDb,[Inpo,Mv],Curr) ->
+          ( chess_db_holds(PosDb,game_posi(Inpo,Curr)) ->
+          % ( chess_db_holds(game_posi(Rosi),PosDb,[Inpo,Mv],Curr) -> )
                     chess_db_posi_value_update( Rosi, Curr, Bim, Gid, ELO, Rex, Mv, Next )
                     ;
                     chess_db_posi_value_create( Rosi, Bim, Gid, ELO, Rex, Mv, Next )

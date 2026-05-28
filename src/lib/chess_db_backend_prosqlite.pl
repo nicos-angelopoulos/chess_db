@@ -14,9 +14,20 @@ chess_db_create( Db, Base, Handle ) :-
      Goal =.. [Base|Cnms],
      db_create( Handle, Goal ).
 
+/*
 chess_db_holds( game_posi(kvx), Db, Args, Val ) :-
      ( Args = [Key|_] -> true; Args = Key ),
      db_holds( Db, game_posi(Key,Val) ).
+     */
+chess_db_holds( Db, Query ) :-
+     ( chess_db_holds_prosqlite(Query,Expanded) -> 
+          true
+          ;
+          Expanded = Query
+     ),
+     db_holds( Db, Expanded ).
+     % this is likely wasteful, it would be nice to down stream to db_facts, when only specific args are required...
+chess_db_holds_prosqlite( game_info(AGno), game_info(AGno,_,_) ).
 
 chess_db_table_update_orig( Dbh, Gid, Otm ) :-
      db_assert( Dbh, game_orig(Gid,Otm), _ ).

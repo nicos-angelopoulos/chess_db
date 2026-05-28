@@ -20,7 +20,7 @@ chess_db_game( Gid ) :-
     chess_db_current( CdbHs ),
     chess_db_handle( info, CdbHs, InfoH ),
     % setof( AGno, (K,V)^db_holds(InfoH,game_info(AGno,K,V)), Gnos ),
-    findall( AGno, db_holds(InfoH,game_info(AGno,_,_)), AllGnos ),
+    findall( AGno, chess_db_holds(InfoH,game_info(AGno)), AllGnos ),
     sort( AllGnos, Gnos ),
     member( Gno, Gnos ),
     Gid = CdbHs:Gno.
