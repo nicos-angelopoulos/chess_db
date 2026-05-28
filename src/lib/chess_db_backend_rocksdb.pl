@@ -31,11 +31,11 @@ chess_db_holds( Db, Query ) :-
      rocks_db_holds( Query, Db ).
 
 rocks_db_holds( game_info(Gid), Db ) :-
-     ( Db = Dbh/Dbv -> true; Dbh = Db ),
+     ( Db = Dbh/_Dbv -> true; Dbh = Db ),
      ( var(Gid) ->
-          rocks_enum( Dbv, Gid, _ )
+          rocks_enum( Dbh, Gid, _ )
           ;
-          rocks_get( Dbv, Gid, _ )
+          rocks_get( Dbh, Gid, _ )
      ).
 rocks_db_holds( Query, Db ) :-
      ( (\+var(Db),Db=Dbh/_) ->     % fixme: need to eleborate here. for now pick first handle if 2 exist (symmetrical tables)
